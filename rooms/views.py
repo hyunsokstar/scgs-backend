@@ -88,7 +88,6 @@ class Rooms(APIView):
         return Response(serializer.data)
     
     def post(self, request):
-        
         print("룸 포스팅 test 확인 !!")
         
         serializer = RoomDetailSerializer(data=request.data)

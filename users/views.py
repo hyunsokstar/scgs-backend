@@ -37,6 +37,16 @@ class Me(APIView):
         
         
 class Users(APIView):
+    def get(self, request):
+        try:
+            # user = User.objects.get(username=username)
+            user = User.objects.all()
+            print("first : ", user)
+        except User.DoesNotExist:
+            raise NotFound
+        serializer = serializers.UserListSerializer(user, many=True)
+        return Response(serializer.data)    
+    
     def post(self, request):
         
         password = request.data.get("password")

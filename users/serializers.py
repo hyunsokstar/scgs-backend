@@ -1,6 +1,16 @@
 from rest_framework.serializers import ModelSerializer
 from .models import User
 
+class UserListSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "avatar",
+            "is_host",
+            "gender",
+            "language",
+        )
 
 class TinyUserSerializer(ModelSerializer):
     class Meta:
@@ -8,7 +18,7 @@ class TinyUserSerializer(ModelSerializer):
         fields = (
             "name",
             "avatar",
-            "username",
+            # "username",
         )
 
 class PrivateUserSerializer(ModelSerializer):
