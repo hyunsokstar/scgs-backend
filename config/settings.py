@@ -63,6 +63,7 @@ CUSTOM_APPS = [
     "bookings.apps.BookingsConfig",
     "medias.apps.MediasConfig",
     "direct_messages.apps.DirectMessagesConfig",
+    "estimate.apps.EstimateConfig",
 ]
 
 SYSTEM_APPS = [
