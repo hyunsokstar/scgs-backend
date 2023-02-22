@@ -25,7 +25,6 @@ from bookings.models import Booking
 
 from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer
 
-
 from django.utils import timezone   
 
 class Amenities(APIView):
