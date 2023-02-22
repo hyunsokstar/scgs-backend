@@ -41,6 +41,23 @@ class EstimateDetail(APIView):
         estimate = self.get_object(pk)
         print("estimate : ", estimate)
 
-        serializer = EstimateRequireSerializer(estimate, context={"request":request})  
+        serializer = EstimateRequireSerializer(
+            estimate, context={"request": request})
 
         return Response(serializer.data)
+
+    def put(self, request, pk):
+        serializer = EstimateRequireSerializer(data=request.data)
+        if serializer.is_valid():
+            estimate = self.get_object(pk)
+
+            try:
+                estimate = serializer.save()
+                serializer = EstimateRequireSerializer(estimate)
+                return Response(serializer.data)
+
+            except Exception:
+                raise ParseError("Estimate not found")
+        else:
+            print("시리얼 라이저가 유효하지 않음")
+            return Response(serializer.errors)

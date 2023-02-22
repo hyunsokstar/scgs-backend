@@ -128,9 +128,10 @@ class Rooms(APIView):
         else:
             print("시리얼 라이저가 유효하지 않음")
             return Response(serializer.errors)           
-    
+
+
 class RoomDetail(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]    
+    permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get_object(self, pk):
         try:
@@ -182,7 +183,7 @@ class RoomDetail(APIView):
         
             try:
                 # 만약 요청 데이터중 amenties가 유효하지 않다면(없다면) 에러 처리 + 룸 save 에 대한 되돌리기 
-                with transaction.atomic():               
+                with transaction.atomic(): 
                     # 일단 save 하는데 유저 정보와 카테고리 정보까지
                     room = serializer.save(
                             owner=request.user, 
