@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Estimate
 from estimate.serializers import EstimateRequireSerializer
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 
 # Create your views here.
@@ -50,12 +51,12 @@ class EstimateDetail(APIView):
         print("pk : ", pk)
 
         estimate = self.get_object(pk)
-
         serializer = EstimateRequireSerializer(
-            estimate,
-            data=request.data,
-            partial=True
-        )
+                estimate,
+                data=request.data,
+                partial=True
+            )
+            
         if serializer.is_valid():
             estimate = self.get_object(pk)
             print("serializer 유효함")
@@ -64,10 +65,17 @@ class EstimateDetail(APIView):
                 serializer = EstimateRequireSerializer(estimate)
                 return Response(serializer.data)
 
-            except Exception:
+            except Exception as e:
+                print("ee : ", e)
                 raise ParseError("Estimate not found")
         else:
             print("시리얼 라이저가 유효하지 않음")
             raise ParseError("serializer is not valid")
 
             # return Response(serializer.errors)
+            
+    def delete(self, request, pk):
+        print("삭제 요청 확인")
+        estimate = self.get_object(pk)
+        estimate.delete()
+        return Response(status=HTTP_204_NO_CONTENT)            
