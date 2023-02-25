@@ -1,3 +1,4 @@
+import math
 from django.shortcuts import render
 # from requests import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
@@ -5,20 +6,42 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Estimate
 from estimate.serializers import EstimateRequireSerializer
-from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
+from django.conf import settings
+
 
 
 # Create your views here.
 
-
 class Estimates(APIView):
+    totalCount=0
+    
     def get(self, request):
-        all_estimate_requires = Estimate.objects.all()
-        print("견적 요청 리스트 : ", all_estimate_requires)
-
-        serializer = EstimateRequireSerializer(
-            all_estimate_requires, many=True)
-        return Response(serializer.data)
+        print("견적 리스트 요청 확인")
+        try:
+            page = request.query_params.get("page", 1) # query 파라미터에서 page 가져오기 or 1 
+            page = int(page)
+        except ValueError:
+            page = 1        
+        
+        # 페이지 1일때 0부터 시작 2일때 3부터 시작 3일때 6부터 시작
+        page_size = 3
+        start = (page - 1) * page_size
+        end = start + page_size        
+        all_estimate_requires = Estimate.objects.all()[start:end]
+        
+        if(Estimate.objects.all().count()%3 == 0 ):
+            self.totalCount = Estimate.objects.all().count()/3
+        else:
+            self.totalCount = Estimate.objects.all().count()/3 + 1
+        
+        serializer = EstimateRequireSerializer(all_estimate_requires, many=True)
+        
+        data = serializer.data
+        data = {"totalCount": math.trunc(self.totalCount), "estimateRequires": data}        
+        
+        # return Response(serializer.data, status = HTTP_200_OK)
+        return Response(data, status=HTTP_200_OK)
 
     def post(self, request):
         serializer = EstimateRequireSerializer(data=request.data)
@@ -39,6 +62,7 @@ class EstimateDetail(APIView):
     def get(self, request, pk):
         print("견적 디테일 페이지 요청 확인 (백엔드) !")
         print(pk, type(pk))
+        
         estimate = self.get_object(pk)
         print("estimate : ", estimate)
 

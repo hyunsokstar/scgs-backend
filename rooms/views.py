@@ -2,29 +2,21 @@ import time
 
 from django.shortcuts import render
 from rest_framework.views import APIView
-
 from rest_framework.response import Response
-
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_204_NO_CONTENT
 
 from .serializers import AmenitySerializer, RoomListSerializer, RoomDetailSerializer
 from .models import Amenity, Room
 from categories.models import Category
-
 from django.db import transaction
 from reviews.serializers import ReviewSerializer
 from django.http import JsonResponse
 from django.conf import settings
-
 from medias.serializers import PhotoSerializer
-
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
 from bookings.models import Booking
-
 from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer
-
 from django.utils import timezone   
 
 class Amenities(APIView):
