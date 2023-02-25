@@ -33,7 +33,8 @@ class Estimates(APIView):
         if(Estimate.objects.all().count()%3 == 0 ):
             self.totalCount = Estimate.objects.all().count()/3
         else:
-            self.totalCount = Estimate.objects.all().count()/3 + 1
+            # self.totalCount = Estimate.objects.all().count()/3 + 1
+            self.totalCount = Estimate.objects.all().count()
         
         serializer = EstimateRequireSerializer(all_estimate_requires, many=True)
         
