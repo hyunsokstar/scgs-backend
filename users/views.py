@@ -7,6 +7,8 @@ from users.models import User
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 
+
+
 from django.conf import settings
 import jwt
 
@@ -50,8 +52,12 @@ class Users(APIView):
     def post(self, request):
         
         password = request.data.get("password")
+        username = request.data.get("username")
+        
         if not password:
-            raise ParseError        
+            raise ParseError("Password is missing")     
+        if not username:
+            raise ParseError("username is missing")             
         
         serializer = serializers.PrivateUserSerializer(data=request.data)
         
@@ -59,9 +65,15 @@ class Users(APIView):
             user = serializer.save()
             user.set_password(password)
             user.save()
-                        
+            
+            new_user = authenticate(request, username=username, password=password)
+
             serializer = serializers.PrivateUserSerializer(user)
-            return Response(serializer.data)
+            if new_user is not None:
+                login(request, new_user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'message': 'Unable to log in with provided credentials.'}, status=status.HTTP_400_BAD_REQUEST)           
         else:
             return Response(serializer.errors)
 

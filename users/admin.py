@@ -12,12 +12,12 @@ class CustomUserAdmin(UserAdmin):
                 {
                     # "fields": ("username", "password", "name", "email", "is_host"),
                     "fields": (
-                        "avatar",
+                        "profile_image",
                         "username",
                         "password",
                         "name",
                         "email",
-                        "is_host",
+                        # "is_host",
                         "gender",
                         "language",
                         "currency",
@@ -46,4 +46,4 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    list_display = ["username", "password", "name", "email", "is_host"]
+    list_display = ["username", "password", "name", "email"]

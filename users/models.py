@@ -21,7 +21,8 @@ class User(AbstractUser):
 
     name = models.CharField(max_length=150, default="")
     profile_image = models.URLField(blank=True, null=True)    
-    gender = models.CharField(max_length=10, choices=GenderChoices.choices,)
     # is_host = models.BooleanField(default=False)
+
+    # gender = models.CharField(max_length=10, choices=GenderChoices.choices,)
     # language = models.CharField(max_length=2, choices=LanguageChoices.choices, null=True, blank=True)
     # currency = models.CharField(max_length=5, choices=CurrencyChoices.choices,)

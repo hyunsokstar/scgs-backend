@@ -33,7 +33,7 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = (
         WordFilter,
         "rating",
-        "user__is_host",
+        # "user__is_host",
         "room__category",
         "room__pet_friendly"
     )

@@ -5,11 +5,13 @@ class UserListSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "name",
             "username",
-            "avatar",
-            "is_host",
-            "gender",
-            "language",
+            "email",
+            "profile_image",
+            # "is_host",
+            # "gender",
+            # "language",
         )
 
 class TinyUserSerializer(ModelSerializer):
@@ -17,7 +19,7 @@ class TinyUserSerializer(ModelSerializer):
         model = User
         fields = (
             "name",
-            "avatar",
+            "profile_image",
             # "username",
         )
 
