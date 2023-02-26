@@ -9,7 +9,7 @@ from estimate.serializers import EstimateRequireSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from django.conf import settings
 
-
+from django.core.mail import send_mail
 
 # Create your views here.
 
@@ -48,6 +48,11 @@ class Estimates(APIView):
         serializer = EstimateRequireSerializer(data=request.data)
         if serializer.is_valid():
             estimate_require = serializer.save()
+            
+            subject = serializer.validated_data['title']
+            body = serializer.validated_data['content']
+            # to = [serializer.validated_data['']]            
+            send_mail(subject, body, 'whiteberry20@naver.com', ['whiteberry20@naver.com'])            
             return Response(EstimateRequireSerializer(estimate_require).data)
         else:
             return Response(serializer.errors)

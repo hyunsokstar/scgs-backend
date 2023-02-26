@@ -205,3 +205,11 @@ CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:3000"]
 
 CF_ID = env("CF_ID")
 CF_TOKEN = env("CF_TOKEN")
+
+# 네이버 메일 보내기
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.naver.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
