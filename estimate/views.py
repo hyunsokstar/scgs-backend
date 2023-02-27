@@ -19,7 +19,10 @@ class DeleteEstimatesForCheck(DestroyAPIView):
     lookup_field = 'id'
     
     def delete(self, request, *args, **kwargs):
+        print("삭제 요청뷰 확인", request.data.get('ids', []))
         ids = request.data.get('ids', [])
+        
+        print("ids : ", ids)
         if not ids:
             return Response({'error': 'ids parameter is required'}, status=400)
         
