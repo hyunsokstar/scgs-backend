@@ -10,8 +10,28 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from django.conf import settings
 
 from django.core.mail import send_mail
+from rest_framework.generics import DestroyAPIView
 
 # Create your views here.
+
+class DeleteEstimatesForCheck(DestroyAPIView):
+    queryset = Estimate.objects.all()
+    lookup_field = 'id'
+    
+    def delete(self, request, *args, **kwargs):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'error': 'ids parameter is required'}, status=400)
+        
+        queryset = self.get_queryset().filter(id__in=ids)
+        message = '{} 개의 row가 삭제 되었습니다.'.format(queryset.count())
+        print("queryset : ", queryset.count())
+        
+        if not queryset.exists():
+            return Response({'error': 'No objects found with given ids'}, status=404)
+        queryset.delete()
+        
+        return Response({'message': message}, status=204)
 
 class Estimates(APIView):
     totalCount=0
@@ -40,7 +60,6 @@ class Estimates(APIView):
         
         data = serializer.data
         data = {"totalCount": math.trunc(self.totalCount), "estimateRequires": data}        
-        
         # return Response(serializer.data, status = HTTP_200_OK)
         return Response(data, status=HTTP_200_OK)
 
@@ -51,7 +70,6 @@ class Estimates(APIView):
             
             subject = serializer.validated_data['title']
             body = serializer.validated_data['content']
-            # to = [serializer.validated_data['']]            
             send_mail(subject, body, 'whiteberry20@naver.com', ['whiteberry20@naver.com'])            
             return Response(EstimateRequireSerializer(estimate_require).data)
         else:
