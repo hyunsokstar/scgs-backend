@@ -34,7 +34,7 @@ SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = 'RENDER' not in os.environ
+DEBUG = True
 
 ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -134,12 +134,41 @@ if DEBUG:
         }   
     }
 else:
+    """
     DATABASES = {
         "default": dj_database_url.config(
             conn_max_age=600,
         )
     }
+    """
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": env('DATABASE_NAME'),
+            "USER": env('DATABASE_USER'),
+            "PASSWORD": env('DATABASE_PASSWORD'),
+            "HOST": env('DATABASE_HOST'),
+            "PORT": 3306,
+            "OPTIONS": {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }   
+    }
 
+# DEBUG = True or False
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": env('DATABASE_NAME'),
+#         "USER": env('DATABASE_USER'),
+#         "PASSWORD": env('DATABASE_PASSWORD'),
+#         "HOST": env('DATABASE_HOST'),
+#         "PORT": 3306,
+#         "OPTIONS": {
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+#         },
+#     }   
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -176,6 +205,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / 'www_dir'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -198,10 +228,8 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://13.125.214.210"]
 CORS_ALLOW_CREDENTIALS = True
-
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:3000"]
 
 CF_ID = env("CF_ID")
 CF_TOKEN = env("CF_TOKEN")
@@ -215,6 +243,6 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1', 'localhost',
+    'http://127.0.0.1', 'http://localhost',
     'http://13.125.214.210',
 ]
