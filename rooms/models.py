@@ -69,7 +69,6 @@ class Room(CommonModel):
                 total_rating += review['rating']
             return round(total_rating / count, 2)
 
-# class Amenity(models.Model):
 class Amenity(CommonModel):
     """ Amenity Definition """
     name = models.CharField(max_length=150)

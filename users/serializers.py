@@ -1,17 +1,48 @@
+from medias.serializers import ProfilePhotoSerializer
 from rest_framework.serializers import ModelSerializer
-from .models import User
+from .models import SkillForFrameWork, User, UserPosition
+
+class UserPostionSerializer(ModelSerializer):
+    class Meta:
+        model = UserPosition
+        fields = (
+            "pk",
+            "position_name",
+        )     
+        
+class SkillForFrameWorkSerializer(ModelSerializer):
+    class Meta:
+        model = SkillForFrameWork
+        fields = (
+            "pk",
+            "frame_work_name",
+        )   
+
+class UserProfileSerializer(ModelSerializer):
+    profileImages = ProfilePhotoSerializer(many=True)
+    skill_for_frameWork = SkillForFrameWorkSerializer(many=True)
+    position = UserPostionSerializer()
+    
+    class Meta:
+        model = User
+        fields = (
+            "pk",
+            "name",
+            "email",
+            "profileImages",
+            'position',
+            "skill_for_frameWork",
+            'about_me',
+        )
 
 class UserListSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "pk",
             "name",
             "username",
             "email",
-            "profile_image",
-            # "is_host",
-            # "gender",
-            # "language",
         )
 
 class TinyUserSerializer(ModelSerializer):
@@ -19,7 +50,7 @@ class TinyUserSerializer(ModelSerializer):
         model = User
         fields = (
             "name",
-            "profile_image",
+            # "profile_image",
             # "username",
         )
 

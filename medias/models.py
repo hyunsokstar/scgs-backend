@@ -3,6 +3,15 @@ from common.models import CommonModel
 
 # Create your models here.
 
+class PhotoForProfile(CommonModel):
+    file = models.URLField()
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="profileImages"  # 이후 출력할때 reverse url 로 접근하기 위해 필요
+    )
 
 class Photo(CommonModel):
     file = models.URLField()        

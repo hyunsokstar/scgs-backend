@@ -1,26 +1,31 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
-
+from .models import User, SkillForFrameWork, UserPosition
 
 # Register your models here.
+
+@admin.register(UserPosition)
+class UserPositionAdmin(admin.ModelAdmin):
+    list_display= ("pk","position_name")
+
+@admin.register(SkillForFrameWork)
+class SkillForFrameWorkAdmin(admin.ModelAdmin):
+    list_display= ("pk","frame_work_name")
+
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     fieldsets = (
             (
                 "Profile",
                 {
-                    # "fields": ("username", "password", "name", "email", "is_host"),
                     "fields": (
-                        "profile_image",
                         "username",
                         "password",
                         "name",
                         "email",
-                        # "is_host",
-                        "gender",
-                        "language",
-                        "currency",
+                        'skill_for_frameWork',
+                        'position',
+                        'about_me'
                     ),                
                     "classes": ("wide",),
                 },
