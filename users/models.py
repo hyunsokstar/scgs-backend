@@ -4,6 +4,7 @@ from common.models import CommonModel
 
 # Create your models here.
 
+
 class User(AbstractUser):
     class GenderChoices(models.TextChoices):
         MALE = ("male", "Male")
@@ -23,31 +24,35 @@ class User(AbstractUser):
     admin_level = models.IntegerField(default=1)
 
     name = models.CharField(max_length=150, default="")
-    
+
     position = models.ForeignKey(
         "users.UserPosition",
-        on_delete = models.SET_NULL, 
-        null = True,
-        blank= True,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="users"
     )
-    
+
     about_me = models.TextField(null=True, blank=True)
-    
+
     skill_for_frameWork = models.ManyToManyField(
         "users.SkillForFrameWork",
-        related_name="users"  
-    )  
-    
+        related_name="users",
+        null=True,
+        blank=True,
+    )
+
+
 class UserPosition(CommonModel):
     position_name = models.CharField(max_length=30)
 
     def __str__(self) -> str:
         return f"{self.position_name}"
-    
+
     class Meta:
-        verbose_name_plural = "UserPosition"    
-    
+        verbose_name_plural = "UserPosition"
+
+
 class SkillForFrameWork(CommonModel):
     frame_work_name = models.CharField(max_length=150)
 
@@ -55,24 +60,24 @@ class SkillForFrameWork(CommonModel):
         return f"{self.frame_work_name}"
 
     class Meta:
-        verbose_name_plural = "SkillForFrameWork"    
+        verbose_name_plural = "SkillForFrameWork"
 
 # 파이썬 활용 능력 + 문서화
-# 노트로 정리 + git 공유  
+# 노트로 정리 + git 공유
 
 # 샘플 프로젝트로 증명 해라 (아마존 연동)
 
-# textbox 
+# textbox
 # 개발 환경 구축 능력
 # 홈페이지 구축 능력
 # 쇼핑몰 구축 능력
-# 라이브 스트리밍 + 채팅 + 결제 
+# 라이브 스트리밍 + 채팅 + 결제
 # 스마트 팩토리 + iot
 
 # css
 # 기본 css, scss
 # react
-# 
+#
 # chakra ui 활용 능력
 
 # 알고리즘 능력
