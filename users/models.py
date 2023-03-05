@@ -20,6 +20,8 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150, editable=False)
     last_name = models.CharField(max_length=150, editable=False)
 
+    admin_level = models.IntegerField(default=1)
+
     name = models.CharField(max_length=150, default="")
     
     position = models.ForeignKey(
@@ -35,7 +37,7 @@ class User(AbstractUser):
     skill_for_frameWork = models.ManyToManyField(
         "users.SkillForFrameWork",
         related_name="users"  
-    )        
+    )  
     
 class UserPosition(CommonModel):
     position_name = models.CharField(max_length=30)

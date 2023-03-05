@@ -64,6 +64,7 @@ CUSTOM_APPS = [
     "medias.apps.MediasConfig",
     "direct_messages.apps.DirectMessagesConfig",
     "estimate.apps.EstimateConfig",
+    "tutorials.apps.TutorialsConfig",
 ]
 
 SYSTEM_APPS = [

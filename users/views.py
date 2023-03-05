@@ -76,7 +76,7 @@ class Me(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = serializers.PrivateUserSerializer(user)
+        serializer = serializers.UserProfileSerializer(user)
         return Response(serializer.data)
     
     def put(self, request):

@@ -28,14 +28,18 @@ class UserProfileSerializer(ModelSerializer):
         fields = (
             "pk",
             "name",
+            "username",
             "email",
             "profileImages",
             'position',
             "skill_for_frameWork",
             'about_me',
+            'admin_level',
         )
 
 class UserListSerializer(ModelSerializer):
+    profileImages = ProfilePhotoSerializer(many=True)
+    
     class Meta:
         model = User
         fields = (
@@ -43,6 +47,7 @@ class UserListSerializer(ModelSerializer):
             "name",
             "username",
             "email",
+            "profileImages"
         )
 
 class TinyUserSerializer(ModelSerializer):
@@ -55,6 +60,8 @@ class TinyUserSerializer(ModelSerializer):
         )
 
 class PrivateUserSerializer(ModelSerializer):
+    # profileImages = ProfilePhotoSerializer(many=True)
+    
     class Meta:
         model = User
         exclude = (
@@ -67,4 +74,5 @@ class PrivateUserSerializer(ModelSerializer):
             "last_name",
             "groups",
             "user_permissions",
+            # "profileImages",
         )

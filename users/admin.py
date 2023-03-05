@@ -25,7 +25,8 @@ class CustomUserAdmin(UserAdmin):
                         "email",
                         'skill_for_frameWork',
                         'position',
-                        'about_me'
+                        'about_me',
+                        'admin_level',
                     ),                
                     "classes": ("wide",),
                 },
