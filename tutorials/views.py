@@ -8,8 +8,9 @@ from tutorials.serializers import TutorialListSerializer
 class Tutorials(APIView):
     def get(self, request):
         all_tutorials = Tutorial.objects.all()
+        print("count : ", all_tutorials.count())
         serializer = TutorialListSerializer(all_tutorials, many=True)
-        print("serializer : ", serializer)
+        print("serializer length: ", serializer)
         return Response(serializer.data)
     
     def post(self, request):
@@ -19,5 +20,5 @@ class Tutorials(APIView):
             tutorial = serializer.save()
             return Response(TutorialListSerializer(tutorial).data)
         else:
-            print("serializer is not valid")
+            print("serializer is not valid : ", serializer.errors)
             return Response(serializer.errors)  
