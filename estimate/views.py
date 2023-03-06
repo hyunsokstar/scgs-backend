@@ -122,8 +122,6 @@ class EstimateDetail(APIView):
         else:
             print("시리얼 라이저가 유효하지 않음")
             raise ParseError("serializer is not valid")
-
-            # return Response(serializer.errors)
             
     def delete(self, request, pk):
         print("삭제 요청 확인")

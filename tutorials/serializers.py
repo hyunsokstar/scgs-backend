@@ -25,3 +25,18 @@ class TutorialListSerializer(serializers.ModelSerializer):
             "backend_framework_option",
             "tutorial_url",
         )
+
+class TutorialDetaailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tutorial
+        fields = (
+            "pk",
+            "tutorial_image",
+            "title",
+            "teacher",
+            "price",
+            "description",
+            "frontend_framework_option",            
+            "backend_framework_option",
+            "tutorial_url",
+        )
