@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from tutorials.serializers import TutorialDetaailSerializer, TutorialListSerializer
 
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
 
 class Tutorials(APIView):
@@ -29,7 +30,6 @@ class Tutorials(APIView):
 
 # tutorial update view
 class TutorialDetail(APIView):
-    # permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
         try:
@@ -73,3 +73,9 @@ class TutorialDetail(APIView):
         else:
             print("시리얼 라이저가 유효하지 않음")
             raise ParseError("serializer is not valid")
+        
+    def delete(self, request, pk):
+        print("삭제 요청 확인")
+        tutorial = self.get_object(pk)
+        tutorial.delete()
+        return Response(status=HTTP_204_NO_CONTENT)  
