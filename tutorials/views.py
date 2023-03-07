@@ -9,6 +9,45 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
 
+class TutorialLike(APIView):
+    def get_object(self, pk):
+        try:
+            return Tutorial.objects.get(pk=pk)
+        except Tutorial.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        tutorial = self.get_object(pk)
+
+        tutorial.like_count += 1
+        result = tutorial.save()
+
+        result_data = {
+            "success": True,
+            "result": result,
+        }
+        return Response(result_data, status=HTTP_200_OK)
+    
+class TutorialUnLike(APIView):
+    def get_object(self, pk):
+        try:
+            return Tutorial.objects.get(pk=pk)
+        except Tutorial.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        tutorial = self.get_object(pk)
+
+        tutorial.unlike_count += 1
+        result = tutorial.save()
+
+        result_data = {
+            "success": True,
+            "result": result,
+        }
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class Tutorials(APIView):
     def get(self, request):
         all_tutorials = Tutorial.objects.all()

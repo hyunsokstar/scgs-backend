@@ -64,5 +64,9 @@ class Tutorial(models.Model):
         blank=True
     )
 
+    like_count = models.IntegerField(default=0)
+    unlike_count = models.IntegerField(default=0)
+
+
     def __str__(self) -> str:
         return self.title

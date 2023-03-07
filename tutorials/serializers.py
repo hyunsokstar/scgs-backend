@@ -12,10 +12,10 @@ from requests import Response
 # backend_framework_option: string;
 # tutorial_url: string;
 
+
 class TutorialListSerializer(serializers.ModelSerializer):
 
     author = TinyUserSerializer(read_only=True)
-
 
     class Meta:
         model = Tutorial
@@ -27,7 +27,25 @@ class TutorialListSerializer(serializers.ModelSerializer):
             "teacher",
             "price",
             "description",
-            "frontend_framework_option",            
+            "frontend_framework_option",
+            "backend_framework_option",
+            "tutorial_url",
+            'like_count',
+            "unlike_count"
+        )
+
+
+class TutorialDetaailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tutorial
+        fields = (
+            "pk",
+            "tutorial_image",
+            "title",
+            "teacher",
+            "price",
+            "description",
+            "frontend_framework_option",
             "backend_framework_option",
             "tutorial_url",
         )
@@ -42,7 +60,7 @@ class TutorialDetaailSerializer(serializers.ModelSerializer):
             "teacher",
             "price",
             "description",
-            "frontend_framework_option",            
+            "frontend_framework_option",
             "backend_framework_option",
             "tutorial_url",
         )
