@@ -21,7 +21,7 @@ class Tutorials(APIView):
         print("tutorial posting check")
         serializer = TutorialListSerializer(data=request.data)
         if serializer.is_valid():
-            tutorial = serializer.save()
+            tutorial = serializer.save(author=request.user)
             return Response(TutorialListSerializer(tutorial).data)
         else:
             print("serializer is not valid : ", serializer.errors)
@@ -54,16 +54,16 @@ class TutorialDetail(APIView):
 
         tutorial = self.get_object(pk)
         serializer = TutorialDetaailSerializer(
-                tutorial,
-                data=request.data,
-                partial=True
-            )
-            
+            tutorial,
+            data=request.data,
+            partial=True
+        )
+
         if serializer.is_valid():
             tutorial = self.get_object(pk)
             print("serializer 유효함")
             try:
-                tutorial = serializer.save()
+                tutorial = serializer.save(author=request.user)
                 serializer = TutorialDetaailSerializer(tutorial)
                 return Response(serializer.data)
 
@@ -73,9 +73,9 @@ class TutorialDetail(APIView):
         else:
             print("시리얼 라이저가 유효하지 않음")
             raise ParseError("serializer is not valid")
-        
+
     def delete(self, request, pk):
         print("삭제 요청 확인")
         tutorial = self.get_object(pk)
         tutorial.delete()
-        return Response(status=HTTP_204_NO_CONTENT)  
+        return Response(status=HTTP_204_NO_CONTENT)
