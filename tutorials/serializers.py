@@ -1,3 +1,4 @@
+from users.serializers import TinyUserSerializer
 from .models import Tutorial
 from rest_framework import serializers
 from requests import Response
@@ -12,10 +13,15 @@ from requests import Response
 # tutorial_url: string;
 
 class TutorialListSerializer(serializers.ModelSerializer):
+
+    author = TinyUserSerializer(read_only=True)
+
+
     class Meta:
         model = Tutorial
         fields = (
             "pk",
+            "author",
             "tutorial_image",
             "title",
             "teacher",

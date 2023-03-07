@@ -7,6 +7,7 @@ class TutorialAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
         "title",
+        "author",
     )
 
 
