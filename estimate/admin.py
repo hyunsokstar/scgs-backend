@@ -8,7 +8,6 @@ class Booking(admin.ModelAdmin):
         "title",
         "product",
         "manager",
-        "email",
         "phone_number",
         "content",
         "estimate_require_completion",

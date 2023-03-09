@@ -65,6 +65,7 @@ CUSTOM_APPS = [
     "direct_messages.apps.DirectMessagesConfig",
     "estimate.apps.EstimateConfig",
     "tutorials.apps.TutorialsConfig",
+    "project_progress.apps.ProjectProgressConfig"
 ]
 
 SYSTEM_APPS = [
@@ -79,13 +80,13 @@ SYSTEM_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
-    # "corsheaders" 
+    # "corsheaders"
 ]
 
 INSTALLED_APPS = CUSTOM_APPS + THIRD_PARTY_APPS + SYSTEM_APPS
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",    
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     'django_brotli.middleware.BrotliMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -132,7 +133,7 @@ if DEBUG:
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
-        }   
+        }
     }
 else:
     """
@@ -153,7 +154,7 @@ else:
             "OPTIONS": {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
-        }   
+        }
     }
 
 # DEBUG = True or False
@@ -168,7 +169,7 @@ else:
 #         "OPTIONS": {
 #             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
 #         },
-#     }   
+#     }
 # }
 
 # Password validation
@@ -223,9 +224,9 @@ PAGE_SIZE = 3
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        "config.authentication.TrustMeBroAuthentication",        
-        "rest_framework.authentication.TokenAuthentication", 
-        "config.authentication.JWTAuthentication",          
+        "config.authentication.TrustMeBroAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "config.authentication.JWTAuthentication",
     ]
 }
 

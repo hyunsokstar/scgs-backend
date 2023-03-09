@@ -3,15 +3,6 @@ from .models import Tutorial
 from rest_framework import serializers
 from requests import Response
 
-# title: string;
-# tutorial_images: FileList;
-# teacher: string;
-# price: string;
-# description: string;
-# frontend_framework_option: string;
-# backend_framework_option: string;
-# tutorial_url: string;
-
 
 class TutorialListSerializer(serializers.ModelSerializer):
 
