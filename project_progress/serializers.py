@@ -3,12 +3,16 @@ from rest_framework import serializers
 from requests import Response
 
 # task
-# writer 
+# writer
 # importance
 # task_status
 # password
 
+
 class ProjectProgressListSerializer(serializers.ModelSerializer):
+
+    started_at_formatted = serializers.SerializerMethodField()
+    elapsed_time_from_started_at = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectProgress
@@ -18,9 +22,18 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "writer",
             "importance",
             "task_status",
+            "started_at",
+            "started_at_formatted",
+            "elapsed_time_from_started_at"
         )
 
-        
+    def get_started_at_formatted(self, obj):
+        return obj.started_at_formatted()
+
+    def get_elapsed_time_from_started_at(self, obj):
+        return obj.elapsed_time_from_started_at()
+
+
 class CreateProjectProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectProgress
@@ -31,5 +44,3 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "importance",
             "task_status",
         )
-
-
