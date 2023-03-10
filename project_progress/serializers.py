@@ -20,3 +20,16 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "task_status",
         )
 
+        
+class CreateProjectProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "pk",
+            "task",
+            "writer",
+            "importance",
+            "task_status",
+        )
+
+

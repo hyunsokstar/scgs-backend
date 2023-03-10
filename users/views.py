@@ -31,7 +31,7 @@ class UserProfile(APIView):
         print("디테일 페이지 요청 확인 (백엔드) !")
         print(pk, type(pk))
         user = self.get_object(pk)
-        # print("user : ", user)
+        print("user : ", user)
         serializer = serializers.UserProfileSerializer(
             user, context={"request": request})
         print("/users/:pk 에 대해 클라이언트로 넘너가는 데이터 serializer.data: ", serializer.data)

@@ -2,13 +2,14 @@ import math
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import ProjectProgress
-from project_progress.serializers import ProjectProgressListSerializer
+from project_progress.serializers import CreateProjectProgressSerializer, ProjectProgressListSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
-    total_page_count = 3  # 1 페이지에 몇개씩
+    total_page_count = 10  # 1 페이지에 몇개씩
 
     def get(self, request):
         # step2 query 파라미터에서 page 가져오기 or 1
@@ -40,8 +41,17 @@ class ProjectProgressView(APIView):
 
         total_page_count = math.trunc(total_page_count)        
 
-
         # step5 응답
         data = serializer.data
         data = {"totalPageCount": total_page_count, "ProjectProgressList": data}
         return Response(data, status=HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = CreateProjectProgressSerializer(data=request.data)
+        if serializer.is_valid():
+            project_progress = serializer.save()
+            return Response(CreateProjectProgressSerializer(project_progress).data)
+        else:
+            print("serializer.errors : " ,serializer.errors)
+            error_message = serializer.errors
+            raise ParseError(error_message)
