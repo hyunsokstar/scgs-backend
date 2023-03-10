@@ -1,6 +1,7 @@
 from .models import ProjectProgress
 from rest_framework import serializers
 from requests import Response
+from django.utils import timezone
 
 # task
 # writer
@@ -34,6 +35,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
         return obj.elapsed_time_from_started_at()
 
 
+
 class CreateProjectProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectProgress
@@ -44,3 +46,7 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "importance",
             "task_status",
         )
+
+    # def save(self, **kwargs):
+    #     self.validated_data['started_at'] = timezone.localtime(timezone.now())
+    #     return super().save(**kwargs)
