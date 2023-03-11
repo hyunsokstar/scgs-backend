@@ -22,7 +22,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "task",
             "writer",
             "importance",
-            "task_status",
+            "task_completed",
             "started_at",
             "started_at_formatted",
             "elapsed_time_from_started_at"
@@ -44,7 +44,7 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "task",
             "writer",
             "importance",
-            "task_status",
+            "task_completed",
         )
 
     # def save(self, **kwargs):

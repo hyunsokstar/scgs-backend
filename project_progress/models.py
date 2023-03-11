@@ -18,10 +18,7 @@ class ProjectProgress(models.Model):
     writer = models.CharField(max_length=80, default="")
     importance = models.IntegerField(default=1, blank=True, null=True)
 
-    task_status = models.CharField(
-        max_length=20,
-        choices=TaskStatusChoices.choices
-    )
+    task_completed = models.BooleanField(default=False)    
 
     password = models.CharField(max_length=20, default=True)
     started_at_utc = models.DateTimeField(default=timezone.now)

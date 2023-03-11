@@ -127,4 +127,4 @@ class EstimateDetail(APIView):
         print("삭제 요청 확인")
         estimate = self.get_object(pk)
         estimate.delete()
-        return Response(status=HTTP_204_NO_CONTENT)            
+        return Response(status=HTTP_204_NO_CONTENT)       

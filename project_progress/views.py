@@ -55,3 +55,37 @@ class ProjectProgressView(APIView):
             print("serializer.errors : " ,serializer.errors)
             error_message = serializer.errors
             raise ParseError(error_message)
+
+
+class ProjectProgressDetailView(APIView):
+    pass
+
+# ProjectProgress 모델에 대해 pk 에 해당하는 completed 를 이전과 반대로 update
+class UpdateTaskCompetedView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""     
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.task_completed:
+            message = "완료에서 비완료로 update"
+            project_task.task_completed = False
+        else:
+            message = "비완료에서 완료로 update"
+            project_task.task_completed = True
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)

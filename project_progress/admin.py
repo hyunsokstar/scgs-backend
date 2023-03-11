@@ -9,6 +9,6 @@ class ProjectProgress(admin.ModelAdmin):
         "task",
         "writer",
         "importance",
-        "task_status",
+        "task_completed",
         "password",
     )
