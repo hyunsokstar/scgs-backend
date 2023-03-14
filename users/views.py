@@ -2,7 +2,7 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from . import serializers
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileSerializer
 from users.models import User
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 # 임포트 관련
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 # from rest_framework.exceptions import ParseError, NotFound
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
 
 
 from django.conf import settings
@@ -18,6 +18,25 @@ import jwt
 
 
 # Create your views here.
+
+# AddMultiRowsView(APIView) <=> 여러개의 행을 추가 with restapi using 배열 데이터 from client
+class AddMultiUsersView(APIView):
+    def post(self, request, format=None):
+        user_data = request.data
+        serializer = AddMultiUserSerializer(data=user_data, many=True)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            users = serializer.save()
+            for user in users:
+                user.set_password('1234')
+                user.save()
+        except ValidationError as e:
+            return Response({'error': e.detail}, status=400)
+
+        return Response({'message': 'Users saved successfully.'})
+
+
 class UserProfile(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -32,7 +51,7 @@ class UserProfile(APIView):
         print(pk, type(pk))
         user = self.get_object(pk)
         # print("user : ", user)
-        serializer = serializers.UserProfileSerializer(
+        serializer = UserProfileSerializer(
             user, context={"request": request})
         print("/users/:pk 에 대해 클라이언트로 넘너가는 데이터 serializer.data: ", serializer.data)
         return Response(serializer.data)
@@ -77,19 +96,19 @@ class Me(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = serializers.UserProfileSerializer(user)
+        serializer = UserProfileSerializer(user)
         return Response(serializer.data)
 
     def put(self, request):
         user = request.user
-        serializer = serializers.PrivateUserSerializer(
+        serializer = PrivateUserSerializer(
             user,
             data=request.data,
             partial=True,
         )
         if serializer.is_valid():
             user = serializer.save()
-            serializer = serializers.PrivateUserSerializer(user)
+            serializer = PrivateUserSerializer(user)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
@@ -98,16 +117,22 @@ class Me(APIView):
 class Users(APIView):
     def get(self, request):
         try:
-            # user = User.objects.get(username=username)
-            user = User.objects.all()
-            print("first : ", user)
+            # user = User.objects.all()
+            user = User.objects.all().order_by('-date_joined')
+            # print("user : ", user)
+            print("user count : ", len(user))
         except User.DoesNotExist:
             raise NotFound
-        serializer = serializers.UserListSerializer(user, many=True)
-        return Response(serializer.data)
+
+        serializer = UserListSerializer(user, many=True)
+        print("userlist serializer result : ", serializer)
+
+        if serializer:
+            return Response(serializer.data)
+        else:
+            raise ParseError("serializer for api/v1/users is not valid")
 
     def post(self, request):
-
         password = request.data.get("password")
         username = request.data.get("username")
         email = request.data.get("email")
@@ -126,7 +151,7 @@ class Users(APIView):
         if not username:
             raise ParseError("username is missing")
 
-        serializer = serializers.PrivateUserSerializer(data=request.data)
+        serializer = PrivateUserSerializer(data=request.data)
 
         if serializer.is_valid():
             user = serializer.save()
@@ -136,7 +161,7 @@ class Users(APIView):
             new_user = authenticate(
                 request, username=username, password=password)
 
-            serializer = serializers.PrivateUserSerializer(user)
+            serializer = PrivateUserSerializer(user)
             if new_user is not None:
                 login(request, new_user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -154,7 +179,7 @@ class PublicUser(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise NotFound
-        serializer = serializers.PrivateUserSerializer(user)
+        serializer = PrivateUserSerializer(user)
         return Response(serializer.data)
 
 
