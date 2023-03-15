@@ -30,37 +30,52 @@ class AddMultiUsersView(APIView):
     def post(self, request, format=None):
         users_data = request.data
         print("users_data : ", users_data)
-        serializer = AddMultiUserSerializer(data=users_data, many=True)
 
         for row in users_data:
-            user = self.get_object(row["pk"])
-            if (row["pk"] == user.pk):
-                print("업데이트 하겠습니다")
-                if (row["username"] != user.username):
-                    is_user_name_exits = User.objects.filter(
-                        username=row["username"]).exists()
-                    user_position = UserPosition.objects.get(
-                        pk=row["position"])
 
-                    if is_user_name_exits:
-                        raise ParseError("유저 이름이 이미 존재")
+            try:
+                row_for_pk_exists = User.objects.filter(pk=row["pk"]).exists()
+            except:
+                print("row_for_pk_exists 찾다가 에러 발생")
 
-                    user.name = row["name"]
-                    user.username = row["username"]
-                    user.email = row["email"]
-                    user.admin_level = row["admin_level"]
-                    user.position = user_position
-                    user.save()
+            if (row_for_pk_exists):
+                user = User.objects.get(pk=row["pk"])
+                print("user :: ", user)
 
-            else:
-                try:
-                    serializer.is_valid(raise_exception=True)
-                    users = serializer.save()
-                    for user in users:
-                        user.set_password('1234')
+                if (user):
+                    print("업데이트 하겠습니다")
+                    if (row["username"] != user.username):
+                        is_user_name_exits = User.objects.filter(
+                            username=row["username"]).exists()
+                        user_position = UserPosition.objects.get(
+                            pk=row["position"])
+
+                        if (user_position == ""):
+                            raise ParseError("유저 postion 을 선택 안하셨습니다")
+
+                        if is_user_name_exits:
+                            print("is_user_name_exits : ", User.objects.get(
+                                username=row["username"]))
+                            raise ParseError("유저 이름이 이미 존재")
+
+                        user.name = row["name"]
+                        user.username = row["username"]
+                        user.email = row["email"]
+                        user.admin_level = row["admin_level"]
+                        user.position = user_position
+                        print("save 합니다 !!!!!!!!!!!!!!!!!!!")
                         user.save()
-                except ValidationError as e:
-                    return Response({'error': e.detail}, status=400)
+
+                else:
+                    serializer = AddMultiUserSerializer(data=users_data, many=True)
+                    try:
+                        serializer.is_valid(raise_exception=True)
+                        users = serializer.save()
+                        for user in users:
+                            user.set_password('1234')
+                            user.save()
+                    except ValidationError as e:
+                        return Response({'error': e.detail}, status=400)
 
         return Response({'message': 'Users saved successfully.'})
 
