@@ -34,43 +34,33 @@ class AddMultiUsersView(APIView):
 
         for row in users_data:
             user = self.get_object(row["pk"])
-            if (user.username == User.objects.get(username=row["username"])):
+            if (row["pk"] == user.pk):
                 print("업데이트 하겠습니다")
-                user_position = UserPosition.objects.get(pk=row["position"])
-                if user:
+                if (row["username"] != user.username):
+                    is_user_name_exits = User.objects.filter(
+                        username=row["username"]).exists()
+                    user_position = UserPosition.objects.get(
+                        pk=row["position"])
+
+                    if is_user_name_exits:
+                        raise ParseError("유저 이름이 이미 존재")
+
                     user.name = row["name"]
                     user.username = row["username"]
                     user.email = row["email"]
                     user.admin_level = row["admin_level"]
                     user.position = user_position
                     user.save()
+
             else:
-                is_user_name_exits = User.objects.exclude(pk=row["pk"]).filter(
-                    username=row["username"]).exists()
-                print("is_user_name_exits : ", is_user_name_exits)
-
-                if (is_user_name_exits == True):
-                    print("user name이 이미 존재")
-                    raise ParseError("user name 이 존재 합니다")
-
-                user_position = UserPosition.objects.get(pk=row["position"])
-                if user:
-                    user.name = row["name"]
-                    user.username = row["username"]
-                    user.email = row["email"]
-                    user.admin_level = row["admin_level"]
-                    user.position = user_position
-                    user.save()
-
-                else:
-                    try:
-                        serializer.is_valid(raise_exception=True)
-                        users = serializer.save()
-                        for user in users:
-                            user.set_password('1234')
-                            user.save()
-                    except ValidationError as e:
-                        return Response({'error': e.detail}, status=400)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    users = serializer.save()
+                    for user in users:
+                        user.set_password('1234')
+                        user.save()
+                except ValidationError as e:
+                    return Response({'error': e.detail}, status=400)
 
         return Response({'message': 'Users saved successfully.'})
 
