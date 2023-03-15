@@ -18,6 +18,20 @@ import jwt
 
 
 # Create your views here.
+
+class DeleteMultiUsersView(APIView):
+    def post(self, request, format=None):
+        user_ids = request.data.get('user_ids', None)
+        if user_ids is not None:
+            users = User.objects.filter(id__in=user_ids)
+            users.delete()
+            return Response({'message': 'Users deleted successfully'})
+        else:
+            return Response({'message': 'No user ids provided'})
+        
+
+
+
 # AddMultiRowsView(APIView) <=> 여러개의 행을 추가 with restapi using 배열 데이터 from client
 class AddMultiUsersView(APIView):
 
@@ -67,7 +81,8 @@ class AddMultiUsersView(APIView):
                         user.save()
 
                 else:
-                    serializer = AddMultiUserSerializer(data=users_data, many=True)
+                    serializer = AddMultiUserSerializer(
+                        data=users_data, many=True)
                     try:
                         serializer.is_valid(raise_exception=True)
                         users = serializer.save()
