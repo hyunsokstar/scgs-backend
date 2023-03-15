@@ -1,9 +1,20 @@
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
 
 
+class UserPositionSerializer(ModelSerializer):
+    class Meta:
+        model = UserPosition
+        fields = (
+            "pk",
+            "position_name"
+        )
+    
+
 class AddMultiUserSerializer(ModelSerializer):
+
     class Meta:
         model = User
         fields = (
@@ -14,15 +25,11 @@ class AddMultiUserSerializer(ModelSerializer):
             "position",
         )
         extra_kwargs = {'password': {'write_only': True, 'required': False}}
-        
 
-class UserPostionSerializer(ModelSerializer):
-    class Meta:
-        model = UserPosition
-        fields = (
-            "pk",
-            "position_name",
-        )
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('이미 존재하는 username입니다.')
+        return value
 
 
 class SkillForFrameWorkSerializer(ModelSerializer):
@@ -37,7 +44,7 @@ class SkillForFrameWorkSerializer(ModelSerializer):
 class UserProfileSerializer(ModelSerializer):
     profileImages = ProfilePhotoSerializer(many=True)
     skill_for_frameWork = SkillForFrameWorkSerializer(many=True)
-    position = UserPostionSerializer()
+    position = UserPositionSerializer()
 
     class Meta:
         model = User
@@ -56,6 +63,7 @@ class UserProfileSerializer(ModelSerializer):
 
 class UserListSerializer(ModelSerializer):
     profileImages = ProfilePhotoSerializer(many=True)
+    position = UserPositionSerializer()
 
     class Meta:
         model = User

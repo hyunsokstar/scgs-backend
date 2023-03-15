@@ -3,7 +3,7 @@ from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileSerializer
-from users.models import User
+from users.models import User, UserPosition
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 
@@ -18,21 +18,59 @@ import jwt
 
 
 # Create your views here.
-
 # AddMultiRowsView(APIView) <=> 여러개의 행을 추가 with restapi using 배열 데이터 from client
 class AddMultiUsersView(APIView):
-    def post(self, request, format=None):
-        user_data = request.data
-        serializer = AddMultiUserSerializer(data=user_data, many=True)
 
+    def get_object(self, pk):
         try:
-            serializer.is_valid(raise_exception=True)
-            users = serializer.save()
-            for user in users:
-                user.set_password('1234')
-                user.save()
-        except ValidationError as e:
-            return Response({'error': e.detail}, status=400)
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, format=None):
+        users_data = request.data
+        print("users_data : ", users_data)
+        serializer = AddMultiUserSerializer(data=users_data, many=True)
+
+        for row in users_data:
+            user = self.get_object(row["pk"])
+            if (user.username == User.objects.get(username=row["username"])):
+                print("업데이트 하겠습니다")
+                user_position = UserPosition.objects.get(pk=row["position"])
+                if user:
+                    user.name = row["name"]
+                    user.username = row["username"]
+                    user.email = row["email"]
+                    user.admin_level = row["admin_level"]
+                    user.position = user_position
+                    user.save()
+            else:
+                is_user_name_exits = User.objects.exclude(pk=row["pk"]).filter(
+                    username=row["username"]).exists()
+                print("is_user_name_exits : ", is_user_name_exits)
+
+                if (is_user_name_exits == True):
+                    print("user name이 이미 존재")
+                    raise ParseError("user name 이 존재 합니다")
+
+                user_position = UserPosition.objects.get(pk=row["position"])
+                if user:
+                    user.name = row["name"]
+                    user.username = row["username"]
+                    user.email = row["email"]
+                    user.admin_level = row["admin_level"]
+                    user.position = user_position
+                    user.save()
+
+                else:
+                    try:
+                        serializer.is_valid(raise_exception=True)
+                        users = serializer.save()
+                        for user in users:
+                            user.set_password('1234')
+                            user.save()
+                    except ValidationError as e:
+                        return Response({'error': e.detail}, status=400)
 
         return Response({'message': 'Users saved successfully.'})
 

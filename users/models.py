@@ -10,13 +10,10 @@ class User(AbstractUser):
         MALE = ("male", "Male")
         FEMAIL = ("female", "Female")
 
-    class LanguageChoices(models.TextChoices):
-        KR = ("kr", "Korea")
-        EN = ("en", "English")
 
-    class CurrencyChoices(models.TextChoices):
-        WON = "won", "Korean Won"
-        USD = "usd", "Dollar"
+    class PositionChoices(models.TextChoices):
+        frontend = "frontend", "FrontEnd"
+        backend = "backend", "BackEnd"
 
     first_name = models.CharField(max_length=150, editable=False)
     last_name = models.CharField(max_length=150, editable=False)
