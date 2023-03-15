@@ -20,7 +20,7 @@ import jwt
 # Create your views here.
 
 class DeleteMultiUsersView(APIView):
-    def post(self, request, format=None):
+    def delete(self, request, format=None):
         user_ids = request.data.get('user_ids', None)
         if user_ids is not None:
             users = User.objects.filter(id__in=user_ids)
