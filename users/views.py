@@ -78,13 +78,12 @@ class AddMultiUsersView(APIView):
                         user.save()
 
             else:
-                print("행 추가 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("행 추가 ::", row)
                 try:
                     serializer = AddMultiUserSerializer(
-                        data=users_data, many=True)
-                    serializer.is_valid(raise_exception=True)
-                    users = serializer.save()
-                    for user in users:
+                        data=row)
+                    if serializer.is_valid(raise_exception=True):
+                        user = serializer.save()
                         user.set_password('1234')
                         user.save()
                 except ValidationError as e:
