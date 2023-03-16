@@ -28,8 +28,6 @@ class DeleteMultiUsersView(APIView):
             return Response({'message': 'Users deleted successfully'})
         else:
             return Response({'message': 'No user ids provided'})
-        
-
 
 
 # AddMultiRowsView(APIView) <=> 여러개의 행을 추가 with restapi using 배열 데이터 from client
@@ -43,16 +41,15 @@ class AddMultiUsersView(APIView):
 
     def post(self, request, format=None):
         users_data = request.data
+        print("multi user 추가 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print("users_data : ", users_data)
 
         for row in users_data:
+            row_for_pk_exists = User.objects.filter(pk=row["pk"]).exists()
+            print("row_for_pk_exists ::::::::::::::::::::::::::::::::: ", row_for_pk_exists)
 
-            try:
-                row_for_pk_exists = User.objects.filter(pk=row["pk"]).exists()
-            except:
-                print("row_for_pk_exists 찾다가 에러 발생")
-
-            if (row_for_pk_exists):
+            if (row_for_pk_exists ==True):
+                print("실행 check here here here")
                 user = User.objects.get(pk=row["pk"])
                 print("user :: ", user)
 
@@ -80,17 +77,18 @@ class AddMultiUsersView(APIView):
                         print("save 합니다 !!!!!!!!!!!!!!!!!!!")
                         user.save()
 
-                else:
+            else:
+                print("행 추가 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                try:
                     serializer = AddMultiUserSerializer(
                         data=users_data, many=True)
-                    try:
-                        serializer.is_valid(raise_exception=True)
-                        users = serializer.save()
-                        for user in users:
-                            user.set_password('1234')
-                            user.save()
-                    except ValidationError as e:
-                        return Response({'error': e.detail}, status=400)
+                    serializer.is_valid(raise_exception=True)
+                    users = serializer.save()
+                    for user in users:
+                        user.set_password('1234')
+                        user.save()
+                except ValidationError as e:
+                    return Response({'error': e.detail}, status=400)
 
         return Response({'message': 'Users saved successfully.'})
 
@@ -183,7 +181,7 @@ class Users(APIView):
             raise NotFound
 
         serializer = UserListSerializer(user, many=True)
-        print("userlist serializer result : ", serializer)
+        # print("userlist serializer result : ", serializer)
 
         if serializer:
             return Response(serializer.data)
