@@ -52,9 +52,16 @@ class ProjectProgressDetailView(APIView):
                 raise ParseError("project_task not found")
         else:
             print("시리얼 라이저가 유효하지 않음")
-            error_message = "serializer is not valid: {}".format(serializer.errors)
+            error_message = "serializer is not valid: {}".format(
+                serializer.errors)
             ParseError("serializer is not valid: {}".format(serializer.errors))
             print(error_message)
+
+    def delete(self, request, pk):
+        print("삭제 요청 확인")
+        project_task = self.get_object(pk)
+        project_task.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class ProjectProgressView(APIView):

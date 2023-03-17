@@ -7,4 +7,5 @@ urlpatterns = [
     path("<int:pk>/importance/update",
          views.UpdateProjectTaskImportance.as_view()),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+    
 ]
