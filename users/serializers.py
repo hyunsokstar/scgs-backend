@@ -4,6 +4,16 @@ from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
 
 
+class UserNameSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "name",
+            "email",
+            "admin_level",
+            "position",
+        )
+
 class UserPositionSerializer(ModelSerializer):
     class Meta:
         model = UserPosition
@@ -82,9 +92,8 @@ class TinyUserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
-            # "name",
-            "username",
-            # "profile_image",
+            "pk",
+            "username"
         )
 
 

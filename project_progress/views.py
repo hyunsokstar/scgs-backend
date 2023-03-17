@@ -2,9 +2,59 @@ import math
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import ProjectProgress
-from project_progress.serializers import CreateProjectProgressSerializer, ProjectProgressListSerializer
+from project_progress.serializers import CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+
+# view 추가
+
+
+class ProjectProgressDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        print("견적 디테일 페이지 요청 확인 (백엔드) !")
+        print(pk, type(pk))
+
+        project_task = self.get_object(pk)
+        print("project_task : ", project_task)
+
+        serializer = ProjectProgressDetailSerializer(
+            project_task, context={"request": request})
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        print("request.data", request.data)
+        print("pk : ", pk)
+
+        project_task = self.get_object(pk)
+        print("project_task : ", project_task)
+
+        serializer = ProjectProgressDetailSerializer(
+            project_task,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                project_task = serializer.save()
+                serializer = ProjectProgressDetailSerializer(project_task)
+                return Response(serializer.data)
+
+            except Exception as e:
+                print("ee : ", e)
+                raise ParseError("project_task not found")
+        else:
+            print("시리얼 라이저가 유효하지 않음")
+            error_message = "serializer is not valid: {}".format(serializer.errors)
+            ParseError("serializer is not valid: {}".format(serializer.errors))
+            print(error_message)
 
 
 class ProjectProgressView(APIView):
@@ -32,35 +82,34 @@ class ProjectProgressView(APIView):
 
         serializer = ProjectProgressListSerializer(
             all_estimate_requires, many=True)
-        
+
         # 총 페이지 숫자 계산
         if (ProjectProgress.objects.all().count() % 3 == 0):
             total_page_count = ProjectProgress.objects.all().count()/page_size
         else:
             total_page_count = ProjectProgress.objects.all().count()/page_size + 1
 
-        total_page_count = math.trunc(total_page_count)        
+        total_page_count = math.trunc(total_page_count)
 
         # step5 응답
         data = serializer.data
-        data = {"totalPageCount": total_page_count, "ProjectProgressList": data}
+        data = {"totalPageCount": total_page_count,
+                "ProjectProgressList": data}
         return Response(data, status=HTTP_200_OK)
-    
+
     def post(self, request):
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
             project_progress = serializer.save()
             return Response(CreateProjectProgressSerializer(project_progress).data)
         else:
-            print("serializer.errors : " ,serializer.errors)
+            print("serializer.errors : ", serializer.errors)
             error_message = serializer.errors
             raise ParseError(error_message)
 
-
-class ProjectProgressDetailView(APIView):
-    pass
-
 # ProjectProgress 모델에 대해 pk 에 해당하는 completed 를 이전과 반대로 update
+
+
 class UpdateTaskCompetedView(APIView):
 
     def get_object(self, pk):
@@ -70,7 +119,7 @@ class UpdateTaskCompetedView(APIView):
             raise NotFound
 
     def put(self, request, pk):
-        message = ""     
+        message = ""
         print("put 요청 확인")
         project_task = self.get_object(pk)
 
@@ -89,7 +138,7 @@ class UpdateTaskCompetedView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
+
 
 class UpdateProjectTaskImportance(APIView):
 
@@ -119,4 +168,3 @@ class UpdateProjectTaskImportance(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-      

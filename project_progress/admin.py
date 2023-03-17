@@ -6,6 +6,7 @@ from .models import ProjectProgress
 @admin.register(ProjectProgress)
 class ProjectProgress(admin.ModelAdmin):
     list_display = (
+        "pk",
         "task",
         "writer",
         "importance",

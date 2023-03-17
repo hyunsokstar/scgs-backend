@@ -18,12 +18,15 @@ class ProjectProgress(models.Model):
     writer = models.CharField(max_length=80, default="")
     importance = models.IntegerField(default=1, blank=True, null=True)
 
-    task_completed = models.BooleanField(default=False)    
+    task_completed = models.BooleanField(default=False)
 
     password = models.CharField(max_length=20, default=True)
     started_at_utc = models.DateTimeField(default=timezone.now)
     completed_at = models.DateTimeField(
         auto_now_add=True, null=True, blank=True)
+
+    due_date = models.DateTimeField(
+        auto_now_add=False, null=True, blank=True)
 
     @property
     def started_at(self):
@@ -39,7 +42,8 @@ class ProjectProgress(models.Model):
     def elapsed_time_from_started_at(self):
         started_at = timezone.localtime(self.started_at_utc)
         now = timezone.now()
-        elapsed_time_minutes = round((now - started_at).total_seconds() / 60)  # 총 몇분
+        elapsed_time_minutes = round(
+            (now - started_at).total_seconds() / 60)  # 총 몇분
 
         # 분(minute) 단위로 계산한 값을 시간(hour)과 분(minute)으로 변환
         hours, minutes = divmod(elapsed_time_minutes, 60)
