@@ -7,15 +7,12 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 # view 추가
-
-
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 5  # 1 페이지에 몇개씩
 
     def get(self, request):
         print("uncompleted task 요청 check !!")
-
         # step2 query 파라미터에서 page 가져오기 or 1
         try:
             page = request.query_params.get("page", 1)
@@ -51,6 +48,7 @@ class UncompletedTaskListView(APIView):
         uncompleted_project_task_list_for_current_page = all_uncompleted_project_task_list[
             start:end]
 
+        # 직렬화
         serializer = ProjectProgressListSerializer(
             uncompleted_project_task_list_for_current_page, many=True)
 
