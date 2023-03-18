@@ -9,6 +9,129 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 # view 추가
 
 
+class UncompletedTaskListView(APIView):
+    totalCountForTask = 0  # total_count 계산
+    task_number_for_one_page = 5  # 1 페이지에 몇개씩
+
+    def get(self, request):
+        print("uncompleted task 요청 check !!")
+
+        # step2 query 파라미터에서 page 가져오기 or 1
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            task_completed=False)
+        count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            task_completed=False).count()
+
+        # 비완료 총개수
+        print("count_for_all_uncompleted_project_task_list : ",
+              count_for_all_uncompleted_project_task_list)
+
+        # step3 해당 페이지(쿼리 파라미터로 페이지 넘버 얻어옴)에 대한 리스트 정보 가져온뒤 직렬화
+        # self.task_number_for_one_page
+
+        # total_page_count = self.totalCount
+
+        # 알고리즘 설명 task_number_for_one_page 이 5 즉 한페이지당 5개씩 보여줄 경우 1페이지에 보여줄 list 의 start 와 end는
+        # list[0~5] 이면 되는데 start end 의 패턴을 보면
+        # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5
+        # (2 - 1 * 5 ~  5 + 5) => 5 ~ 10
+        # (3 - 1 * 5 ~  10 + 5) => 10 ~ 15
+        #  여기서 1-2-3 이 start
+        #  뒤의 0  + 5 5 +5 end = start + page num 으로 하고
+        # url query 파라 미터로 페이지번호만 전달해 주면
+        #  아래와 같이 ProjectProgress.objects.filter(task_completed=False)[start:end] 으로 list 를 가져올 수 있게 됨
+        start = (page - 1) * self.task_number_for_one_page
+        end = start + self.task_number_for_one_page
+        uncompleted_project_task_list_for_current_page = all_uncompleted_project_task_list[
+            start:end]
+
+        serializer = ProjectProgressListSerializer(
+            uncompleted_project_task_list_for_current_page, many=True)
+
+        # 총 페이지 숫자 계산
+        # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
+        #     self.totalCountForTask = count_for_all_completed_project_task_list 
+        # else:
+        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1  
+
+        self.totalCountForTask = math.trunc(count_for_all_uncompleted_project_task_list)
+
+        # step5 응답
+        data = serializer.data
+        data = {
+            "totalPageCount": self.totalCountForTask,
+            "ProjectProgressList": data
+        }
+        return Response(data, status=HTTP_200_OK)
+
+class CompletedTaskListView(APIView):
+    totalCountForTask = 0  # total_count 계산
+    task_number_for_one_page = 5  # 1 페이지에 몇개씩
+
+    def get(self, request):
+        print("uncompleted task 요청 check !!")
+
+        # step2 query 파라미터에서 page 가져오기 or 1
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        all_completed_project_task_list = ProjectProgress.objects.filter(
+            task_completed=True)
+        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(
+            task_completed=True).count()
+
+        # 완료 총개수
+        print("count_for_all_completed_project_task_list : ",
+              count_for_all_completed_project_task_list)
+
+        # step3 해당 페이지(쿼리 파라미터로 페이지 넘버 얻어옴)에 대한 리스트 정보 가져온뒤 직렬화
+        # self.task_number_for_one_page
+
+        # total_page_count = self.totalCount
+
+        # 알고리즘 설명 task_number_for_one_page 이 5 즉 한페이지당 5개씩 보여줄 경우 1페이지에 보여줄 list 의 start 와 end는
+        # list[0~5] 이면 되는데 start end 의 패턴을 보면
+        # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5
+        # (2 - 1 * 5 ~  5 + 5) => 5 ~ 10
+        # (3 - 1 * 5 ~  10 + 5) => 10 ~ 15
+        #  여기서 1-2-3 이 start
+        #  뒤의 0  + 5 5 +5 end = start + page num 으로 하고
+        # url query 파라 미터로 페이지번호만 전달해 주면
+        #  아래와 같이 ProjectProgress.objects.filter(task_completed=False)[start:end] 으로 list 를 가져올 수 있게 됨
+        start = (page - 1) * self.task_number_for_one_page
+        end = start + self.task_number_for_one_page
+        completed_project_task_list_for_current_page = all_completed_project_task_list[
+            start:end]
+
+        serializer = ProjectProgressListSerializer(
+            completed_project_task_list_for_current_page, many=True)
+
+        # 총 페이지 숫자 계산
+        # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
+        #     self.totalCountForTask = count_for_all_completed_project_task_list 
+        # else:
+        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1  
+
+        self.totalCountForTask = math.trunc(count_for_all_completed_project_task_list)
+
+        # step5 응답
+        data = serializer.data
+        data = {
+            "totalPageCount": self.totalCountForTask,
+            "ProjectProgressList": data
+        }
+        return Response(data, status=HTTP_200_OK)
+
+
 class ProjectProgressDetailView(APIView):
     def get_object(self, pk):
         try:
@@ -114,9 +237,8 @@ class ProjectProgressView(APIView):
             error_message = serializer.errors
             raise ParseError(error_message)
 
+
 # ProjectProgress 모델에 대해 pk 에 해당하는 completed 를 이전과 반대로 update
-
-
 class UpdateTaskCompetedView(APIView):
 
     def get_object(self, pk):
