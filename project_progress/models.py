@@ -22,11 +22,11 @@ class ProjectProgress(models.Model):
 
     password = models.CharField(max_length=20, default=True)
     started_at_utc = models.DateTimeField(default=timezone.now)
-    completed_at = models.DateTimeField(
-        auto_now_add=True, null=True, blank=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
 
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
+
 
     @property
     def started_at(self):
@@ -35,19 +35,23 @@ class ProjectProgress(models.Model):
     def __str__(self) -> str:
         return self.task
 
+    def completed_at_formatted(self):
+        print("custom time : ", self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분'))
+        return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
+
     def started_at_formatted(self):
         print("custom time : ", self.started_at.strftime('%y년 %m월 %d일 %H시 %M분'))
         return self.started_at.strftime('%y년 %m월 %d일 %H시 %M분')
-    
+
     def due_date_formatted(self):
-        due_date_str=""
-        if(self.due_date == None):
+        due_date_str = ""
+        if (self.due_date == None):
             due_date_str = "미정"
         else:
-            due_date_str = self.due_date.strftime('%y년 %m월 %d일 %H시 %M분')        
+            due_date_str = self.due_date.strftime('%y년 %m월 %d일 %H시 %M분')
             print("due_date_str : ", due_date_str)
 
-        return due_date_str       
+        return due_date_str
 
     def elapsed_time_from_started_at(self):
         started_at = timezone.localtime(self.started_at_utc)
@@ -63,6 +67,20 @@ class ProjectProgress(models.Model):
 
         return elapsed_time_str
     
+    def time_consumed_from_start_to_complete(self):
+        started_at = timezone.localtime(self.started_at_utc)
+        completed_at = self.completed_at
+        elapsed_time_minutes = round(
+            (completed_at - started_at).total_seconds() / 60)  # 총 몇분
+
+        # 분(minute) 단위로 계산한 값을 시간(hour)과 분(minute)으로 변환
+        hours, minutes = divmod(elapsed_time_minutes, 60)
+
+        # 시간 분 형식의 문자열로 변환
+        time_consumed_from_startat_to_completed_str = f"{hours}시간 {minutes}분"
+
+        return time_consumed_from_startat_to_completed_str    
+
     def time_left_to_due_date(self):
         due_date = timezone.localtime(self.due_date)
         now = timezone.now()
@@ -75,4 +93,4 @@ class ProjectProgress(models.Model):
         # 시간 분 형식의 문자열로 변환
         time_left_to_due_date_str = f"{hours}시간 {minutes}분"
 
-        return time_left_to_due_date_str    
+        return time_left_to_due_date_str

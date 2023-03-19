@@ -5,8 +5,11 @@ from .models import ProjectProgress
 from project_progress.serializers import CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from django.utils import timezone
 
 # view 추가
+
+
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 5  # 1 페이지에 몇개씩
@@ -54,11 +57,12 @@ class UncompletedTaskListView(APIView):
 
         # 총 페이지 숫자 계산
         # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
-        #     self.totalCountForTask = count_for_all_completed_project_task_list 
+        #     self.totalCountForTask = count_for_all_completed_project_task_list
         # else:
-        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1  
+        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1
 
-        self.totalCountForTask = math.trunc(count_for_all_uncompleted_project_task_list)
+        self.totalCountForTask = math.trunc(
+            count_for_all_uncompleted_project_task_list)
 
         # step5 응답
         data = serializer.data
@@ -67,6 +71,7 @@ class UncompletedTaskListView(APIView):
             "ProjectProgressList": data
         }
         return Response(data, status=HTTP_200_OK)
+
 
 class CompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
@@ -115,11 +120,12 @@ class CompletedTaskListView(APIView):
 
         # 총 페이지 숫자 계산
         # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
-        #     self.totalCountForTask = count_for_all_completed_project_task_list 
+        #     self.totalCountForTask = count_for_all_completed_project_task_list
         # else:
-        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1  
+        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1
 
-        self.totalCountForTask = math.trunc(count_for_all_completed_project_task_list)
+        self.totalCountForTask = math.trunc(
+            count_for_all_completed_project_task_list)
 
         # step5 응답
         data = serializer.data
@@ -253,9 +259,12 @@ class UpdateTaskCompetedView(APIView):
         if project_task.task_completed:
             message = "완료에서 비완료로 update"
             project_task.task_completed = False
+            project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
         else:
             message = "비완료에서 완료로 update"
             project_task.task_completed = True
+            project_task.completed_at = timezone.now()  # 현재 시간 저장
 
         project_task.save()
 
