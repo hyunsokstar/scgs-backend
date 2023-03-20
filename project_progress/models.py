@@ -36,6 +36,16 @@ class ProjectProgress(models.Model):
         return self.task
 
     def completed_at_formatted(self):
+        local_completed_at = timezone.localtime(self.completed_at)
+        completed_at_str = ""
+        if (self.completed_at == None):
+            completed_at_str = "미정"
+        else:
+            completed_at_str = self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
+            print("completed_at_str : ", completed_at_str)
+
+        return completed_at_str
+
         print("custom time : ", self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분'))
         return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
@@ -69,18 +79,22 @@ class ProjectProgress(models.Model):
         return elapsed_time_str
     
     def time_consumed_from_start_to_complete(self):
-        started_at = timezone.localtime(self.started_at_utc)
-        completed_at = self.completed_at
-        elapsed_time_minutes = round(
-            (completed_at - started_at).total_seconds() / 60)  # 총 몇분
 
-        # 분(minute) 단위로 계산한 값을 시간(hour)과 분(minute)으로 변환
-        hours, minutes = divmod(elapsed_time_minutes, 60)
+        if(self.started_at_utc != None and self.completed_at != None):
+            started_at = timezone.localtime(self.started_at_utc)
+            completed_at = self.completed_at
+            elapsed_time_minutes = round(
+                (completed_at - started_at).total_seconds() / 60)  # 총 몇분
 
-        # 시간 분 형식의 문자열로 변환
-        time_consumed_from_startat_to_completed_str = f"{hours}시간 {minutes}분"
+            # 분(minute) 단위로 계산한 값을 시간(hour)과 분(minute)으로 변환
+            hours, minutes = divmod(elapsed_time_minutes, 60)
 
-        return time_consumed_from_startat_to_completed_str    
+            # 시간 분 형식의 문자열로 변환
+            time_consumed_from_startat_to_completed_str = f"{hours}시간 {minutes}분"
+
+            return time_consumed_from_startat_to_completed_str   
+        else: 
+            return "미정" 
 
     def time_left_to_due_date(self):
         due_date = timezone.localtime(self.due_date)
