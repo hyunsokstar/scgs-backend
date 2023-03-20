@@ -54,9 +54,10 @@ class ProjectProgress(models.Model):
         return self.started_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
     def due_date_formatted(self):
-        local_due_date = timezone.localtime(self.due_date)
+        local_due_date = self.due_date
+        print("local_due_date : ", local_due_date)
         due_date_str = ""
-        if (local_due_date == None):
+        if (local_due_date == None or local_due_date == ""):
             due_date_str = "미정"
         else:
             due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
