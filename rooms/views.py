@@ -74,7 +74,7 @@ class Rooms(APIView):
         print("room list 출력 확인")
         # time.sleep(2)
         all_rooms = Room.objects.all()
-        serializer = RoomListSerializer(all_rooms, many=True, context={"request": request})        
+        serializer = RoomListSerializer(all_rooms, many=True, context={"request": request})
         return Response(serializer.data)
     
     def post(self, request):

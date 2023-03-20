@@ -14,8 +14,16 @@ class ProjectProgress(models.Model):
         uncomplete = ("uncomplete", "비완료")
         complete = ("complete", "완료")
 
+    task_manager = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="progect_tasks",
+        blank=True,
+        null=True
+    )
+
     task = models.CharField(max_length=50, default="")
-    writer = models.CharField(max_length=80, default="")
+    writer = models.CharField(max_length=80, blank=True, null=True)
     importance = models.IntegerField(default=1, blank=True, null=True)
 
     task_completed = models.BooleanField(default=False)
@@ -26,7 +34,6 @@ class ProjectProgress(models.Model):
 
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
-
 
     @property
     def started_at(self):
@@ -41,7 +48,8 @@ class ProjectProgress(models.Model):
         if (self.completed_at == None):
             completed_at_str = "미정"
         else:
-            completed_at_str = self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
+            completed_at_str = self.completed_at.strftime(
+                '%y년 %m월 %d일 %H시 %M분')
             print("completed_at_str : ", completed_at_str)
 
         return completed_at_str
@@ -78,10 +86,10 @@ class ProjectProgress(models.Model):
         elapsed_time_str = f"{hours}시간 {minutes}분"
 
         return elapsed_time_str
-    
+
     def time_consumed_from_start_to_complete(self):
 
-        if(self.started_at_utc != None and self.completed_at != None):
+        if (self.started_at_utc != None and self.completed_at != None):
             started_at = timezone.localtime(self.started_at_utc)
             completed_at = self.completed_at
             elapsed_time_minutes = round(
@@ -93,9 +101,9 @@ class ProjectProgress(models.Model):
             # 시간 분 형식의 문자열로 변환
             time_consumed_from_startat_to_completed_str = f"{hours}시간 {minutes}분"
 
-            return time_consumed_from_startat_to_completed_str   
-        else: 
-            return "미정" 
+            return time_consumed_from_startat_to_completed_str
+        else:
+            return "미정"
 
     def time_left_to_due_date(self):
         due_date = timezone.localtime(self.due_date)
