@@ -16,10 +16,10 @@ class ProjectProgress(models.Model):
 
     task_manager = models.ForeignKey(
         "users.User",
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
         related_name="progect_tasks",
-        blank=True,
-        null=True
     )
 
     task = models.CharField(max_length=50, default="")
