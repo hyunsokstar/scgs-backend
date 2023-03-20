@@ -9,6 +9,10 @@ urlpatterns = [
     path("<int:pk>/completed/update", views.UpdateTaskCompetedView.as_view()),
     path("<int:pk>/importance/update",
          views.UpdateProjectTaskImportance.as_view()),
+    path("<int:pk>/due_date/update",
+         views.UpdateProjectTaskDueDate.as_view()),
+    path("<int:pk>/started_at/update",
+         views.UpdateProjectTaskStartedAt.as_view()),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
 ]

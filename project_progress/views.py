@@ -304,3 +304,62 @@ class UpdateProjectTaskImportance(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
+
+class UpdateProjectTaskDueDate(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("put 요청 확인")
+
+        # request body 에서 star_count 가져 오기
+        due_date = request.data.get("due_date")
+
+        # 해당 행 찾기
+        project_task = self.get_object(pk)
+        before_due_date = project_task.due_date
+
+        # 업데이트할 값 설정 후 save()
+        project_task.due_date = due_date
+        result = project_task.save()
+        print("update result for due date update : ", result)
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_due_date} to {due_date} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+class UpdateProjectTaskStartedAt(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("put 요청 확인")
+        # request body 에서 star_count 가져 오기
+        started_at_for_update = request.data.get("started_at_for_update")
+
+        # 해당 행 찾기
+        project_task = self.get_object(pk)
+        before_started_at = project_task.started_at
+
+        # 업데이트할 값 설정 후 save()
+        project_task.started_at_utc = started_at_for_update
+        result = project_task.save()
+        print("update result for due date update : ", result)
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_started_at} to {started_at_for_update} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
