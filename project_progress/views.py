@@ -287,6 +287,7 @@ class ProjectProgressDetailView(APIView):
 
         project_task = self.get_object(pk)
         print("project_task : ", project_task)
+        print("project_task.writer : ", project_task.writer)
 
         serializer = ProjectProgressDetailSerializer(
             project_task, context={"request": request})

@@ -15,7 +15,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
 
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
-    writer = UserNameSerializer()
+    # writer = UserNameSerializer()
 
     class Meta:
         model = ProjectProgress
