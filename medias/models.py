@@ -5,7 +5,7 @@ from common.models import CommonModel
 
 
 class ReferImageForTask(CommonModel):
-    image = models.URLField()
+    image_url = models.URLField()
     task = models.ForeignKey(
         "project_progress.ProjectProgress",
         on_delete=models.CASCADE,

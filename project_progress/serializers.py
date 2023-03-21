@@ -1,3 +1,4 @@
+from medias.serializers import ReferImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer
 from .models import ProjectProgress
 from rest_framework import serializers
@@ -16,6 +17,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
     # writer = UserNameSerializer()
+    task_images = ReferImageForTaskSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -28,7 +30,8 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "started_at",
             "started_at_formatted",
             "due_date",
-            "elapsed_time_from_started_at"
+            "elapsed_time_from_started_at",
+            "task_images"
         )
 
     def get_started_at_formatted(self, obj):
