@@ -5,14 +5,30 @@ from medias.serializers import ReferImageForTaskSerializer
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.status import HTTP_200_OK
 # from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from .models import Photo
 
+from .models import Photo, ReferImageForTask
 
+class DeleteViewForRefImageForTask(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ReferImageForTask.objects.get(pk=pk)
+        except ReferImageForTask.DoesNotExist:
+            raise NotFound 
+
+    def delete(self, request, pk):
+        ref_image = self.get_object(pk)
+
+        # if room.owner != request.user:
+        #     raise PermissionDenied
+        ref_image.delete()
+        return Response(status=HTTP_204_NO_CONTENT) 
+    
 class CreateViewForRefImageToTaskDetail(APIView):
     def get_object(self, pk):
         try:
