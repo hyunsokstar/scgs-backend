@@ -269,7 +269,7 @@ class LogIn(APIView):
         )
         if user:
             login(request, user)
-            return Response({"ok": "Welcome!"})
+            return Response({"ok": "Welcome!", "user_name": user.username, "admin_level": user.admin_level})
         else:
             print("로그인 정보 틀렸음")
             raise ParseError("authentication info is wrong")
