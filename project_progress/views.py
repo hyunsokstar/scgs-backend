@@ -43,6 +43,37 @@ class UpdateTaskInProgressView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+    
+class UpdateTaskIsTestingView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인 : pk ", pk)
+        project_task = self.get_object(pk)
+
+        if project_task.is_testing:
+            message = "테스트 진행 취소 update"
+            project_task.is_testing = False
+
+
+        else:
+            message = "테스트 진행중으로 update"
+            project_task.is_testing = True
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 
 class UncompletedTaskListViewForMe(APIView):

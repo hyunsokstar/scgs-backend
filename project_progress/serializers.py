@@ -54,7 +54,6 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = TinyUserSerializer(read_only=True)
 
-
     class Meta:
         model = ProjectProgress
         fields = (
@@ -64,6 +63,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "task_manager",
             "importance",
             "in_progress",
+            "is_testing",
             "task_completed",
             "started_at",
             "due_date",

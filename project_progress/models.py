@@ -27,10 +27,11 @@ class ProjectProgress(models.Model):
     importance = models.IntegerField(default=1, blank=True, null=True)
 
     in_progress = models.BooleanField(default=False)
+    is_testing = models.BooleanField(default=False)
     task_completed = models.BooleanField(default=False)
 
     password = models.CharField(max_length=20, default=True)
-    created_at = models.DateTimeField(default=timezone.now)    
+    created_at = models.DateTimeField(default=timezone.now)
     started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
     completed_at = models.DateTimeField(blank=True, null=True)
 
@@ -60,12 +61,11 @@ class ProjectProgress(models.Model):
         return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
     def started_at_formatted(self):
-        if(self.started_at_utc != None):
+        if (self.started_at_utc != None):
             local_started_at = timezone.localtime(self.started_at_utc)
             return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
             return "준비"
-
 
     def due_date_formatted(self):
         local_due_date = self.due_date
