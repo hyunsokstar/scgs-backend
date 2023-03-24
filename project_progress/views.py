@@ -1,4 +1,6 @@
 import math
+
+from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import ProjectProgress
@@ -8,6 +10,39 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.utils import timezone
 
 # view 추가
+
+class UpdateTaskInProgressView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인 : pk ", pk)
+        project_task = self.get_object(pk)
+
+        if project_task.in_progress:
+            message = "진행에서 준비중로 update"
+            project_task.in_progress = False
+            project_task.started_at_utc = None  # completed_at을 blank 상태로 만듦
+            project_task.started_at_formatted = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            message = "준비에서 작업중으로 update"
+            project_task.in_progress = True
+            project_task.started_at_utc = timezone.now()  # 현재 시간 저장
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 
 class UncompletedTaskListViewForMe(APIView):
@@ -93,7 +128,7 @@ class UncompletedTaskListView(APIView):
             page = 1
 
         all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-            task_completed=False)
+            task_completed=False).order_by('-in_progress', '-created_at')
         count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
             task_completed=False).count()
 
@@ -374,13 +409,20 @@ class ProjectProgressView(APIView):
         return Response(data, status=HTTP_200_OK)
 
     def post(self, request):
+
+        print("request.data['task_manager] : ", request.data['task_manager'])
+
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
-            if request.user.is_authenticated:
-                project_progress = serializer.save(task_manager=request.user)
-            else:
-                project_progress = serializer.save()
+            # if request.user.is_authenticated:
+            #     project_progress = serializer.save(task_manager=request.user)
+            # else:
+            #     project_progress = serializer.save()
+            task_manager = User.objects.get(pk=request.data['task_manager'])
+
+            project_progress = serializer.save(task_manager=task_manager)
             return Response(CreateProjectProgressSerializer(project_progress).data)
+        
         else:
             print("serializer.errors : ", serializer.errors)
             error_message = serializer.errors
@@ -409,7 +451,8 @@ class UpdateTaskCompetedView(APIView):
         else:
             message = "비완료에서 완료로 update"
             project_task.task_completed = True
-            project_task.completed_at = timezone.now()  # 현재 시간 저장
+            new_completed_at = timezone.localtime()
+            project_task.completed_at = new_completed_at  # 현재 시간 저장
 
         project_task.save()
 

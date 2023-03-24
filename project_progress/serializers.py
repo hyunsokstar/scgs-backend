@@ -63,6 +63,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "writer",
             "task_manager",
             "importance",
+            "in_progress",
             "task_completed",
             "started_at",
             "due_date",

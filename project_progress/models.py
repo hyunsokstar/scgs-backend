@@ -26,10 +26,12 @@ class ProjectProgress(models.Model):
     writer = models.CharField(max_length=80, blank=True, null=True)
     importance = models.IntegerField(default=1, blank=True, null=True)
 
+    in_progress = models.BooleanField(default=False)
     task_completed = models.BooleanField(default=False)
 
     password = models.CharField(max_length=20, default=True)
-    started_at_utc = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)    
+    started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
     completed_at = models.DateTimeField(blank=True, null=True)
 
     due_date = models.DateTimeField(
@@ -48,7 +50,7 @@ class ProjectProgress(models.Model):
         if (self.completed_at == None):
             completed_at_str = "미정"
         else:
-            completed_at_str = self.completed_at.strftime(
+            completed_at_str = local_completed_at.strftime(
                 '%y년 %m월 %d일 %H시 %M분')
             print("completed_at_str : ", completed_at_str)
 
@@ -58,8 +60,12 @@ class ProjectProgress(models.Model):
         return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
     def started_at_formatted(self):
-        print("custom time : ", self.started_at.strftime('%y년 %m월 %d일 %H시 %M분'))
-        return self.started_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        if(self.started_at_utc != None):
+            local_started_at = timezone.localtime(self.started_at_utc)
+            return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"
+
 
     def due_date_formatted(self):
         local_due_date = self.due_date

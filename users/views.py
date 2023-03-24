@@ -2,7 +2,7 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileSerializer
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileSerializer, UsersForCreateSerializer
 from users.models import User, UserPosition
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -12,12 +12,20 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 # from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
 
-
 from django.conf import settings
 import jwt
 
 
 # Create your views here.
+class UserNameListView (APIView):
+    def get(self, request):
+        users = User.objects.all()
+        print("users : ", users)
+        serializer = UsersForCreateSerializer(
+            users, context={"request": request}, many=True)
+        print("usernames only !! ", serializer.data)
+        return Response(serializer.data)
+
 
 class DeleteMultiUsersView(APIView):
     def delete(self, request, format=None):
@@ -46,9 +54,10 @@ class AddMultiUsersView(APIView):
 
         for row in users_data:
             row_for_pk_exists = User.objects.filter(pk=row["pk"]).exists()
-            print("row_for_pk_exists ::::::::::::::::::::::::::::::::: ", row_for_pk_exists)
+            print("row_for_pk_exists ::::::::::::::::::::::::::::::::: ",
+                  row_for_pk_exists)
 
-            if (row_for_pk_exists ==True):
+            if (row_for_pk_exists == True):
                 print("실행 check here here here")
                 user = User.objects.get(pk=row["pk"])
                 print("user :: ", user)

@@ -9,6 +9,7 @@ urlpatterns = [
     path("completed", views.CompletedTaskListView.as_view(), name ="completed_task_list"),
     path("completed/for-me", views.CompletedTaskListViewForMe.as_view(), name ="completed_task_list_for_me"),
     path("<int:pk>/completed/update", views.UpdateTaskCompetedView.as_view()),
+    path("<int:pk>/in_progress/update", views.UpdateTaskInProgressView.as_view()),
     path("<int:pk>/importance/update",
          views.UpdateProjectTaskImportance.as_view()),
     path("<int:pk>/due_date/update",
