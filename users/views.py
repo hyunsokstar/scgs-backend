@@ -2,7 +2,7 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileSerializer, UsersForCreateSerializer
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
 from users.models import User, UserPosition
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -136,22 +136,30 @@ class UserPhotos(APIView):
         if request.user != user:
             raise PermissionDenied  # 현재 로그인한 사람이 아닐 경우 접근 거부
 
-        serializer = ProfilePhotoSerializer(data=request.data)
+        serializer = UserProfileImageSerializer(user, data = request.data, partial=True)
 
         if serializer.is_valid():
-
-            exist_photo = PhotoForProfile.objects.filter(user=user)
-            if (exist_photo):
-                result = exist_photo.delete()
-                print("result : ", result)
-
-            photo = serializer.save(user=user)
-            print("photo : ", photo)
-            serializer = ProfilePhotoSerializer(photo)
-            print("serializer : ", serializer.data)
-            return Response(serializer.data)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors)
+
+        # serializer = ProfilePhotoSerializer(data=request.data)
+
+        # if serializer.is_valid():
+
+        #     exist_photo = PhotoForProfile.objects.filter(user=user)
+        #     if (exist_photo):
+        #         result = exist_photo.delete()
+        #         print("result : ", result)
+
+        #     photo = serializer.save(user=user)
+        #     print("photo : ", photo)
+        #     serializer = ProfilePhotoSerializer(photo)
+        #     print("serializer : ", serializer.data)
+        #     return Response(serializer.data)
+        # else:
+        #     return Response(serializer.errors)
 
 
 class Me(APIView):

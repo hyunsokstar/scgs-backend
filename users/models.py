@@ -10,7 +10,6 @@ class User(AbstractUser):
         MALE = ("male", "Male")
         FEMAIL = ("female", "Female")
 
-
     class PositionChoices(models.TextChoices):
         frontend = "frontend", "FrontEnd"
         backend = "backend", "BackEnd"
@@ -38,6 +37,8 @@ class User(AbstractUser):
         null=True,
         blank=True,
     )
+
+    profile_image = models.URLField(null=True, blank=True)
 
 
 class UserPosition(CommonModel):

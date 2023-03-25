@@ -3,6 +3,14 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
 
+class UserProfileImageSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "pk",
+            "profile_image"
+        )
+
 class UsersForCreateSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -75,6 +83,7 @@ class UserProfileSerializer(ModelSerializer):
             "skill_for_frameWork",
             'about_me',
             'admin_level',
+            'profile_image',
         )
 
 
