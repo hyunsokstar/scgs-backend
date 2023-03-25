@@ -8,8 +8,59 @@ from project_progress.serializers import CreateProjectProgressSerializer, Projec
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
+from datetime import datetime, timedelta
+
+# in_progress = models.BooleanField(default=False)
+# is_testing = models.BooleanField(default=False)
+# task_completed = models.BooleanField(default=False)
 
 # view 추가
+
+
+class TaskStatusListView(APIView):
+    all_tasks = ProjectProgress.objects.all()
+    one_month_ago = timezone.now() - timedelta(days=30)
+
+    def get(self, request):
+        all_tasks_in_month = self.all_tasks.filter(
+            created_at__gte=self.one_month_ago, importance__gte=3
+        )
+
+        tasks_in_ready_list = self.all_tasks.filter(
+            in_progress=False, is_testing=False, task_completed=False, created_at__gte=self.one_month_ago, importance__gte=3
+        )
+        tasks_in_progress_list = self.all_tasks.filter(
+            in_progress=True, is_testing=False, created_at__gte=self.one_month_ago, importance__gte=3
+        )
+        tasks_in_testing_list = self.all_tasks.filter(
+            in_progress=True, is_testing=True, created_at__gte=self.one_month_ago, importance__gte=3
+        )
+        tasks_in_completed_list = self.all_tasks.filter(
+            task_completed=True, created_at__gte=self.one_month_ago, importance__gte=3
+        )
+
+        all_tasks_in_month_serializer = ProjectProgressListSerializer(
+            all_tasks_in_month, many=True)
+
+        tasks_in_ready_serializer = ProjectProgressListSerializer(
+            tasks_in_ready_list, many=True)
+        tasks_in_progress_serializer = ProjectProgressListSerializer(
+            tasks_in_progress_list, many=True)
+        tasks_in_testing_serializer = ProjectProgressListSerializer(
+            tasks_in_testing_list, many=True)
+        tasks_in_completed_serializer = ProjectProgressListSerializer(
+            tasks_in_completed_list, many=True)
+
+        result_data = {
+            "all_tasks_in_month": all_tasks_in_month_serializer.data,
+            "tasks_in_ready": tasks_in_ready_serializer.data,
+            "tasks_in_progress": tasks_in_progress_serializer.data,
+            "tasks_in_testing": tasks_in_testing_serializer.data,
+            "tasks_in_completed": tasks_in_completed_serializer.data,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateTaskInProgressView(APIView):
 
@@ -27,6 +78,7 @@ class UpdateTaskInProgressView(APIView):
         if project_task.in_progress:
             message = "진행에서 준비중로 update"
             project_task.in_progress = False
+            project_task.is_testing = False
             project_task.started_at_utc = None  # completed_at을 blank 상태로 만듦
             project_task.started_at_formatted = None  # completed_at을 blank 상태로 만듦
 
@@ -43,7 +95,8 @@ class UpdateTaskInProgressView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
+
+
 class UpdateTaskIsTestingView(APIView):
 
     def get_object(self, pk):
@@ -61,9 +114,9 @@ class UpdateTaskIsTestingView(APIView):
             message = "테스트 진행 취소 update"
             project_task.is_testing = False
 
-
         else:
             message = "테스트 진행중으로 update"
+            project_task.in_progress = True
             project_task.is_testing = True
 
         project_task.save()
@@ -453,7 +506,7 @@ class ProjectProgressView(APIView):
 
             project_progress = serializer.save(task_manager=task_manager)
             return Response(CreateProjectProgressSerializer(project_progress).data)
-        
+
         else:
             print("serializer.errors : ", serializer.errors)
             error_message = serializer.errors
