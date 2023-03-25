@@ -549,7 +549,6 @@ class UpdateTaskCompetedView(APIView):
 
 
 class UpdateProjectTaskImportance(APIView):
-
     def get_object(self, pk):
         try:
             return ProjectProgress.objects.get(pk=pk)
@@ -577,6 +576,46 @@ class UpdateProjectTaskImportance(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+class UpdateProjectStatusPageView(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        status_to_move = request.data.get("status_to_move")
+        if status_to_move == "ready":
+            project_task.in_progress = False
+            project_task.is_testing = False
+            project_task.task_completed = False
+
+        elif status_to_move == "in_progress":
+            project_task.in_progress = True
+            project_task.is_testing = False
+            project_task.task_completed = False
+        
+        elif status_to_move == "is_testing":
+            project_task.in_progress = True
+            project_task.is_testing = True
+            project_task.task_completed = False
+        
+        elif status_to_move == "complete":
+            project_task.in_progress = False
+            project_task.is_testing = False
+            project_task.task_completed = True                                        
+        
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": f'update success <=> to {status_to_move} !!'
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 class UpdateProjectTaskDueDate(APIView):
 
