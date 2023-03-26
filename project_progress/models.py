@@ -122,7 +122,7 @@ class ProjectProgress(models.Model):
         return time_left_to_due_date_str
 
 
-class SupplementaryTask(models.Model):
+class ExtraTask(models.Model):
     class TaskStatusChoices(models.TextChoices):
         ready = ("ready", "준비")
         in_progress = ("in_progress", "작업중")
