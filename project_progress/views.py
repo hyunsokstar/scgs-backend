@@ -266,9 +266,19 @@ class UncompletedTaskListView(APIView):
         self.totalCountForTask = math.trunc(
             count_for_all_uncompleted_project_task_list)
 
+        count_for_ready = all_uncompleted_project_task_list.filter(
+            in_progress=False).count()
+        count_for_in_progress = all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=False, task_completed=False).count()
+        count_for_in_testing = all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=True, task_completed=False).count()
+
         # step5 응답
         data = serializer.data
         data = {
+            "count_for_ready": count_for_ready,
+            "count_for_in_progress": count_for_in_progress,
+            "count_for_in_testing": count_for_in_testing,
             "totalPageCount": self.totalCountForTask,
             "ProjectProgressList": data
         }
