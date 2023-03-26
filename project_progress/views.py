@@ -144,12 +144,12 @@ class UncompletedTaskListViewForMe(APIView):
 
         if request.user.is_authenticated:
             all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, task_manager=request.user)
+                task_completed=False, task_manager=request.user).order_by('-in_progress', '-created_at')
             count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False, task_manager=request.user).count()
         else:
             all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False)
+                task_completed=False).order_by('-in_progress', '-created_at')
             count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False).count()
 
@@ -189,9 +189,23 @@ class UncompletedTaskListViewForMe(APIView):
         self.totalCountForTask = math.trunc(
             count_for_all_uncompleted_project_task_list)
 
+        count_for_ready = all_uncompleted_project_task_list.filter(
+            in_progress=False).count()
+        count_for_in_progress = all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=False, task_completed=False).count()
+        count_for_in_testing = all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=True, task_completed=False).count()
+
+        print("count_for_ready : ", count_for_ready)
+        print("count_for_in_progress : ", count_for_in_progress)
+
         # step5 응답
         data = serializer.data
         data = {
+            "count_for_ready": count_for_ready,
+            "count_for_in_progress": count_for_in_progress,
+            "count_for_in_testing": count_for_in_testing,
+
             "totalPageCount": self.totalCountForTask,
             "ProjectProgressList": data
         }
@@ -576,6 +590,7 @@ class UpdateProjectTaskImportance(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+
 class UpdateProjectStatusPageView(APIView):
     def get_object(self, pk):
         try:
@@ -597,17 +612,17 @@ class UpdateProjectStatusPageView(APIView):
             project_task.in_progress = True
             project_task.is_testing = False
             project_task.task_completed = False
-        
+
         elif status_to_move == "is_testing":
             project_task.in_progress = True
             project_task.is_testing = True
             project_task.task_completed = False
-        
+
         elif status_to_move == "complete":
             project_task.in_progress = False
             project_task.is_testing = False
-            project_task.task_completed = True                                        
-        
+            project_task.task_completed = True
+
         project_task.save()
 
         result_data = {
@@ -616,6 +631,7 @@ class UpdateProjectStatusPageView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateProjectTaskDueDate(APIView):
 
