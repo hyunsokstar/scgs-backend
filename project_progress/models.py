@@ -10,9 +10,6 @@ from datetime import datetime
 
 
 class ProjectProgress(models.Model):
-    class TaskStatusChoices(models.TextChoices):
-        uncomplete = ("uncomplete", "비완료")
-        complete = ("complete", "완료")
 
     task_manager = models.ForeignKey(
         "users.User",
@@ -57,8 +54,8 @@ class ProjectProgress(models.Model):
 
         return completed_at_str
 
-        print("custom time : ", self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분'))
-        return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        # print("custom time : ", self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분'))
+        # return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
     def started_at_formatted(self):
         if (self.started_at_utc != None):
@@ -122,5 +119,65 @@ class ProjectProgress(models.Model):
 
         # 시간 분 형식의 문자열로 변환
         time_left_to_due_date_str = f"{hours}시간 {minutes}분"
-
         return time_left_to_due_date_str
+
+
+class SupplementaryTask(models.Model):
+    class TaskStatusChoices(models.TextChoices):
+        ready = ("ready", "준비")
+        in_progress = ("in_progress", "작업중")
+        testing = ("testing", "테스트중")
+        completed = ("completed", "완료")
+
+    orginal_task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="extra_tasks",
+        blank=True,
+        null=True,        
+    )
+    
+    task_manager = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="task_manager_for_supplementary_task",
+    )
+
+    task = models.TextField(default="", blank=True, null=True)
+    task_status = models.CharField(
+        max_length=20,
+        choices=TaskStatusChoices.choices,
+        default=TaskStatusChoices.ready # 기본값을 "ready"로 설정
+    )
+
+    importance = models.IntegerField(default=1, blank=True, null=True)
+    password = models.CharField(max_length=20, default="1234")
+
+    started_at = models.DateTimeField(null=True, blank=True, default=None)
+    completed_at = models.DateTimeField(blank=True, null=True)
+
+    due_date = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.task
+
+    def completed_at_formatted(self):
+        local_completed_at = timezone.localtime(self.completed_at)
+        completed_at_str = ""
+        if (self.completed_at == None):
+            completed_at_str = "미정"
+        else:
+            completed_at_str = local_completed_at.strftime(
+                '%y년 %m월 %d일 %H시 %M분')
+            print("completed_at_str : ", completed_at_str)
+
+        return completed_at_str
+
+    def started_at_formatted(self):
+        if (self.started_at != None):
+            local_started_at = timezone.localtime(self.started_at)
+            return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"

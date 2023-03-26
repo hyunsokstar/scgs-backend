@@ -31,7 +31,8 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "started_at_formatted",
             "due_date",
             "elapsed_time_from_started_at",
-            "task_images"
+            "task_images",
+            "extra_tasks"
         )
 
     def get_started_at_formatted(self, obj):
