@@ -136,7 +136,7 @@ class ExtraTask(models.Model):
         testing = ("testing", "테스트중")
         completed = ("completed", "완료")
 
-    orginal_task = models.ForeignKey(
+    original_task = models.ForeignKey(
         "project_progress.ProjectProgress",
         on_delete=models.CASCADE,
         related_name="extra_tasks",

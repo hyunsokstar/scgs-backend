@@ -4,7 +4,7 @@ from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import ProjectProgress
-from project_progress.serializers import CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
+from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
@@ -15,6 +15,35 @@ from datetime import datetime, timedelta
 # task_completed = models.BooleanField(default=False)
 
 # view 추가
+
+
+class ExtraTasks(APIView):
+    def post(self, request):
+        print("request.data : ", request.data)
+        print("request.data['task_manager] : ", request.data['task_manager'])
+
+        serializer = CreateExtraTaskSerializer(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                userPk = request.data['task_manager']
+                taskPk = request.data['taskPk']
+
+                print("userPk : ", userPk)
+                print("taskPk : ", taskPk)
+
+                task_manager = User.objects.get(pk=userPk)
+                original_task_obj = ProjectProgress.objects.get(pk=taskPk)
+                extra_task = serializer.save(
+                    original_task=original_task_obj, task_manager=task_manager)
+                serializer = CreateExtraTaskSerializer(extra_task)
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
 
 
 class TaskStatusListView(APIView):

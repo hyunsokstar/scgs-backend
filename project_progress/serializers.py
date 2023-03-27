@@ -6,12 +6,18 @@ from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 
-# task
-# writer
-# importance
-# task_status
-# password
+class CreateExtraTaskSerializer(serializers.ModelSerializer):
+    # task_manager = TinyUserSerializer(read_only=True)
 
+    class Meta:
+        model = ExtraTask
+        fields = (
+            "pk",
+            "original_task",
+            "task_manager",
+            "task",
+            "importance",
+        )
 
 class ExtraTasksSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
