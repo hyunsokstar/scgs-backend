@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
+    path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('task-status', views.TaskStatusListView.as_view(), name="task_status_view"),
     path("uncompleted", views.UncompletedTaskListView.as_view(), name ="completed_task_list"),
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(), name ="uncompleted_task_list_for_me"),
@@ -15,9 +16,7 @@ urlpatterns = [
     path("<int:pk>/is_testing/update", views.UpdateTaskIsTestingView.as_view()),
     path("<int:pk>/importance/update",
          views.UpdateProjectTaskImportance.as_view()),
-
     path("<int:pk>/update_project_status_page/update", views.UpdateProjectStatusPageView.as_view()),
-
 
     path("<int:pk>/due_date/update",
          views.UpdateProjectTaskDueDate.as_view()),

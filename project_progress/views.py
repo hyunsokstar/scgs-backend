@@ -3,21 +3,29 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import ProjectProgress
 from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
+from .models import ProjectProgress, ExtraTask
 
 # in_progress = models.BooleanField(default=False)
 # is_testing = models.BooleanField(default=False)
 # task_completed = models.BooleanField(default=False)
 
 # view 추가
+# 1122
 
 
 class ExtraTasks(APIView):
+    def get_object(self, pk):
+        try:
+            print("pk check at get_object : ", pk)
+            return ExtraTask.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
     def post(self, request):
         print("request.data : ", request.data)
         print("request.data['task_manager] : ", request.data['task_manager'])
@@ -44,6 +52,16 @@ class ExtraTasks(APIView):
                 print("e : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
+
+    def delete(self, request, pk):
+        print("삭제 요청 확인 for pk : ", pk)
+        try:
+            extra_task = self.get_object(pk)
+            extra_task.delete()
+        except Exception as e:
+            raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
+
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class TaskStatusListView(APIView):
