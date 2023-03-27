@@ -62,6 +62,23 @@ class ExtraTasks(APIView):
             raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
 
         return Response(status=HTTP_204_NO_CONTENT)
+    
+    def put(self, request, pk):
+        print("hyunsok is king")
+        print("put 요청 확인 : pk ", pk)
+        extra_task = self.get_object(pk)
+        task_status_before_update = extra_task.task_status
+        task_status_for_update = request.data.get("task_status")
+
+        extra_task.task_status = task_status_for_update
+        extra_task.save()
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {task_status_before_update} to {task_status_for_update} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 
 class TaskStatusListView(APIView):
