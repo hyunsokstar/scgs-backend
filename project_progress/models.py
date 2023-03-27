@@ -121,6 +121,13 @@ class ProjectProgress(models.Model):
         time_left_to_due_date_str = f"{hours}시간 {minutes}분"
         return time_left_to_due_date_str
 
+# pk
+# task
+# task_status
+# importance
+# password
+# started_at
+# completed_at
 
 class ExtraTask(models.Model):
     class TaskStatusChoices(models.TextChoices):

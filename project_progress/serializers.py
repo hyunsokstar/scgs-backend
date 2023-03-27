@@ -1,9 +1,10 @@
 from medias.serializers import ReferImageForTaskSerializer
-from users.serializers import TinyUserSerializer, UserNameSerializer
-from .models import ProjectProgress
+from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
+from .models import ExtraTask, ProjectProgress
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
+from rest_framework.serializers import ModelSerializer
 
 # task
 # writer
@@ -12,12 +13,28 @@ from django.utils import timezone
 # password
 
 
+class ExtraTasksSerializer(ModelSerializer):
+    task_manager = UserProfileImageSerializer()
+
+    class Meta:
+        model = ExtraTask
+        fields = (
+            "pk",
+            "task_manager",
+            "task",
+            "task_status",
+            "importance",
+            "started_at",
+            "completed_at"
+        )
+
+
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
 
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
-    # writer = UserNameSerializer()
     task_images = ReferImageForTaskSerializer(many=True)
+    extra_tasks = ExtraTasksSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -110,6 +127,3 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "task_completed",
         )
 
-    # def save(self, **kwargs):
-    #     self.validated_data['started_at'] = timezone.localtime(timezone.now())
-    #     return super().save(**kwargs)

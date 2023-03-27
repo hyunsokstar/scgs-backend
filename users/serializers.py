@@ -8,6 +8,7 @@ class UserProfileImageSerializer(ModelSerializer):
         model = User
         fields = (
             "pk",
+            "username",
             "profile_image"
         )
 
