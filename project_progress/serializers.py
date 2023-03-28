@@ -6,6 +6,7 @@ from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 
+
 class CreateExtraTaskSerializer(serializers.ModelSerializer):
     # task_manager = TinyUserSerializer(read_only=True)
 
@@ -19,8 +20,10 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
             "importance",
         )
 
+
 class ExtraTasksSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
+    started_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = ExtraTask
@@ -31,8 +34,12 @@ class ExtraTasksSerializer(ModelSerializer):
             "task_status",
             "importance",
             "started_at",
-            "completed_at"
+            "completed_at",
+            "started_at_formatted"
         )
+
+    def get_started_at_formatted(self, obj):
+        return obj.started_at_formatted()
 
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
@@ -132,4 +139,3 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "importance",
             "task_completed",
         )
-

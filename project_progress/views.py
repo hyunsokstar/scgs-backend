@@ -71,6 +71,11 @@ class ExtraTasks(APIView):
         task_status_for_update = request.data.get("task_status")
 
         extra_task.task_status = task_status_for_update
+        if task_status_for_update == "in_progress":
+            extra_task.started_at = timezone.now()
+        if task_status_for_update == "ready":
+            extra_task.started_at = None
+
         extra_task.save()
 
         result_data = {
