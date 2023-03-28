@@ -20,6 +20,7 @@ class ProjectProgress(models.Model):
     )
 
     task = models.CharField(max_length=50, default="")
+    task_description = models.TextField(max_length=300, default="")
     writer = models.CharField(max_length=80, blank=True, null=True)
     importance = models.IntegerField(default=1, blank=True, null=True)
 

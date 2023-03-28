@@ -54,6 +54,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "task",
+            "task_description",
             "writer",
             "importance",
             "task_completed",

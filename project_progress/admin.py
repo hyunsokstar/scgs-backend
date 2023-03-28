@@ -8,6 +8,7 @@ class ProjectProgress(admin.ModelAdmin):
     list_display = (
         "pk",
         "task",
+        "task_description",
         "writer",
         "importance",
         "task_completed",
