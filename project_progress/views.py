@@ -10,13 +10,37 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask
 
-# in_progress = models.BooleanField(default=False)
-# is_testing = models.BooleanField(default=False)
-# task_completed = models.BooleanField(default=False)
 
 # view 추가
 # 1122
 
+class UpdateExtraTaskImportance(APIView):
+    def get_object(self, pk):
+        try:
+            return ExtraTask.objects.get(pk=pk)
+        except ExtraTask.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("put 요청 확인")
+
+        # request body 에서 star_count 가져 오기
+        star_count = request.data.get("star_count")
+
+        # 해당 행 찾기
+        project_task = self.get_object(pk)
+        before_star_count = project_task.importance
+
+        # 업데이트할 값 설정 후 save()
+        project_task.importance = star_count
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_star_count} to {star_count} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 class ExtraTasks(APIView):
     def get_object(self, pk):
