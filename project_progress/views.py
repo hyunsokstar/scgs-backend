@@ -8,11 +8,25 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import ProjectProgress, ExtraTask
+from .models import ProjectProgress, ExtraTask, TestForTask
 
 
 # view 추가
 # 1122
+
+class DeleteTestForTasksView(APIView):
+    def get_object(self, taskPk):
+        try:
+            return TestForTask.objects.get(pk=taskPk)
+        except TestForTask.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, testPk):
+        print("삭제 요청 확인")
+        test_for_task = self.get_object(testPk)
+        test_for_task.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
+
 
 class TestForTasks(APIView):
     def get_object(self, taskPk):
@@ -43,7 +57,7 @@ class TestForTasks(APIView):
                 original_task = self.get_object(taskPk)
                 test_for_task = serializer.save(original_task=original_task)
                 serializer = CreateExtraTaskSerializer(test_for_task)
-                
+
                 return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
 
             except Exception as e:
