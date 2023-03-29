@@ -26,6 +26,7 @@ urlpatterns = [
          views.UpdateProjectTaskStartedAt.as_view()),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
     path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view()),
-    path("TestForTasks/<int:testPk>/delete", views.DeleteTestForTasksView.as_view())
+    path("TestForTasks/<int:testPk>/delete", views.DeleteTestForTasksView.as_view()),
+    path("TestForTasks/<int:testPk>/update", views.UpatedTestPassedForTasksView.as_view())
 
 ]

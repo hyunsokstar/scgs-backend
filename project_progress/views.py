@@ -10,9 +10,37 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TestForTask
 
-
-# view 추가
 # 1122
+
+
+class UpatedTestPassedForTasksView(APIView):
+    def get_object(self, pk):
+        try:
+            return TestForTask.objects.get(pk=pk)
+        except TestForTask.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, testPk):
+        message = ""
+        print("put 요청 확인 : pk ", testPk)
+        test_for_task = self.get_object(testPk)
+
+        if test_for_task.test_passed:
+            message = "test passed to 취소 !"
+            test_for_task.test_passed = False
+        else:
+            message = "test_passed to success!"
+            test_for_task.test_passed = True
+
+        test_for_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
 
 class DeleteTestForTasksView(APIView):
     def get_object(self, taskPk):
