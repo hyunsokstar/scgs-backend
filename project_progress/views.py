@@ -14,7 +14,7 @@ from .models import ProjectProgress, ExtraTask
 # view 추가
 # 1122
 
-class TeestForTasks(APIView):
+class TestForTasks(APIView):
     def get_object(self, taskPk):
         try:
             return ProjectProgress.objects.get(pk=taskPk)

@@ -25,5 +25,5 @@ urlpatterns = [
     path("<int:pk>/started_at/update",
          views.UpdateProjectTaskStartedAt.as_view()),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
-    path("<int:taskPk>/TestForTasks", views.TeestForTasks.as_view())
+    path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view())
 ]
