@@ -1,6 +1,6 @@
 from medias.serializers import ReferImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ExtraTask, ProjectProgress
+from .models import ExtraTask, ProjectProgress, TestForTask
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
@@ -18,6 +18,29 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
             "task_manager",
             "task",
             "importance",
+        )
+
+
+class CreateTestSerializerForOneTask(ModelSerializer):
+    class Meta:
+        model = TestForTask
+        fields = (
+            "test_description",
+            "test_method",
+            "test_passed"
+            # "test_result_image"
+        )
+
+
+class TestSerializerForOneTask(ModelSerializer):
+    class Meta:
+        model = TestForTask
+        fields = (
+            "pk",
+            "test_description",
+            "test_passed",
+            "test_method",
+            "test_result_image"
         )
 
 
@@ -48,6 +71,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     elapsed_time_from_started_at = serializers.SerializerMethodField()
     task_images = ReferImageForTaskSerializer(many=True)
     extra_tasks = ExtraTasksSerializer(many=True)
+    tests_for_tasks = TestSerializerForOneTask(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -63,7 +87,8 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "due_date",
             "elapsed_time_from_started_at",
             "task_images",
-            "extra_tasks"
+            "extra_tasks",
+            "tests_for_tasks"
         )
 
     def get_started_at_formatted(self, obj):

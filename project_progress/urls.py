@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
 
-# /project_progress/ + @
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
@@ -26,5 +25,5 @@ urlpatterns = [
     path("<int:pk>/started_at/update",
          views.UpdateProjectTaskStartedAt.as_view()),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
-
+    path("<int:taskPk>/TestForTasks", views.TeestForTasks.as_view())
 ]

@@ -3,7 +3,7 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer
+from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
@@ -13,6 +13,46 @@ from .models import ProjectProgress, ExtraTask
 
 # view 추가
 # 1122
+
+class TeestForTasks(APIView):
+    def get_object(self, taskPk):
+        try:
+            return ProjectProgress.objects.get(pk=taskPk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, taskPk):
+        print("pk(taskPk) : ", taskPk)
+        original_task = self.get_object(taskPk)
+
+        tests_for_original_task = original_task.tests_for_tasks.all()
+        print("tests_for_original_task : ", tests_for_original_task)
+
+        original_task_serializer = TestSerializerForOneTask(
+            tests_for_original_task, many=True)
+
+        return Response(original_task_serializer.data, status=HTTP_200_OK)
+
+    def post(self, request, taskPk):
+
+        serializer = CreateTestSerializerForOneTask(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                original_task = self.get_object(taskPk)
+                test_for_task = serializer.save(original_task=original_task)
+                serializer = CreateExtraTaskSerializer(test_for_task)
+                
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+
+        pass
+
 
 class UpdateExtraTaskImportance(APIView):
     def get_object(self, pk):
@@ -41,6 +81,7 @@ class UpdateExtraTaskImportance(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
 
 class ExtraTasks(APIView):
     def get_object(self, pk):
@@ -86,7 +127,7 @@ class ExtraTasks(APIView):
             raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
 
         return Response(status=HTTP_204_NO_CONTENT)
-    
+
     def put(self, request, pk):
         print("hyunsok is king")
         print("put 요청 확인 : pk ", pk)
