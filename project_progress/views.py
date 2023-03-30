@@ -145,8 +145,8 @@ class ExtraTasks(APIView):
                 userPk = request.data['task_manager']
                 taskPk = request.data['taskPk']
 
-                print("userPk : ", userPk)
-                print("taskPk : ", taskPk)
+                # print("userPk : ", userPk)
+                # print("taskPk : ", taskPk)
 
                 task_manager = User.objects.get(pk=userPk)
                 original_task_obj = ProjectProgress.objects.get(pk=taskPk)

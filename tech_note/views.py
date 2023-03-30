@@ -22,7 +22,7 @@ def create_dummy_tech_notes(request):
 class TechNoteList(APIView):
     # step1 클래스 변수 선언 , total_count_for_tech_note_table_rows = 테이블 모든 행의 개수
     total_count_for_tech_note_table_rows = 0
-    number_for_one_page = 8
+    number_for_one_page = 10
 
     def get(self, request):
         # step2 default page num = 1 로 설정
@@ -34,7 +34,7 @@ class TechNoteList(APIView):
 
         # step3 all list 가져오기
         all_tech_notes = TechNote.objects.all()
-
+        self.total_count_for_tech_note_table_rows = all_tech_notes.count()
         # step4 페이지 번호와 연동 되는 start 와 end 설정 <=> ex) all_tech_notes[0:5] 01234
         # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5 <=> 1페이지 일때
         # (2 - 1 * 5 ~  5 + 5) => 5 ~ 10 <=> 2페이지 일때
