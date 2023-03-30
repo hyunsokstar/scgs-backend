@@ -248,6 +248,11 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1', 'http://localhost',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
+    'http://localhost',
+    'http://localhost:3000',
     'http://13.125.214.210',
+    'http://12.125.214.210:3000',
+    'http://12.125.214.210:8000'
 ]

@@ -53,3 +53,28 @@ class TechNoteList(APIView):
         }
 
         return Response(data, status=HTTP_200_OK)
+
+    # 넘어올 데이터: techNotePk,category_option,tech_note_description,
+    def put(self, request):
+
+        techNotePk = request.data.get("techNotePk")
+        tech_note_description = request.data.get("tech_note_description")
+        category_option = request.data.get("category_option")
+
+        print("techNotePk : ", techNotePk)
+        print("tech_note_description : ", tech_note_description)
+        print("category_option : ", category_option)
+
+        tech_note = TechNote.objects.get(pk=techNotePk)
+
+        # 업데이트 할것 title, category
+        tech_note.title = tech_note_description
+        tech_note.category = category_option
+        tech_note.save()
+
+        result_data = {
+            "success": True,
+            "message": "tech_note update success"
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
