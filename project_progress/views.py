@@ -649,6 +649,7 @@ class ProjectProgressDetailView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
+1122
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
     total_page_count = 10  # 1 페이지에 몇개씩
