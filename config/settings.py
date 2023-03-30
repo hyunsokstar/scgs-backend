@@ -65,7 +65,8 @@ CUSTOM_APPS = [
     "direct_messages.apps.DirectMessagesConfig",
     "estimate.apps.EstimateConfig",
     "tutorials.apps.TutorialsConfig",
-    "project_progress.apps.ProjectProgressConfig"
+    "project_progress.apps.ProjectProgressConfig",
+    "tech_note.apps.TechNoteConfig"
 ]
 
 SYSTEM_APPS = [
