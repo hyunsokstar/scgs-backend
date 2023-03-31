@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TechNote
+from .models import TechNote, TechNoteContent
 
 
 class TechNoteSerializer(serializers.ModelSerializer):
@@ -16,3 +16,15 @@ class CreateTechNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechNote
         fields = ('title', 'category')
+
+
+class TechNoteContentsListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TechNoteContent
+        fields = (
+            "tech_note",
+            "title",
+            "file",
+            "content",
+            "created_at"
+        )

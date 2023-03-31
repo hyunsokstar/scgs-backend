@@ -6,7 +6,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 from .models import TechNote, TechNoteContent
-from .serializers import CreateTechNoteSerializer, TechNoteSerializer
+from .serializers import CreateTechNoteSerializer, TechNoteContentsListSerializer, TechNoteSerializer
 
 
 @csrf_exempt
@@ -155,7 +155,10 @@ class TechNoteContentView(APIView):
     def get(self, request, pk):
         tech_note = self.get_object(pk)
         print("tech_note : ", tech_note)
-        tech_note_contents = TechNoteContent.objects.filter(tech_note=tech_note)
+        tech_note_contents = TechNoteContent.objects.filter(
+            tech_note=pk)
         print("tech_note_contents : ", tech_note_contents)
+        serializer = TechNoteContentsListSerializer(
+            tech_note_contents, many=True)
 
-        return Response({"success": "true"})
+        return Response({"success": "true", "data": serializer.data})
