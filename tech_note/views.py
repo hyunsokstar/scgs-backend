@@ -6,7 +6,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 from .models import TechNote
-from .serializers import TechNoteSerializer
+from .serializers import CreateTechNoteSerializer, TechNoteSerializer
 
 
 @csrf_exempt
@@ -19,7 +19,7 @@ def create_dummy_tech_notes(request):
     return JsonResponse({"message": "Dummy notes created successfully."})
 
 
-class TechNoteList(APIView):
+class TechNotes(APIView):
     # step1 클래스 변수 선언 , total_count_for_tech_note_table_rows = 테이블 모든 행의 개수
     total_count_for_tech_note_table_rows = 0
     number_for_one_page = 10
@@ -33,7 +33,7 @@ class TechNoteList(APIView):
             page = 1
 
         # step3 all list 가져오기
-        all_tech_notes = TechNote.objects.all()
+        all_tech_notes = TechNote.objects.all().order_by("-created_at")
         self.total_count_for_tech_note_table_rows = all_tech_notes.count()
         # step4 페이지 번호와 연동 되는 start 와 end 설정 <=> ex) all_tech_notes[0:5] 01234
         # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5 <=> 1페이지 일때
@@ -53,6 +53,26 @@ class TechNoteList(APIView):
         }
 
         return Response(data, status=HTTP_200_OK)
+
+    def post(self, request):
+        print("request.data : ", request.data)
+        print("request.data['title] : ", request.data['title'])
+        print("request.data['category] : ", request.data['category'])
+
+        serializer = CreateTechNoteSerializer(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                tech_note = serializer.save()
+                serializer = TechNoteSerializer(tech_note)
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+
 
     # 넘어올 데이터: techNotePk,category_option,tech_note_description,
     def put(self, request):
