@@ -31,3 +31,17 @@ class TechNote(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TechNoteContent(models.Model):
+    tech_note = models.ForeignKey(
+        "tech_note.TechNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="tech_note_contents"
+    )
+    title = models.CharField(max_length=50)
+    file = models.CharField(max_length=50, null=True, blank=True)
+    content = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

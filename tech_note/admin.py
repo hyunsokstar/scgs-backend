@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import TechNote
+from .models import TechNote, TechNoteContent
+
 
 @admin.register(TechNote)
 class TechNoteAdmin(admin.ModelAdmin):
@@ -8,3 +9,8 @@ class TechNoteAdmin(admin.ModelAdmin):
     list_filter = ('category',)
     search_fields = ('title', 'author__username',)
     ordering = ('-created_at',)
+
+
+@admin.register(TechNoteContent)
+class TechNoteContentAdmin(admin.ModelAdmin):
+    list_display = ('tech_note', 'title', 'file', 'content', 'created_at')

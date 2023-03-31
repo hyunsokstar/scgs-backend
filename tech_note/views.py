@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
-from .models import TechNote
+from .models import TechNote, TechNoteContent
 from .serializers import CreateTechNoteSerializer, TechNoteSerializer
 
 
@@ -143,3 +143,19 @@ class TechNoteListDeleteView(APIView):
             raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+
+class TechNoteContentView(APIView):
+    def get_object(self, pk):
+        try:
+            return TechNote.objects.get(pk=pk)
+        except TechNote.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        tech_note = self.get_object(pk)
+        print("tech_note : ", tech_note)
+        tech_note_contents = TechNoteContent.objects.filter(tech_note=tech_note)
+        print("tech_note_contents : ", tech_note_contents)
+
+        return Response({"success": "true"})
