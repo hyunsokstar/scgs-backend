@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
-
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 from .models import TechNote
 from .serializers import TechNoteSerializer
@@ -78,3 +78,22 @@ class TechNoteList(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
+
+class TechNoteListDeleteView(APIView):
+
+    def get_object(self, taskPk):
+        try:
+            return TechNote.objects.get(pk=taskPk)
+        except TechNote.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, pk):
+        print("삭제 요청 확인 for pk : ", pk)
+        try:
+            tech_note = self.get_object(pk)
+            tech_note.delete()
+        except Exception as e:
+            raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
+
+        return Response(status=HTTP_204_NO_CONTENT)
