@@ -19,6 +19,32 @@ def create_dummy_tech_notes(request):
     return JsonResponse({"message": "Dummy notes created successfully."})
 
 
+class UpdateLikeView(APIView):
+    def get_object(self, pk):
+        try:
+            return TechNote.objects.get(pk=pk)
+        except TechNote.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        tech_note = self.get_object(pk)
+
+        if tech_note:
+            before_like_count = tech_note.like_count
+            tech_note.like_count += 1
+        else:
+            raise ParseError(pk+"에 해당하는 노트가 없습니다")
+
+        tech_note.save()
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_like_count} to {before_like_count+1} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class TechNotes(APIView):
     # step1 클래스 변수 선언 , total_count_for_tech_note_table_rows = 테이블 모든 행의 개수
     total_count_for_tech_note_table_rows = 0
@@ -73,8 +99,8 @@ class TechNotes(APIView):
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
 
-
     # 넘어올 데이터: techNotePk,category_option,tech_note_description,
+
     def put(self, request):
 
         techNotePk = request.data.get("techNotePk")
