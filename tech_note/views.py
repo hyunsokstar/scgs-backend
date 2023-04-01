@@ -145,7 +145,7 @@ class TechNoteListDeleteView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-class TechNoteContentView(APIView):
+class TechNoteContentListView(APIView):
     def get_object(self, pk):
         try:
             return TechNote.objects.get(pk=pk)
