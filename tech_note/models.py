@@ -41,7 +41,7 @@ class TechNoteContent(models.Model):
         on_delete=models.CASCADE,
         related_name="tech_note_contents"
     )
-    title = models.CharField(max_length=50)
-    file = models.CharField(max_length=50, null=True, blank=True)
-    content = models.TextField(null=True, blank=True)
+    note_content_title = models.CharField(max_length=50)
+    note_content_file = models.CharField(max_length=50, null=True, blank=True)
+    note_content_content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

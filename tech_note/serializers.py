@@ -24,8 +24,20 @@ class TechNoteContentsListSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "tech_note",
-            "title",
-            "file",
-            "content",
+            "note_content_title",
+            "note_content_file",
+            "note_content_content",
+            "created_at"
+        )
+
+
+class SerializerForCreateTechNoteContent(serializers.ModelSerializer):
+    class Meta:
+        model = TechNoteContent
+        fields = (
+            "tech_note",
+            "note_content_title",
+            "note_content_file",
+            "note_content_content",
             "created_at"
         )

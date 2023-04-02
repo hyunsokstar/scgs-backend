@@ -6,7 +6,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 
 from .models import TechNote, TechNoteContent
-from .serializers import CreateTechNoteSerializer, TechNoteContentsListSerializer, TechNoteSerializer
+from .serializers import CreateTechNoteSerializer, SerializerForCreateTechNoteContent, TechNoteContentsListSerializer, TechNoteSerializer
 
 
 @csrf_exempt
@@ -145,20 +145,37 @@ class TechNoteListDeleteView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-class TechNoteContentListView(APIView):
-    def get_object(self, pk):
+class TechNoteContentsView(APIView):
+    def get_object(self, fk):
         try:
-            return TechNote.objects.get(pk=pk)
+            return TechNote.objects.get(pk=fk)
         except TechNote.DoesNotExist:
             raise NotFound
 
-    def get(self, request, pk):
-        tech_note = self.get_object(pk)
+    def get(self, request, fk):
+        tech_note = self.get_object(fk)
         print("tech_note : ", tech_note)
         tech_note_contents = TechNoteContent.objects.filter(
-            tech_note=pk)
+            tech_note=fk)
         print("tech_note_contents : ", tech_note_contents)
         serializer = TechNoteContentsListSerializer(
             tech_note_contents, many=True)
 
-        return Response({"success": "true", "data": serializer.data})
+        return Response({"success": "true", "tech_note_title": tech_note.title, "data": serializer.data})
+
+    def post(self, request, fk):
+        # print("request.data : ", request.data)
+        # print("request.data['task_manager] : ", request.data['task_manager'])
+        # print("hi")
+        serializer = SerializerForCreateTechNoteContent(data=request.data)
+
+        if serializer.is_valid():
+            try:
+                tech_note_content = serializer.save()
+                serializer = TechNoteContentsListSerializer(tech_note_content)
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create tech_content")
