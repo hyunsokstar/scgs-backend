@@ -18,6 +18,24 @@ def create_dummy_tech_notes(request):
         )
     return JsonResponse({"message": "Dummy notes created successfully."})
 
+class TechNoteContentDeleteView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return TechNoteContent.objects.get(pk=pk)
+        except TechNoteContent.DoesNotExist:
+            raise NotFound
+        
+    def delete(self, request, pk):
+        print("삭제 요청 확인 for pk : ", pk)
+        try:
+            tech_note_content = self.get_object(pk)
+            tech_note_content.delete()
+        except Exception as e:
+            raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
+
+        return Response(status=HTTP_204_NO_CONTENT)        
+    
 
 class UpdateLikeView(APIView):
     def get_object(self, pk):
