@@ -190,7 +190,6 @@ class ExtraTask(models.Model):
         else:
             return "준비"
 
-
 class TestForTask(models.Model):
     class TestMethodChoices(models.TextChoices):
         browser = ("browser", "브라우져")
@@ -215,3 +214,24 @@ class TestForTask(models.Model):
     )
 
     test_result_image = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        return self.test_description
+
+class TestersForTest(models.Model):
+    task = models.ForeignKey(                  # 어떤 태스크의 테스트
+        "project_progress.TestForTask",
+        on_delete=models.CASCADE,
+        related_name="testers_for_test",
+        blank=True,
+        null=True,
+    )
+
+    tester = models.OneToOneField(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)

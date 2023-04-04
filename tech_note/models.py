@@ -31,10 +31,11 @@ class TechNote(models.Model):
 
     def __str__(self):
         return self.title
-    
+
     @property
     def note_content_count(self):
         return self.tech_note_contents.count()
+
 
 class TechNoteContent(models.Model):
     tech_note = models.ForeignKey(
@@ -48,3 +49,5 @@ class TechNoteContent(models.Model):
     note_content_file = models.CharField(max_length=50, null=True, blank=True)
     note_content_content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+

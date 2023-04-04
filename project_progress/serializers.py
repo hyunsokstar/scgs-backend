@@ -1,10 +1,33 @@
 from medias.serializers import ReferImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ExtraTask, ProjectProgress, TestForTask
+from .models import ExtraTask, ProjectProgress, TestForTask, TestersForTest
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
+
+
+class TestersForTestSerializer(serializers.ModelSerializer):
+    tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
+
+    class Meta:
+        model = TestersForTest
+        fields = (
+            "pk",
+            "task",
+            "tester"
+        )
+
+
+class CreateTestSerializerForOneTask(ModelSerializer):
+
+    class Meta:
+        model = TestForTask
+        fields = (
+            "test_description",
+            "test_method",
+            "test_passed"
+        )
 
 
 class CreateExtraTaskSerializer(serializers.ModelSerializer):
@@ -20,19 +43,13 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
             "importance",
         )
 
-
-class CreateTestSerializerForOneTask(ModelSerializer):
-    class Meta:
-        model = TestForTask
-        fields = (
-            "test_description",
-            "test_method",
-            "test_passed"
-            # "test_result_image"
-        )
+# 0404 여기에 추가 해야 함
 
 
 class TestSerializerForOneTask(ModelSerializer):
+    
+    testers_for_test = TestersForTestSerializer(many=True)
+
     class Meta:
         model = TestForTask
         fields = (
@@ -40,7 +57,8 @@ class TestSerializerForOneTask(ModelSerializer):
             "test_description",
             "test_passed",
             "test_method",
-            "test_result_image"
+            "test_result_image",
+            "testers_for_test"
         )
 
 
@@ -63,6 +81,8 @@ class ExtraTasksSerializer(ModelSerializer):
 
     def get_started_at_formatted(self, obj):
         return obj.started_at_formatted()
+
+# UserProfileImageSerializer
 
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
