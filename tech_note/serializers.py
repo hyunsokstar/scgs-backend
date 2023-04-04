@@ -3,10 +3,16 @@ from .models import TechNote, TechNoteContent
 
 
 class TechNoteSerializer(serializers.ModelSerializer):
+    note_content_count = serializers.SerializerMethodField()
+
+    # content_count 가져오기
     class Meta:
         model = TechNote
-        fields = ('pk', 'author', 'title', 'category',
+        fields = ('pk', 'author', 'title', 'note_content_count', 'category',
                   'like_count', 'view_count', 'created_at')
+
+    def get_note_content_count(self, obj):
+        return obj.note_content_count
 
 # tech_note_description
 # category_option

@@ -34,6 +34,7 @@ class UpdateViewForTechNoteViewCount(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+
 @csrf_exempt
 def create_dummy_tech_notes(request):
     for i in range(50):
@@ -43,6 +44,7 @@ def create_dummy_tech_notes(request):
         )
     return JsonResponse({"message": "Dummy notes created successfully."})
 
+
 class TechNoteContentDeleteView(APIView):
 
     def get_object(self, pk):
@@ -50,7 +52,7 @@ class TechNoteContentDeleteView(APIView):
             return TechNoteContent.objects.get(pk=pk)
         except TechNoteContent.DoesNotExist:
             raise NotFound
-        
+
     def delete(self, request, pk):
         print("삭제 요청 확인 for pk : ", pk)
         try:
@@ -59,8 +61,8 @@ class TechNoteContentDeleteView(APIView):
         except Exception as e:
             raise ParseError(f"삭제 요청 에러입니다: {str(e)}")
 
-        return Response(status=HTTP_204_NO_CONTENT)        
-    
+        return Response(status=HTTP_204_NO_CONTENT)
+
 
 class UpdateLikeView(APIView):
     def get_object(self, pk):
@@ -198,8 +200,7 @@ class TechNoteContentsView(APIView):
     def get(self, request, fk):
         tech_note = self.get_object(fk)
         print("tech_note : ", tech_note)
-        tech_note_contents = TechNoteContent.objects.filter(
-            tech_note=fk)
+        tech_note_contents = TechNoteContent.objects.filter(tech_note=fk)
         print("tech_note_contents : ", tech_note_contents)
         serializer = TechNoteContentsListSerializer(
             tech_note_contents, many=True)
