@@ -14,7 +14,7 @@ class TestersForTestSerializer(serializers.ModelSerializer):
         model = TestersForTest
         fields = (
             "pk",
-            "task",
+            "test",
             "tester"
         )
 

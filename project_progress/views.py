@@ -3,12 +3,12 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask
+from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import ProjectProgress, ExtraTask, TestForTask
+from .models import ProjectProgress, ExtraTask, TestForTask, TestersForTest
 
 # 1122
 
@@ -33,6 +33,47 @@ class UpatedTestPassedForTasksView(APIView):
             test_for_task.test_passed = True
 
         test_for_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+# testers_for_test
+# task tester created_at
+
+
+class UpatedTestersForTestPkView(APIView):
+
+    # def get_object(self, request, pk):
+    #     try:
+    #         return TestersForTest.objects.get(test=pk, tester=request.user)
+    #     except TestersForTest.DoesNotExist:
+    #         print("TestersForTest 에서 못찾았습니다.")
+    #         raise NotFound
+
+    def put(self, request, testPk):
+        message = ""
+        print("put 요청 확인 : pk ", testPk)
+
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        is_tester_aready_exists = TestersForTest.objects.filter(
+            test=testPk, tester=request.user).exists()
+
+        if is_tester_aready_exists == False:
+            test = TestForTask.objects.get(pk=testPk)
+            new_tester_for_test = TestersForTest(test=test, tester=request.user)
+            new_tester_for_test.save()
+            message = "test check success"
+
+        else:
+            TestersForTest.objects.filter(
+                test=testPk).delete()
+            message = "test check cancle !"
 
         result_data = {
             "success": True,
@@ -650,6 +691,8 @@ class ProjectProgressDetailView(APIView):
 
 
 1122
+
+
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
     total_page_count = 10  # 1 페이지에 몇개씩

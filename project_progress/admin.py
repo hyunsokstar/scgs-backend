@@ -36,5 +36,5 @@ class TestForTaskAdmin(admin.ModelAdmin):
 
 @admin.register(TestersForTest)
 class TechNoteTesterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'task', 'tester', 'created_at')
-    list_filter = ('task', 'created_at')
+    list_display = ('id', 'test', 'tester', 'created_at')
+    list_filter = ('test', 'created_at')

@@ -219,7 +219,7 @@ class TestForTask(models.Model):
         return self.test_description
 
 class TestersForTest(models.Model):
-    task = models.ForeignKey(                  # 어떤 태스크의 테스트
+    test = models.ForeignKey(                  # 어떤 태스크의 테스트
         "project_progress.TestForTask",
         on_delete=models.CASCADE,
         related_name="testers_for_test",
@@ -227,7 +227,7 @@ class TestersForTest(models.Model):
         null=True,
     )
 
-    tester = models.OneToOneField(
+    tester = models.ForeignKey(
         "users.User",
         blank=True,
         null=True,
