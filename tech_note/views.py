@@ -9,6 +9,31 @@ from .models import TechNote, TechNoteContent
 from .serializers import CreateTechNoteSerializer, SerializerForCreateTechNoteContent, TechNoteContentsListSerializer, TechNoteSerializer
 
 
+class UpdateViewForTechNoteViewCount(APIView):
+    def get_object(self, pk):
+        try:
+            return TechNote.objects.get(pk=pk)
+        except TechNote.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        tech_note = self.get_object(pk)
+
+        if tech_note:
+            before_view_count = tech_note.view_count
+            tech_note.view_count += 1
+        else:
+            raise ParseError(pk+"에 해당하는 노트가 없습니다")
+
+        tech_note.save()
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_view_count} to {before_view_count+1} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
 @csrf_exempt
 def create_dummy_tech_notes(request):
     for i in range(50):

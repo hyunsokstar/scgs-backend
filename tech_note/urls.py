@@ -8,6 +8,8 @@ urlpatterns = [
     path('', views.TechNotes.as_view(), name='tech-note-list'),
     # technote content view by pk <=> pk 는 technote의 pk 를 참조
     path('<int:fk>', views.TechNoteContentsView.as_view(), name="tech-note-contents"),
+    path('<int:pk>/view-count/update', views.UpdateViewForTechNoteViewCount.as_view(), name="update-view-for-tech-note-view-count"),
+
     path('tech-note-content/<int:pk>/delete', views.TechNoteContentDeleteView.as_view(), name="tech-note-content-delete-view"),
     path('<int:pk>/delete', views.TechNoteListDeleteView.as_view(),
          name='tech-note-list-delete'),
