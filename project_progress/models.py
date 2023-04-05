@@ -190,6 +190,7 @@ class ExtraTask(models.Model):
         else:
             return "준비"
 
+
 class TestForTask(models.Model):
     class TestMethodChoices(models.TextChoices):
         browser = ("browser", "브라우져")
@@ -218,6 +219,7 @@ class TestForTask(models.Model):
     def __str__(self):
         return self.test_description
 
+
 class TestersForTest(models.Model):
     test = models.ForeignKey(                  # 어떤 태스크의 테스트
         "project_progress.TestForTask",
@@ -235,3 +237,25 @@ class TestersForTest(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TaskComment(models.Model):
+    task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="task_comments",
+        blank=True,
+        null=True,
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="task_comments",
+    )
+
+    comment = models.CharField(max_length=100)
+    like_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
