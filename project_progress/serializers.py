@@ -105,6 +105,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     extra_tasks = ExtraTasksSerializer(many=True)
     tests_for_tasks = TestSerializerForOneTask(many=True)
     task_comments = TaskCommentSerializer(many=True)
+    task_manager = UserProfileImageSerializer()
 
     class Meta:
         model = ProjectProgress
@@ -113,6 +114,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "task",
             "task_description",
             "writer",
+            "task_manager",
             "importance",
             "task_completed",
             "started_at",
