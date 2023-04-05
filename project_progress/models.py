@@ -259,3 +259,10 @@ class TaskComment(models.Model):
     comment = models.CharField(max_length=100)
     like_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
+
+    def created_at_formatted(self):
+        if (self.created_at != None):
+            local_created_at = timezone.localtime(self.created_at)
+            return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"

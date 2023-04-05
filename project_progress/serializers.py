@@ -1,6 +1,6 @@
 from medias.serializers import ReferImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ExtraTask, ProjectProgress, TestForTask, TestersForTest
+from .models import ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
@@ -47,7 +47,7 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
 
 
 class TestSerializerForOneTask(ModelSerializer):
-    
+
     testers_for_test = TestersForTestSerializer(many=True)
 
     class Meta:
@@ -82,7 +82,19 @@ class ExtraTasksSerializer(ModelSerializer):
     def get_started_at_formatted(self, obj):
         return obj.started_at_formatted()
 
-# UserProfileImageSerializer
+
+class TaskCommentSerializer(serializers.ModelSerializer):
+    created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer()
+
+    class Meta:
+        model = TaskComment
+        fields = ('id', 'task', 'writer', 'comment', 'like_count',
+                  'created_at', "created_at_formatted")
+        read_only_fields = ('id', 'created_at',)
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()
 
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
@@ -92,6 +104,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     task_images = ReferImageForTaskSerializer(many=True)
     extra_tasks = ExtraTasksSerializer(many=True)
     tests_for_tasks = TestSerializerForOneTask(many=True)
+    task_comments = TaskCommentSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -107,6 +120,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "due_date",
             "elapsed_time_from_started_at",
             "task_images",
+            "task_comments",
             "extra_tasks",
             "tests_for_tasks"
         )
