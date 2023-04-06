@@ -8,9 +8,62 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import ProjectProgress, ExtraTask, TestForTask, TestersForTest
+from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 
 # 1122
+class UpdateViewForCommentText(APIView):
+    def get_object(self, pk):
+        try:
+            return TaskComment.objects.get(pk=pk)
+        except TaskComment.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        print("request.data.get(comment) : ", request.data.get("comment"))
+        comment_obj = self.get_object(commentPk)
+        comment_obj.comment = request.data.get("comment")
+        comment_obj.is_edit_mode = False
+        comment_obj.save()
+
+        result_data = {
+            "success": True,
+            "message": "comment text update success",
+        }
+
+        return Response(result_data, status=HTTP_200_OK)    
+    
+class UpdateViewForCommentEdit(APIView):
+    def get_object(self, pk):
+        try:
+            return TaskComment.objects.get(pk=pk)
+        except TaskComment.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        message = ""
+        comment = self.get_object(commentPk)
+
+        if comment.is_edit_mode:
+            comment.is_edit_mode = False
+            message = "edit mode to read mode"
+            # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            comment.is_edit_mode = True
+            message = "from read mode to edit mode"
+            # new_completed_at = timezone.localtime()
+
+        comment.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)    
+
 class ProjectProgressCommentView(APIView):
     def get_object(self, taskPk):
         try:
