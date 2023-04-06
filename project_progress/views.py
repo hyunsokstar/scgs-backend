@@ -11,8 +11,6 @@ from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TestForTask, TestersForTest
 
 # 1122
-
-
 class ProjectProgressCommentView(APIView):
     def get_object(self, taskPk):
         try:

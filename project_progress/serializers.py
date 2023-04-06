@@ -18,6 +18,7 @@ class TestersForTestSerializer(serializers.ModelSerializer):
             "tester"
         )
 
+
 class CreateTestSerializerForOneTask(ModelSerializer):
 
     class Meta:
@@ -27,6 +28,8 @@ class CreateTestSerializerForOneTask(ModelSerializer):
             "test_method",
             "test_passed"
         )
+
+
 class CreateCommentSerializerForTask(ModelSerializer):
 
     class Meta:
@@ -96,8 +99,16 @@ class TaskCommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskComment
-        fields = ('id', 'task', 'writer', 'comment', 'like_count',
-                  'created_at', "created_at_formatted")
+        fields = (
+            'id',
+            'task',
+            'writer',
+            'comment',
+            'is_edit_mode',
+            'like_count',
+            'created_at',
+            "created_at_formatted"
+        )
         read_only_fields = ('id', 'created_at',)
 
     def get_created_at_formatted(self, obj):

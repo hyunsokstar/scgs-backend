@@ -259,6 +259,7 @@ class TaskComment(models.Model):
     comment = models.CharField(max_length=100)
     like_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
+    is_edit_mode = models.BooleanField(default=False)
 
     def created_at_formatted(self):
         if (self.created_at != None):
