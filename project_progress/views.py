@@ -3,7 +3,7 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
@@ -11,6 +11,34 @@ from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TestForTask, TestersForTest
 
 # 1122
+
+
+class ProjectProgressCommentView(APIView):
+    def get_object(self, taskPk):
+        try:
+            return ProjectProgress.objects.get(pk=taskPk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, taskPk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+        
+        serializer = CreateCommentSerializerForTask(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                # original_task = self.get_object(taskPk)S
+                test_for_task = serializer.save(writer=request.user)
+                serializer = CreateExtraTaskSerializer(test_for_task)
+
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
 
 
 class UpatedTestPassedForTasksView(APIView):
@@ -66,7 +94,8 @@ class UpatedTestersForTestPkView(APIView):
 
         if is_tester_aready_exists == False:
             test = TestForTask.objects.get(pk=testPk)
-            new_tester_for_test = TestersForTest(test=test, tester=request.user)
+            new_tester_for_test = TestersForTest(
+                test=test, tester=request.user)
             new_tester_for_test.save()
             message = "test check success"
 
@@ -133,8 +162,6 @@ class TestForTasks(APIView):
                 print("e : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
-
-        pass
 
 
 class UpdateExtraTaskImportance(APIView):

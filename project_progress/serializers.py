@@ -18,7 +18,6 @@ class TestersForTestSerializer(serializers.ModelSerializer):
             "tester"
         )
 
-
 class CreateTestSerializerForOneTask(ModelSerializer):
 
     class Meta:
@@ -27,6 +26,14 @@ class CreateTestSerializerForOneTask(ModelSerializer):
             "test_description",
             "test_method",
             "test_passed"
+        )
+class CreateCommentSerializerForTask(ModelSerializer):
+
+    class Meta:
+        model = TaskComment
+        fields = (
+            "task",
+            "comment",
         )
 
 
