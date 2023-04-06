@@ -11,6 +11,20 @@ from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 
 # 1122
+class CommentForTaskView(APIView):
+    def get_object(self, pk):
+        try:
+            return TaskComment.objects.get(pk=pk)
+        except TaskComment.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, commentPk):
+        
+        comment_obj = self.get_object(commentPk)
+        comment_obj.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
 class UpdateViewForCommentText(APIView):
     def get_object(self, pk):
         try:
