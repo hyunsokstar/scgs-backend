@@ -1,7 +1,7 @@
 import requests
 from django.conf import settings
-from project_progress.models import ProjectProgress
-from medias.serializers import ReferImageForTaskSerializer
+from project_progress.models import ProjectProgress, TestForTask
+from medias.serializers import ReferImageForTaskSerializer, TestResultImageSerializer
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -13,13 +13,37 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from .models import Photo, ReferImageForTask
 
+
+class createTestImageResult(APIView):
+    def get_object(self, pk):
+        try:
+            return TestForTask.objects.get(pk=pk)
+        except TestForTask.DoesNotExist:
+            raise NotFound
+
+    def post(self, request):
+        print("request.data[testPk] : ", request.data["testPk"])
+        serializer = TestResultImageSerializer(data=request.data)
+
+        if serializer.is_valid():
+            test = self.get_object(request.data["testPk"])
+            test_result = serializer.save(test=test)
+            print("test_result : ", test_result)
+            serializer = TestResultImageSerializer(test_result)
+            print("serializer : ", serializer.data)
+            return Response(serializer.data)
+        else:
+            raise ParseError(serializer.errors)
+            # return Response(serializer.errors)
+
+
 class DeleteViewForRefImageForTask(APIView):
 
     def get_object(self, pk):
         try:
             return ReferImageForTask.objects.get(pk=pk)
         except ReferImageForTask.DoesNotExist:
-            raise NotFound 
+            raise NotFound
 
     def delete(self, request, pk):
         ref_image = self.get_object(pk)
@@ -27,8 +51,9 @@ class DeleteViewForRefImageForTask(APIView):
         # if room.owner != request.user:
         #     raise PermissionDenied
         ref_image.delete()
-        return Response(status=HTTP_204_NO_CONTENT) 
-    
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
 class CreateViewForRefImageToTaskDetail(APIView):
     def get_object(self, pk):
         try:

@@ -4,7 +4,7 @@ from common.models import CommonModel
 # Create your models here.
 class TestResultImageForTask(CommonModel):
     image_url = models.URLField()
-    task = models.ForeignKey(
+    test = models.ForeignKey(
         "project_progress.TestForTask",
         on_delete=models.CASCADE,
         max_length=200,

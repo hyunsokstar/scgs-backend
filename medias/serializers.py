@@ -36,3 +36,11 @@ class ReferImageForTaskSerializer(ModelSerializer):
             "image_url",
             # "task",
         )
+
+class TestResultImageSerializer(ModelSerializer):
+    class Meta:
+        model = TestResultImageForTask
+        fields = (
+            "pk",
+            "image_url",
+        )

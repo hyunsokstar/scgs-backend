@@ -19,7 +19,6 @@ class CommentForTaskView(APIView):
             raise NotFound
 
     def delete(self, request, commentPk):
-        
         comment_obj = self.get_object(commentPk)
         comment_obj.delete()
 

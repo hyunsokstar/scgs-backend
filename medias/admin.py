@@ -35,4 +35,4 @@ class ReferImageForTaskAdmin(admin.ModelAdmin):
 
 @admin.register(TestResultImageForTask)
 class TestResultImageForTaskAdmin(admin.ModelAdmin):
-    list_display = ("image_url", "task")
+    list_display = ("image_url", "test")
