@@ -2,7 +2,16 @@ from django.db import models
 from common.models import CommonModel
 
 # Create your models here.
-
+class TestResultImageForTask(CommonModel):
+    image_url = models.URLField()
+    task = models.ForeignKey(
+        "project_progress.TestForTask",
+        on_delete=models.CASCADE,
+        max_length=200,
+        null=True,
+        blank=True,
+        related_name="test_result_images"
+    )
 
 class ReferImageForTask(CommonModel):
     image_url = models.URLField()

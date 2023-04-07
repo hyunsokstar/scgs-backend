@@ -1,4 +1,4 @@
-from medias.serializers import ReferImageForTaskSerializer
+from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
 from .models import ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest
 from rest_framework import serializers
@@ -53,12 +53,12 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
             "importance",
         )
 
-# 0404 여기에 추가 해야 함
-
+# 0407 여기에 추가 해야 함
 
 class TestSerializerForOneTask(ModelSerializer):
 
     testers_for_test = TestersForTestSerializer(many=True)
+    test_result_images = TestResultImageForTaskSerializer(many=True)
 
     class Meta:
         model = TestForTask
@@ -68,7 +68,8 @@ class TestSerializerForOneTask(ModelSerializer):
             "test_passed",
             "test_method",
             "test_result_image",
-            "testers_for_test"
+            "testers_for_test",
+            "test_result_images"
         )
 
 
