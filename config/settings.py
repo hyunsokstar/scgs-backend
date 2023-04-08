@@ -66,7 +66,8 @@ CUSTOM_APPS = [
     "estimate.apps.EstimateConfig",
     "tutorials.apps.TutorialsConfig",
     "project_progress.apps.ProjectProgressConfig",
-    "tech_note.apps.TechNoteConfig"
+    "tech_note.apps.TechNoteConfig",
+    "api_docu.apps.ApiDocuConfig"
 ]
 
 SYSTEM_APPS = [
