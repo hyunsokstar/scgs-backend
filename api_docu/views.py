@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ApiDocuSerializer, SerializerForInsertToApiDocu
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
-
 from .models import ApiDocu
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
+
 
 
 class ApiDocuView(APIView):
@@ -37,3 +38,17 @@ class ApiDocuView(APIView):
             raise ParseError(error_message)
 
         return Response({"success": True, "data": serializer.data})
+
+
+class ApiDocuDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return ApiDocu.objects.get(pk=pk)
+        except ApiDocu.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, pk):
+        api_docu = self.get_object(pk)
+        api_docu.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
