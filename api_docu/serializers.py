@@ -10,8 +10,19 @@ class ApiDocuSerializer(serializers.ModelSerializer):
         model = ApiDocu
         fields = (
             'id',
-            'classification',
             'url',
             'description',
+            'classification',
             'writer',
         )
+
+class SerializerForInsertToApiDocu(serializers.ModelSerializer):
+
+    class Meta:
+        model = ApiDocu
+        fields = (
+            'url',
+            'description',
+            'classification',
+            'writer',
+        )    
