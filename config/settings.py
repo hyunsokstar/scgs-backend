@@ -67,7 +67,8 @@ CUSTOM_APPS = [
     "tutorials.apps.TutorialsConfig",
     "project_progress.apps.ProjectProgressConfig",
     "tech_note.apps.TechNoteConfig",
-    "api_docu.apps.ApiDocuConfig"
+    "api_docu.apps.ApiDocuConfig",
+    "shortcut.apps.ShortcutConfig",
 ]
 
 SYSTEM_APPS = [
