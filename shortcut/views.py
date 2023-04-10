@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
 from .models import ShortCut
 from .serializers import SerializerForInsertToShortcut, ShortCutSerializer
@@ -38,3 +39,17 @@ class ShortCutListView(APIView):
             raise ParseError(error_message)
 
         return Response({"success": True, "data": serializer.data})
+
+# ShortCutDetailView
+class ShortCutDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return ShortCut.objects.get(pk=pk)
+        except ShortCut.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, pk):
+        shortcut = self.get_object(pk)
+        shortcut.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
