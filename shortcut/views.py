@@ -8,6 +8,7 @@ from .serializers import ShortCutSerializer
 
 class ShortCutListView(APIView):
     def get(self, request):
+        print("shortcut list 요청 받음")
         shortcuts = ShortCut.objects.all()
         serializer = ShortCutSerializer(shortcuts, many=True)
         response_data = {

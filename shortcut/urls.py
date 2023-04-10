@@ -3,6 +3,4 @@ from . import views
 
 urlpatterns = [
     path('', views.ShortCutListView.as_view(), name='project_progress'),
-
 ]
-
