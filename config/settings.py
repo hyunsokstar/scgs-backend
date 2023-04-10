@@ -69,6 +69,7 @@ CUSTOM_APPS = [
     "tech_note.apps.TechNoteConfig",
     "api_docu.apps.ApiDocuConfig",
     "shortcut.apps.ShortcutConfig",
+    "shortcut2.apps.Shortcut2Config",
 ]
 
 SYSTEM_APPS = [
