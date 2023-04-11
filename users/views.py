@@ -298,7 +298,7 @@ class LogOut(APIView):
 
     def post(self, request):
         logout(request)
-        return Response({"ok": "bye!"})
+        return Response({"logout_success": True})
 
 # class JWTLogIn(APIView):
 #     def post(self, request):
