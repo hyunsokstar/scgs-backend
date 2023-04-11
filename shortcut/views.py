@@ -48,8 +48,8 @@ class ShortCutListView(APIView):
                             print("tag : ", tag)
                             shortcut.tags.add(tag)
             except Exception as e:
-                print("여기에서 에러 발생 !!!!!!" , e)
-                raise ParseError("tag not found")                    
+                print("여기에서 에러 발생 !!!!!!", e)
+                raise ParseError("tag not found")
 
             else:
                 shortcut = serializer.save()
@@ -77,3 +77,46 @@ class ShortCutDetailView(APIView):
         shortcut.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+
+    def put(self, request, pk):
+        print("shortcut update 요청 확인")
+        print("request.data", request.data)
+        print("pk : ", pk)
+
+
+        shortcut = self.get_object(pk)
+        print("shortcut : ", shortcut)
+
+        serializer = SerializerForInsertToShortcut(
+            shortcut,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            try:
+                shortcut = serializer.save()
+
+                shortcut.tags.clear()
+                tags = request.data.get("tags")
+                print("tags : ", tags)
+
+                for tagName in tags:
+                    tag = Tags.objects.get(name=tagName)
+                    print("tag : ", tag)
+                    shortcut.tags.add(tag)
+
+                serializer = SerializerForInsertToShortcut(shortcut)
+                return Response(serializer.data)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError("project_task not found")
+        else:
+            print(serializer.errors)
+            raise ParseError("serializer is not valid: {}".format(serializer.errors))
+            error_response = {
+                "errors": serializer.errors
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)

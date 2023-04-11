@@ -32,5 +32,4 @@ class SerializerForInsertToShortcut(serializers.ModelSerializer):
             'shortcut',
             'description',
             'classification',
-            # 'tags'
         )

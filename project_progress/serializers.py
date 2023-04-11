@@ -117,7 +117,6 @@ class TaskCommentSerializer(serializers.ModelSerializer):
 
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
-
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
     task_images = ReferImageForTaskSerializer(many=True)
