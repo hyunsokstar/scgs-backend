@@ -78,12 +78,10 @@ class ShortCutDetailView(APIView):
 
         return Response(status=HTTP_204_NO_CONTENT)
 
-
     def put(self, request, pk):
         print("shortcut update 요청 확인")
         print("request.data", request.data)
         print("pk : ", pk)
-
 
         shortcut = self.get_object(pk)
         print("shortcut : ", shortcut)
@@ -102,7 +100,14 @@ class ShortCutDetailView(APIView):
                 tags = request.data.get("tags")
                 print("tags : ", tags)
 
+                tags = request.data.get("tags")
                 for tagName in tags:
+                    is_tag_exists = Tags.objects.filter(name=tagName).exists()
+
+                    if is_tag_exists == False:
+                        tag = Tags.objects.create(name=tagName)
+                        tag.save()
+                        
                     tag = Tags.objects.get(name=tagName)
                     print("tag : ", tag)
                     shortcut.tags.add(tag)
@@ -115,7 +120,8 @@ class ShortCutDetailView(APIView):
                 raise ParseError("project_task not found")
         else:
             print(serializer.errors)
-            raise ParseError("serializer is not valid: {}".format(serializer.errors))
+            raise ParseError(
+                "serializer is not valid: {}".format(serializer.errors))
             error_response = {
                 "errors": serializer.errors
             }
