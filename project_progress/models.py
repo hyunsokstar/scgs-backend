@@ -8,7 +8,6 @@ from datetime import datetime
 # seoul_tz = tz('Asia/Seoul')
 # timezone.activate(seoul_tz)
 
-
 class ProjectProgress(models.Model):
     task_manager = models.ForeignKey(
         "users.User",
@@ -18,9 +17,9 @@ class ProjectProgress(models.Model):
         related_name="progect_tasks",
     )
 
-    task = models.CharField(max_length=50, default="")
+    task = models.CharField(max_length=80, default="")
     task_description = models.TextField(max_length=300, default="")
-    writer = models.CharField(max_length=80, blank=True, null=True)
+    writer = models.CharField(max_length=50, blank=True, null=True)
     importance = models.IntegerField(default=1, blank=True, null=True)
 
     in_progress = models.BooleanField(default=False)
@@ -121,13 +120,6 @@ class ProjectProgress(models.Model):
         time_left_to_due_date_str = f"{hours}시간 {minutes}분"
         return time_left_to_due_date_str
 
-# pk
-# task
-# task_status
-# importance
-# password
-# started_at
-# completed_at
 
 
 class ExtraTask(models.Model):

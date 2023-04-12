@@ -9,8 +9,38 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
+from django.db.models import Count
 
-# 1122
+
+def get_writers_info(complete_status):
+    print("complete_status2 : ", complete_status)
+    task_manager_counts = ProjectProgress.objects.filter(task_completed=complete_status).values(
+        'task_manager__username', 'task_manager__profile_image').annotate(count=Count('id'))
+    print("task_manager_counts : ", task_manager_counts)
+
+    task_managers_info = []
+    for task_manager_count in task_manager_counts:
+        writer_info = {
+            "username": task_manager_count['task_manager__username'],
+            "profile_image": task_manager_count['task_manager__profile_image'],
+            "task_count": task_manager_count['count']
+        }
+        task_managers_info.append(writer_info)
+
+    # result_data = {
+        # "writersInfo": task_managers_info
+    # }
+
+    return task_managers_info
+
+
+class TaskMangerInfo(APIView):
+    def get(self, request):
+        result_data = get_writers_info(complete_status=False)
+
+        return Response(result_data)
+
+
 class CommentForTaskView(APIView):
     def get_object(self, pk):
         try:
@@ -23,6 +53,7 @@ class CommentForTaskView(APIView):
         comment_obj.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class UpdateViewForCommentText(APIView):
     def get_object(self, pk):
@@ -44,8 +75,9 @@ class UpdateViewForCommentText(APIView):
             "message": "comment text update success",
         }
 
-        return Response(result_data, status=HTTP_200_OK)    
-    
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class UpdateViewForCommentEdit(APIView):
     def get_object(self, pk):
         try:
@@ -75,7 +107,8 @@ class UpdateViewForCommentEdit(APIView):
             "message": message,
         }
 
-        return Response(result_data, status=HTTP_200_OK)    
+        return Response(result_data, status=HTTP_200_OK)
+
 
 class ProjectProgressCommentView(APIView):
     def get_object(self, taskPk):
@@ -87,7 +120,7 @@ class ProjectProgressCommentView(APIView):
     def post(self, request, taskPk):
         if not request.user.is_authenticated:
             raise NotAuthenticated
-        
+
         serializer = CreateCommentSerializerForTask(data=request.data)
 
         if serializer.is_valid():
@@ -583,14 +616,19 @@ class UncompletedTaskListView(APIView):
 
         # step5 응답
         data = serializer.data
-        data = {
+
+        # 0412
+        writers_info = get_writers_info(complete_status=False)
+
+        response_data = {
+            "writers_info": writers_info,
+            "ProjectProgressList": data,
             "count_for_ready": count_for_ready,
             "count_for_in_progress": count_for_in_progress,
             "count_for_in_testing": count_for_in_testing,
             "totalPageCount": self.totalCountForTask,
-            "ProjectProgressList": data
         }
-        return Response(data, status=HTTP_200_OK)
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class CompletedTaskListViewForMe(APIView):
@@ -655,11 +693,15 @@ class CompletedTaskListViewForMe(APIView):
 
         # step5 응답
         data = serializer.data
-        data = {
+
+        writers_info = get_writers_info(complete_status=True)
+
+        response__data = {
+            "writers_info": writers_info,
             "totalPageCount": self.totalCountForTask,
             "ProjectProgressList": data
         }
-        return Response(data, status=HTTP_200_OK)
+        return Response(response__data, status=HTTP_200_OK)
 
 
 class CompletedTaskListView(APIView):
@@ -745,6 +787,7 @@ class ProjectProgressDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
+        print("put 요청 확인 ")
         print("request.data", request.data)
         print("pk : ", pk)
 

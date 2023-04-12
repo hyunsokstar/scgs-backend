@@ -7,9 +7,10 @@ from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, Tester
 class ProjectProgressAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
+        "task_manager",
+        "writer",
         "task",
         "task_description",
-        "writer",
         "importance",
         "task_completed",
         "password",
