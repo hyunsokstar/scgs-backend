@@ -6,17 +6,56 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from .models import ApiDocu
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
+# step1 페이지 번호 가져 오기
+# test:
+# http://127.0.0.1:8000/api/v1/api-docu/?page=1
 
 
 class ApiDocuView(APIView):
+    toalCountForApiDocu = 0
+    per_page = 5  # 1 페이지에 몇개씩
+
+    # step3 목록 가져오는 함수 정의
+    def get_api_docu_list(self):
+        try:
+            return ApiDocu.objects.all()
+        except ApiDocu.DoesNotExist:
+            raise NotFound
+    # step2 한 페이지당 목록 개수 정하기
+
     def get(self, request):
-        apis = ApiDocu.objects.all()
-        serializer = ApiDocuSerializer(apis, many=True)
-        response_data = {
-            'success': True,
-            'api_docu_list': serializer.data,
+        # step1 page 번호 받아 오기
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # step4 페이지 번호 확인
+        print("page : ", page)
+
+        # step5 number_for_one_page
+        self.toalCountForApiDocu = self.get_api_docu_list().count()
+
+        # step6 총 개수
+        print("총개수 check (self.toalCountForApiDocu) : ", self.toalCountForApiDocu)
+
+        # step7 해당 페이지의 ApiDocu목록 가져 오기
+        # step7-1 범위 정하기 (start ~ end)
+        start = (page - 1) * self.per_page
+        end = start + self.per_page
+        # step 7-2 해당 범위의 목록 가져 오기
+        list_for_api_docu_for_page = self.get_api_docu_list()[start:end]        
+
+        # step 8 시리얼라이저로 직렬화 
+        serializer = ApiDocuSerializer(list_for_api_docu_for_page, many=True)
+
+        data = {
+            "totalCount": self.toalCountForApiDocu,
+            "api_docu_list": serializer.data
         }
-        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(data, status=HTTP_200_OK)
+        # return Response(response_data, status=status.HTTP_200_OK)
 
     def post(self, request):
         print("request.data['url] : ", request.data['url'])
