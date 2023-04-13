@@ -32,7 +32,7 @@ class TechNoteSerializer(serializers.ModelSerializer):
 class CreateTechNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechNote
-        fields = ('title', 'category')
+        fields = ('title', 'category','task')
 
 
 class TechNoteContentsListSerializer(serializers.ModelSerializer):

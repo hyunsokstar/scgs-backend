@@ -135,7 +135,11 @@ class TechNotes(APIView):
         if serializer.is_valid():
             print("serializer 유효함")
             try:
-                tech_note = serializer.save()
+                if request.user.is_authenticated:
+                    tech_note = serializer.save(author=request.user)
+                else: 
+                    tech_note = serializer.save()                    
+
                 serializer = TechNoteSerializer(tech_note)
                 return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
 
