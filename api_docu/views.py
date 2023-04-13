@@ -6,22 +6,21 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from .models import ApiDocu
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
-# step1 페이지 번호 가져 오기
 # test:
 # http://127.0.0.1:8000/api/v1/api-docu/?page=1
 
 
 class ApiDocuView(APIView):
+    # step3 한 페이지당 목록 개수(per_page), 목록 총 개수(totalCount) 정의 하기
     toalCountForApiDocu = 0
-    per_page = 5  # 1 페이지에 몇개씩
+    per_page = 5  
 
-    # step3 목록 가져오는 함수 정의
+    # step4 목록 가져오는 함수 정의
     def get_api_docu_list(self):
         try:
             return ApiDocu.objects.all()
         except ApiDocu.DoesNotExist:
             raise NotFound
-    # step2 한 페이지당 목록 개수 정하기
 
     def get(self, request):
         # step1 page 번호 받아 오기
@@ -31,10 +30,10 @@ class ApiDocuView(APIView):
         except ValueError:
             page = 1
 
-        # step4 페이지 번호 확인
+        # step2 페이지 번호 확인
         print("page : ", page)
 
-        # step5 number_for_one_page
+        # step5 total count
         self.toalCountForApiDocu = self.get_api_docu_list().count()
 
         # step6 총 개수

@@ -8,7 +8,6 @@ class Tags(models.Model):
     def __str__(self):
         return self.name
 
-
 class ShortCut(models.Model):
     class ClassificationChoices(models.TextChoices):
         FRONT = 'front', _('Frontend')
@@ -22,7 +21,7 @@ class ShortCut(models.Model):
         null=True,
     )
 
-    shortcut = models.TextField(max_length=100, null=True, blank=True)
+    shortcut = models.TextField(max_length=500, null=True, blank=True)
 
     description = models.CharField(
         max_length=50,
