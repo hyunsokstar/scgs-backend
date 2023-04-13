@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-
 class TechNote(models.Model):
     class CATEGORY_CHOICES(models.TextChoices):
         create = ("create", "Create")
@@ -11,6 +10,14 @@ class TechNote(models.Model):
         boiler_plate = ("boiler_plate", "BoilerPlate")
         library_example = ("libray_example", "LibraryExample")
 
+    task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="related_notes",
+        blank=True,
+        null=True,
+    )
+
     author = models.ForeignKey(
         "users.User",
         blank=True,
@@ -18,6 +25,7 @@ class TechNote(models.Model):
         on_delete=models.CASCADE,
         related_name="tech_notes"
     )
+    
     title = models.CharField(max_length=255)
     category = models.CharField(
         max_length=15,
