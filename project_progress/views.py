@@ -357,31 +357,78 @@ class ExtraTasks(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+# 0414
+
 
 class TaskStatusListView(APIView):
-    all_tasks = ProjectProgress.objects.all()
+    #   dateRange(string, default="thisMonth"),
+    #   taskManagerForFiltering(number, default=""),
+    #   importance(number, default=1),
+    #   isRequestedForHelp(boolean, default=False),
+    #   isBountyTask(boolean, default=False),
+    #   dateRange = request.data.get("dateRange")
     one_month_ago = timezone.now() - timedelta(days=30)
+    date_from = ""
+    all_tasks = ProjectProgress.objects.all()
+
+    def get_all_tasks(self, request):
+
+        date_range = request.query_params.get('dateRange', 'thisMonth')
+        task_manager = request.query_params.get(
+            'taskManagerForFiltering', 'no_manager')
+        importance = request.query_params.get('importance', 1)
+        # is_requested_for_help = request.query_params.get('isRequestedForHelp', False)
+        # is_bounty_task = request.query_params.get('isBountyTask', False)
+
+        print("date_range, task_manager, importance : ",
+              date_range, task_manager, importance)
+
+        if (task_manager != ""):
+            task_manager = User.objects.get(pk=task_manager)
+
+        if (date_range == "thisMonth"):
+            self.date_from = timezone.now() - timedelta(days=30)
+        elif (date_range == "thisWeek"):
+            self.date_from = timezone.now() - timedelta(days=7)
+        elif (date_range == "today"):
+            self.date_from = timezone.now() - timedelta(days=1)
+        else:
+            self.date_from = timezone.now() - timedelta(days=60)
+
+        if (task_manager == ""):
+            print("no manager !!!!!!!!!!!!!!!!!! :", task_manager)
+            self.all_tasks = self.all_tasks.filter(
+                created_at__gte=self.date_from, importance__gte=importance
+            )
+        else:
+            print("manager is exist !!!!!!!!!!!!! : ", task_manager)
+            print("self.all_tasks : ", self.all_tasks.count())
+            self.all_tasks = self.all_tasks.filter(
+                created_at__gte=self.date_from, importance__gte=importance, task_manager=task_manager
+            )
+
+        return self.all_tasks
 
     def get(self, request):
-        all_tasks_in_month = self.all_tasks.filter(
-            created_at__gte=self.one_month_ago, importance__gte=3
-        )
+        # all_tasks_in_month = self.all_tasks.filter(
+        #     created_at__gte=self.one_month_ago, importance__gte=3
+        # )
 
-        tasks_in_ready_list = self.all_tasks.filter(
-            in_progress=False, is_testing=False, task_completed=False, created_at__gte=self.one_month_ago, importance__gte=3
+        tasks_in_ready_list = self.get_all_tasks(request).filter(
+            in_progress=False, is_testing=False, task_completed=False
         )
-        tasks_in_progress_list = self.all_tasks.filter(
-            in_progress=True, is_testing=False, created_at__gte=self.one_month_ago, importance__gte=3
+        tasks_in_progress_list = self.get_all_tasks(request).filter(
+            in_progress=True, is_testing=False
         )
-        tasks_in_testing_list = self.all_tasks.filter(
-            in_progress=True, is_testing=True, created_at__gte=self.one_month_ago, importance__gte=3
+        tasks_in_testing_list = self.get_all_tasks(request).filter(
+            in_progress=True, is_testing=True, task_completed=False
         )
-        tasks_in_completed_list = self.all_tasks.filter(
-            task_completed=True, created_at__gte=self.one_month_ago, importance__gte=3
+        tasks_in_completed_list = self.get_all_tasks(request).filter(
+            task_completed=True
         )
 
         all_tasks_in_month_serializer = ProjectProgressListSerializer(
-            all_tasks_in_month, many=True)
+            self.get_all_tasks(request), many=True)
 
         tasks_in_ready_serializer = ProjectProgressListSerializer(
             tasks_in_ready_list, many=True)
@@ -391,6 +438,8 @@ class TaskStatusListView(APIView):
             tasks_in_testing_list, many=True)
         tasks_in_completed_serializer = ProjectProgressListSerializer(
             tasks_in_completed_list, many=True)
+
+        print("all_tasks (filter result): ", self.all_tasks.count())
 
         result_data = {
             "all_tasks_in_month": all_tasks_in_month_serializer.data,
