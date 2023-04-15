@@ -11,17 +11,23 @@ from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, Tester
 from django.db.models import Count
 from users.serializers import UserProfileImageSerializer
 
+
 class TaskStaticsIView(APIView):
     def get(self, request):
-        task_managers = ProjectProgress.objects.values_list('task_manager', flat=True).distinct()
+        task_managers = ProjectProgress.objects.values_list(
+            'task_manager', flat=True).distinct()
 
         response_data = []
         for manager in task_managers:
-            completed_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=True).count()
-            uncompleted_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=False).count()
+            completed_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=True).count()
+            count_for_testing_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=True).count()
+            uncompleted_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=False).count()
 
             task_manager = User.objects.get(pk=manager).username
-            
+
             # task_manager = {
             #     "username": task_manager.username,
             #     "profile_image": task_manager.profile_image,
@@ -30,11 +36,13 @@ class TaskStaticsIView(APIView):
             manager_data = {
                 "task_manager": task_manager,
                 "completed_count_for_task": completed_count_for_task,
-                "uncompleted_count_for_task": uncompleted_count_for_task,
+                "count_for_testing_task": count_for_testing_task,
+                "uncompleted_count_for_task": uncompleted_count_for_task
             }
             response_data.append(manager_data)
 
         return Response(response_data)
+
 
 def get_writers_info(complete_status):
     print("complete_status2 : ", complete_status)
