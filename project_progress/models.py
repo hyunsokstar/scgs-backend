@@ -7,7 +7,6 @@ from datetime import datetime
 # Create your models here.
 # seoul_tz = tz('Asia/Seoul')
 # timezone.activate(seoul_tz)
-
 class ProjectProgress(models.Model):
     task_manager = models.ForeignKey(
         "users.User",
@@ -52,9 +51,6 @@ class ProjectProgress(models.Model):
             print("completed_at_str : ", completed_at_str)
 
         return completed_at_str
-
-        # print("custom time : ", self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분'))
-        # return self.completed_at.strftime('%y년 %m월 %d일 %H시 %M분')
 
     def started_at_formatted(self):
         if (self.started_at_utc != None):

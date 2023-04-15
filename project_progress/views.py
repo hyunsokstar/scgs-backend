@@ -1,5 +1,4 @@
 import math
-
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +10,22 @@ from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
 
+class TaskStaticsIView(APIView):
+    def get(self, request):
+        task_managers = ProjectProgress.objects.values_list('task_manager', flat=True).distinct()
+
+        response_data = []
+        for manager in task_managers:
+            completed_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=True).count()
+            uncompleted_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=False).count()
+            manager_data = {
+                "task_manager": manager,
+                "completed_count_for_task": completed_count_for_task,
+                "uncompleted_count_for_task": uncompleted_count_for_task,
+            }
+            response_data.append(manager_data)
+
+        return Response(response_data)
 
 def get_writers_info(complete_status):
     print("complete_status2 : ", complete_status)

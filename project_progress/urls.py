@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
+    path('task-statics', views.TaskStaticsIView.as_view(), name="task_statics_for_month"),
     path('writer-info', views.TaskMangerInfo.as_view()),
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),
