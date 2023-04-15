@@ -9,6 +9,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
+from users.serializers import UserProfileImageSerializer
 
 class TaskStaticsIView(APIView):
     def get(self, request):
@@ -18,8 +19,16 @@ class TaskStaticsIView(APIView):
         for manager in task_managers:
             completed_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=True).count()
             uncompleted_count_for_task = ProjectProgress.objects.filter(task_manager=manager, task_completed=False).count()
+
+            task_manager = User.objects.get(pk=manager).username
+            
+            # task_manager = {
+            #     "username": task_manager.username,
+            #     "profile_image": task_manager.profile_image,
+            # }
+
             manager_data = {
-                "task_manager": manager,
+                "task_manager": task_manager,
                 "completed_count_for_task": completed_count_for_task,
                 "uncompleted_count_for_task": uncompleted_count_for_task,
             }
