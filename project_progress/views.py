@@ -25,19 +25,18 @@ class TaskStaticsIView(APIView):
                 task_manager=manager, task_completed=False, is_testing=True).count()
             uncompleted_count_for_task = ProjectProgress.objects.filter(
                 task_manager=manager, task_completed=False, is_testing=False).count()
-
+            total_count_for_uncompleted_task = uncompleted_count_for_task + count_for_testing_task
+            total_count_for_completed_task = uncompleted_count_for_task + \
+                count_for_testing_task + completed_count_for_task
             task_manager = User.objects.get(pk=manager).username
-
-            # task_manager = {
-            #     "username": task_manager.username,
-            #     "profile_image": task_manager.profile_image,
-            # }
 
             manager_data = {
                 "task_manager": task_manager,
                 "completed_count_for_task": completed_count_for_task,
                 "count_for_testing_task": count_for_testing_task,
-                "uncompleted_count_for_task": uncompleted_count_for_task
+                "uncompleted_count_for_task": uncompleted_count_for_task,
+                "total_count_for_uncompleted_task": total_count_for_uncompleted_task,
+                "total_count_for_completed_task": total_count_for_completed_task
             }
             response_data.append(manager_data)
 
