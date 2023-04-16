@@ -57,7 +57,7 @@ class ProjectProgress(models.Model):
             local_started_at = timezone.localtime(self.started_at_utc)
             return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
-            return "준비"
+            return "미정"
 
     def due_date_formatted(self):
         local_due_date = self.due_date

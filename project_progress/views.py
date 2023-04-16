@@ -636,6 +636,12 @@ class UncompletedTaskListViewForMe(APIView):
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 5  # 1 페이지에 몇개씩
+    all_uncompleted_project_task_list = []
+
+    # all
+    # within_a_week
+    # within_a_month
+    # over_a_month_ago
 
     def get(self, request):
         print("uncompleted task 요청 check !!")
@@ -646,8 +652,25 @@ class UncompletedTaskListView(APIView):
         except ValueError:
             page = 1
 
-        all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-            task_completed=False).order_by('-in_progress', '-created_at')
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        if period_option == "all":
+            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False).order_by('-in_progress', '-created_at')
+        elif period_option == "within_a_week":
+            one_week_ago = datetime.now() - timedelta(days=7)
+            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "within_a_month":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "over_a_month_ago":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+
         count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
             task_completed=False).count()
 
