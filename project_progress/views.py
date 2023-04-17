@@ -635,7 +635,7 @@ class UncompletedTaskListViewForMe(APIView):
 
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
-    task_number_for_one_page = 5  # 1 페이지에 몇개씩
+    task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
 
     # all
@@ -730,6 +730,7 @@ class UncompletedTaskListView(APIView):
             "count_for_in_progress": count_for_in_progress,
             "count_for_in_testing": count_for_in_testing,
             "totalPageCount": self.totalCountForTask,
+            "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
 
