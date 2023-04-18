@@ -638,89 +638,65 @@ class UncompletedTaskListView(APIView):
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
 
-    # all
-    # within_a_week
-    # within_a_month
-    # over_a_month_ago
-
+    # get 요청에 대해 처리
     def get(self, request):
-        print("uncompleted task 요청 check !!")
-        # step2 query 파라미터에서 page 가져오기 or 1
         try:
             page = request.query_params.get("page", 1)
             page = int(page)
         except ValueError:
             page = 1
 
+        # self.all_uncompleted_project_task_list 초기화 하기 for period option
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
 
         if period_option == "all":
-            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False).order_by('-in_progress', '-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
-            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
         elif period_option == "within_a_month":
             one_month_ago = datetime.now() - timedelta(days=30)
-            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
         elif period_option == "over_a_month_ago":
             one_month_ago = datetime.now() - timedelta(days=30)
-            all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                 task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
 
+        # total count 초기화
         count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
             task_completed=False).count()
 
-        # 비완료 총개수
         print("count_for_all_uncompleted_project_task_list : ",
               count_for_all_uncompleted_project_task_list)
+        
+        self.totalCountForTask = math.trunc(
+            count_for_all_uncompleted_project_task_list)
 
-        # step3 해당 페이지(쿼리 파라미터로 페이지 넘버 얻어옴)에 대한 리스트 정보 가져온뒤 직렬화
-        # self.task_number_for_one_page
-
-        # total_page_count = self.totalCount
-
-        # 알고리즘 설명 task_number_for_one_page 이 5 즉 한페이지당 5개씩 보여줄 경우 1페이지에 보여줄 list 의 start 와 end는
-        # list[0~5] 이면 되는데 start end 의 패턴을 보면
-        # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5
-        # (2 - 1 * 5 ~  5 + 5) => 5 ~ 10
-        # (3 - 1 * 5 ~  10 + 5) => 10 ~ 15
-        #  여기서 1-2-3 이 start
-        #  뒤의 0  + 5 5 +5 end = start + page num 으로 하고
-        # url query 파라 미터로 페이지번호만 전달해 주면
-        #  아래와 같이 ProjectProgress.objects.filter(task_completed=False)[start:end] 으로 list 를 가져올 수 있게 됨
+        # 페이지에 해당하는 list 정보 초기화
         start = (page - 1) * self.task_number_for_one_page
         end = start + self.task_number_for_one_page
-        uncompleted_project_task_list_for_current_page = all_uncompleted_project_task_list[
+        uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
             start:end]
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
             uncompleted_project_task_list_for_current_page, many=True)
 
-        # 총 페이지 숫자 계산
-        # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
-        #     self.totalCountForTask = count_for_all_completed_project_task_list
-        # else:
-        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1
-
-        self.totalCountForTask = math.trunc(
-            count_for_all_uncompleted_project_task_list)
-
-        count_for_ready = all_uncompleted_project_task_list.filter(
+        count_for_ready = self.all_uncompleted_project_task_list.filter(
             in_progress=False).count()
-        count_for_in_progress = all_uncompleted_project_task_list.filter(
+        count_for_in_progress = self.all_uncompleted_project_task_list.filter(
             in_progress=True, is_testing=False, task_completed=False).count()
-        count_for_in_testing = all_uncompleted_project_task_list.filter(
+        count_for_in_testing = self.all_uncompleted_project_task_list.filter(
             in_progress=True, is_testing=True, task_completed=False).count()
 
         # step5 응답
         data = serializer.data
 
-        # 0412
+        # 작성자 목록
         writers_info = get_writers_info(complete_status=False)
 
         response_data = {
@@ -733,6 +709,90 @@ class UncompletedTaskListView(APIView):
             "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
+
+
+class CompletedTaskListView(APIView):
+    totalCountForTask = 0  # total_count 계산
+    task_number_for_one_page = 50  # 1 페이지에 몇개씩
+    all_completed_project_task_list = []
+
+    def get(self, request):
+        print("uncompleted task 요청 check !!")
+
+        # step2 query 파라미터에서 page 가져오기 or 1
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        if period_option == "all":
+            self.all_completed_project_task_list = ProjectProgress.objects.filter(
+                task_completed=True).order_by('-in_progress', '-created_at')
+        elif period_option == "within_a_week":
+            one_week_ago = datetime.now() - timedelta(days=7)
+            self.all_completed_project_task_list = ProjectProgress.objects.filter(
+                task_completed=True, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "within_a_month":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            self.all_completed_project_task_list = ProjectProgress.objects.filter(
+                task_completed=True, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "over_a_month_ago":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            self.all_completed_project_task_list = ProjectProgress.objects.filter(
+                task_completed=True, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+
+        # total count 초기화
+        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(task_completed=True).count()
+        print("count_for_all_uncompleted_project_task_list : ", count_for_all_completed_project_task_list)
+        
+        self.totalCountForTask = math.trunc(
+            count_for_all_completed_project_task_list)
+
+        # 페이지에 해당하는 list 정보 초기화
+        start = (page - 1) * self.task_number_for_one_page
+        end = start + self.task_number_for_one_page
+        completed_project_task_list_for_current_page = self.all_completed_project_task_list[
+            start:end]
+
+        serializer = ProjectProgressListSerializer(
+            completed_project_task_list_for_current_page, many=True)
+
+        # 직렬화
+        data = serializer.data
+
+        count_for_ready = self.all_completed_project_task_list.filter(
+            in_progress=False).count()
+        count_for_in_progress = self.all_completed_project_task_list.filter(
+            in_progress=True, is_testing=False, task_completed=False).count()
+        count_for_in_testing = self.all_completed_project_task_list.filter(
+            in_progress=True, is_testing=True, task_completed=False).count()
+
+        # 작성자 목록
+        writers_info = get_writers_info(complete_status=True)
+        print("writers_info : ", writers_info)
+
+        # 응답할 데이터 설정
+        # data = {
+        #     "totalPageCount": self.totalCountForTask,
+        #     "ProjectProgressList": data
+        # }
+        # return Response(data, status=HTTP_200_OK)
+
+        response_data = {
+            "ProjectProgressList": data,
+            "totalPageCount": self.totalCountForTask,
+            "writers_info": writers_info,
+            "count_for_ready": count_for_ready,
+            "count_for_in_progress": count_for_in_progress,
+            "count_for_in_testing": count_for_in_testing,
+            "task_number_for_one_page": self.task_number_for_one_page
+        }
+        return Response(response_data, status=HTTP_200_OK)
+
 
 
 class CompletedTaskListViewForMe(APIView):
@@ -806,69 +866,6 @@ class CompletedTaskListViewForMe(APIView):
             "ProjectProgressList": data
         }
         return Response(response__data, status=HTTP_200_OK)
-
-
-class CompletedTaskListView(APIView):
-    totalCountForTask = 0  # total_count 계산
-    task_number_for_one_page = 5  # 1 페이지에 몇개씩
-
-    def get(self, request):
-        print("uncompleted task 요청 check !!")
-
-        # step2 query 파라미터에서 page 가져오기 or 1
-        try:
-            page = request.query_params.get("page", 1)
-            page = int(page)
-        except ValueError:
-            page = 1
-
-        all_completed_project_task_list = ProjectProgress.objects.filter(
-            task_completed=True)
-        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(
-            task_completed=True).count()
-
-        # 완료 총개수
-        print("count_for_all_completed_project_task_list : ",
-              count_for_all_completed_project_task_list)
-
-        # step3 해당 페이지(쿼리 파라미터로 페이지 넘버 얻어옴)에 대한 리스트 정보 가져온뒤 직렬화
-        # self.task_number_for_one_page
-
-        # total_page_count = self.totalCount
-
-        # 알고리즘 설명 task_number_for_one_page 이 5 즉 한페이지당 5개씩 보여줄 경우 1페이지에 보여줄 list 의 start 와 end는
-        # list[0~5] 이면 되는데 start end 의 패턴을 보면
-        # (1 - 1 * 5 ~  0  + 5) => 0 ~ 5
-        # (2 - 1 * 5 ~  5 + 5) => 5 ~ 10
-        # (3 - 1 * 5 ~  10 + 5) => 10 ~ 15
-        #  여기서 1-2-3 이 start
-        #  뒤의 0  + 5 5 +5 end = start + page num 으로 하고
-        # url query 파라 미터로 페이지번호만 전달해 주면
-        #  아래와 같이 ProjectProgress.objects.filter(task_completed=False)[start:end] 으로 list 를 가져올 수 있게 됨
-        start = (page - 1) * self.task_number_for_one_page
-        end = start + self.task_number_for_one_page
-        completed_project_task_list_for_current_page = all_completed_project_task_list[
-            start:end]
-
-        serializer = ProjectProgressListSerializer(
-            completed_project_task_list_for_current_page, many=True)
-
-        # 총 페이지 숫자 계산
-        # if (count_for_all_completed_project_task_list % self.task_number_for_one_page == 0):
-        #     self.totalCountForTask = count_for_all_completed_project_task_list
-        # else:
-        #     self.totalCountForTask = count_for_all_completed_project_task_list + 1
-
-        self.totalCountForTask = math.trunc(
-            count_for_all_completed_project_task_list)
-
-        # step5 응답
-        data = serializer.data
-        data = {
-            "totalPageCount": self.totalCountForTask,
-            "ProjectProgressList": data
-        }
-        return Response(data, status=HTTP_200_OK)
 
 
 class ProjectProgressDetailView(APIView):
