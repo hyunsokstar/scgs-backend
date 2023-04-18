@@ -500,12 +500,14 @@ class UpdateTaskInProgressView(APIView):
             message = "진행에서 준비중로 update"
             project_task.in_progress = False
             project_task.is_testing = False
+            project_task.current_status = "ready"
             project_task.started_at_utc = None  # completed_at을 blank 상태로 만듦
             project_task.started_at_formatted = None  # completed_at을 blank 상태로 만듦
 
         else:
             message = "준비에서 작업중으로 update"
             project_task.in_progress = True
+            project_task.current_status = "in_progress"
             project_task.started_at_utc = timezone.now()  # 현재 시간 저장
 
         project_task.save()
@@ -534,11 +536,13 @@ class UpdateTaskIsTestingView(APIView):
         if project_task.is_testing:
             message = "테스트 진행 취소 update"
             project_task.is_testing = False
+            project_task.current_status = "in_progress"
 
         else:
             message = "테스트 진행중으로 update"
             project_task.in_progress = True
             project_task.is_testing = True
+            project_task.current_status = "testing"
 
         project_task.save()
 
@@ -672,7 +676,7 @@ class UncompletedTaskListView(APIView):
 
         print("count_for_all_uncompleted_project_task_list : ",
               count_for_all_uncompleted_project_task_list)
-        
+
         self.totalCountForTask = math.trunc(
             count_for_all_uncompleted_project_task_list)
 
@@ -746,9 +750,11 @@ class CompletedTaskListView(APIView):
                 task_completed=True, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
 
         # total count 초기화
-        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(task_completed=True).count()
-        print("count_for_all_uncompleted_project_task_list : ", count_for_all_completed_project_task_list)
-        
+        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(
+            task_completed=True).count()
+        print("count_for_all_uncompleted_project_task_list : ",
+              count_for_all_completed_project_task_list)
+
         self.totalCountForTask = math.trunc(
             count_for_all_completed_project_task_list)
 
@@ -792,7 +798,6 @@ class CompletedTaskListView(APIView):
             "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
-
 
 
 class CompletedTaskListViewForMe(APIView):
@@ -1009,11 +1014,13 @@ class UpdateTaskCompetedView(APIView):
         if project_task.task_completed:
             message = "완료에서 비완료로 update"
             project_task.task_completed = False
+            project_task.current_status = "testing"
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
         else:
             message = "비완료에서 완료로 update"
             project_task.task_completed = True
+            project_task.current_status = "completed"
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 

@@ -176,6 +176,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "in_progress",
             "is_testing",
             "task_completed",
+            "current_status",
             "started_at",
             "due_date",
             "started_at_formatted",

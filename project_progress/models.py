@@ -8,6 +8,13 @@ from datetime import datetime
 # seoul_tz = tz('Asia/Seoul')
 # timezone.activate(seoul_tz)
 class ProjectProgress(models.Model):
+
+    class TaskStatusChoices(models.TextChoices):
+        ready = ("ready", "준비")
+        in_progress = ("in_progress", "작업중")
+        testing = ("testing", "테스트중")
+        completed = ("completed", "완료")
+
     task_manager = models.ForeignKey(
         "users.User",
         blank=True,
@@ -24,6 +31,12 @@ class ProjectProgress(models.Model):
     in_progress = models.BooleanField(default=False)
     is_testing = models.BooleanField(default=False)
     task_completed = models.BooleanField(default=False)
+
+    current_status = models.CharField(
+        max_length=20,
+        choices=TaskStatusChoices.choices,
+        default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
+    )
 
     password = models.CharField(max_length=20, default=True)
     created_at = models.DateTimeField(default=timezone.now)
