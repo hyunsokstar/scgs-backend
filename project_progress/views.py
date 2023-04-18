@@ -764,12 +764,12 @@ class CompletedTaskListView(APIView):
         # 직렬화
         data = serializer.data
 
-        count_for_ready = self.all_completed_project_task_list.filter(
-            in_progress=False).count()
-        count_for_in_progress = self.all_completed_project_task_list.filter(
-            in_progress=True, is_testing=False, task_completed=False).count()
-        count_for_in_testing = self.all_completed_project_task_list.filter(
-            in_progress=True, is_testing=True, task_completed=False).count()
+        # count_for_ready = self.all_completed_project_task_list.filter(
+        #     in_progress=False).count()
+        # count_for_in_progress = self.all_completed_project_task_list.filter(
+        #     in_progress=True, is_testing=False, task_completed=False).count()
+        # count_for_in_testing = self.all_completed_project_task_list.filter(
+        #     in_progress=True, is_testing=True, task_completed=False).count()
 
         # 작성자 목록
         writers_info = get_writers_info(complete_status=True)
@@ -786,9 +786,9 @@ class CompletedTaskListView(APIView):
             "ProjectProgressList": data,
             "totalPageCount": self.totalCountForTask,
             "writers_info": writers_info,
-            "count_for_ready": count_for_ready,
-            "count_for_in_progress": count_for_in_progress,
-            "count_for_in_testing": count_for_in_testing,
+            # "count_for_ready": count_for_ready,
+            # "count_for_in_progress": count_for_in_progress,
+            # "count_for_in_testing": count_for_in_testing,
             "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
