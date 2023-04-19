@@ -984,6 +984,43 @@ class UpdateTaskCompetedView(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+class UpdateCheckResultByTesterView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.check_result_by_tester:
+            message = "완료에서 비완료로 update"
+            project_task.check_result_by_tester = False
+            # project_task.task_completed = False
+            # project_task.current_status = "testing"
+            # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            message = "비완료에서 완료로 update"
+            project_task.check_result_by_tester = True
+            # project_task.task_completed = True
+            # project_task.current_status = "completed"
+            # new_completed_at = timezone.localtime()
+            # project_task.completed_at = new_completed_at  # 현재 시간 저장
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateProjectTaskImportance(APIView):
     def get_object(self, pk):

@@ -1,20 +1,15 @@
 from django.db import models
 from django.utils import timezone
-# from pytz import timezone as tz
-
 from datetime import datetime
 
-# Create your models here.
-# seoul_tz = tz('Asia/Seoul')
-# timezone.activate(seoul_tz)
-class ProjectProgress(models.Model):
 
+class ProjectProgress(models.Model):
     class TaskStatusChoices(models.TextChoices):
         ready = ("ready", "준비")
         in_progress = ("in_progress", "작업중")
         testing = ("testing", "테스트중")
         completed = ("completed", "완료")
-
+    
     task_manager = models.ForeignKey(
         "users.User",
         blank=True,
@@ -31,6 +26,7 @@ class ProjectProgress(models.Model):
     in_progress = models.BooleanField(default=False)
     is_testing = models.BooleanField(default=False)
     task_completed = models.BooleanField(default=False)
+    check_result_by_tester = models.BooleanField(default=False)
 
     current_status = models.CharField(
         max_length=20,
