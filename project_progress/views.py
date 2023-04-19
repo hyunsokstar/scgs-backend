@@ -553,12 +553,13 @@ class UpdateTaskIsTestingView(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+
 class UncompletedTaskListViewForMe(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
 
-    # get 요청에 대해 
+    # get 요청에 대해
     def get(self, request):
         try:
             page = request.query_params.get("page", 1)
@@ -567,16 +568,17 @@ class UncompletedTaskListViewForMe(APIView):
             page = 1
 
         # period option (기간에 대해 검색)
-        period_option = request.query_params.get("selectedPeriodOptionForUncompletedTaskList", "all")
-        
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
+
         self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-            task_completed=False, task_manager=request.user).order_by('-in_progress', '-created_at')        
+            task_completed=False, task_manager=request.user).order_by('-in_progress', '-created_at')
         count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.count()
         print("총개수 for My Task : ", count_for_all_uncompleted_project_task_list)
 
         start = (page - 1) * self.task_number_for_one_page
         end = start + self.task_number_for_one_page
-        
+
         uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
             start:end]
 
@@ -622,7 +624,8 @@ class UncompletedTaskListView(APIView):
             page = 1
 
         # period option 가져 오기
-        period_option = request.query_params.get("selectedPeriodOptionForUncompletedTaskList", "all")
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
 
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
@@ -668,7 +671,7 @@ class UncompletedTaskListView(APIView):
         count_for_in_testing = self.all_uncompleted_project_task_list.filter(
             in_progress=True, is_testing=True, task_completed=False).count()
 
-        # 리스트 직렬화 
+        # 리스트 직렬화
         data = serializer.data
 
         # 작성자 목록
@@ -787,7 +790,8 @@ class CompletedTaskListViewForMe(APIView):
             page = 1
 
         # period option (기간에 대해 검색)
-        period_option = request.query_params.get("selectedPeriodOptionForUncompletedTaskList", "all")
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
 
         self.all_completed_project_task_list = ProjectProgress.objects.filter(
             task_completed=True, task_manager=request.user)
@@ -797,7 +801,7 @@ class CompletedTaskListViewForMe(APIView):
         # 완료 총개수
         print("count_for_all_completed_project_task_list : ",
               count_for_all_completed_project_task_list)
-        
+
         start = (page - 1) * self.task_number_for_one_page
         end = start + self.task_number_for_one_page
         completed_project_task_list_for_current_page = self.all_completed_project_task_list[
@@ -805,7 +809,6 @@ class CompletedTaskListViewForMe(APIView):
 
         serializer = ProjectProgressListSerializer(
             completed_project_task_list_for_current_page, many=True)
-
 
         self.totalCountForTask = math.trunc(
             count_for_all_completed_project_task_list)
@@ -984,8 +987,34 @@ class UpdateTaskCompetedView(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
-class UpdateCheckResultByTesterView(APIView):
 
+class UpdateScoreByTesterView(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+        score_by_tester = request.data.get('score_by_tester')
+
+        project_task.score_by_tester = score_by_tester
+        message = f"{score_by_tester} 점으로 task score update"
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
+class UpdateCheckResultByTesterView(APIView):
     def get_object(self, pk):
         try:
             return ProjectProgress.objects.get(pk=pk)

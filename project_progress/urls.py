@@ -12,9 +12,10 @@ urlpatterns = [
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(), name ="uncompleted_task_list_for_me"),
     path("completed", views.CompletedTaskListView.as_view(), name ="completed_task_list"),
     path("completed/for-me", views.CompletedTaskListViewForMe.as_view(), name ="completed_task_list_for_me"),
+
     path("<int:pk>/completed/update", views.UpdateTaskCompetedView.as_view()),
     path("<int:pk>/check-result/update", views.UpdateCheckResultByTesterView.as_view()),
-
+    path("<int:pk>/score-by-tester/update", views.UpdateScoreByTesterView.as_view()),
     path("<int:pk>/in_progress/update", views.UpdateTaskInProgressView.as_view()),
     path("<int:pk>/is_testing/update", views.UpdateTaskIsTestingView.as_view()),
     path("<int:pk>/importance/update",
