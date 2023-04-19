@@ -12,6 +12,13 @@ from django.db.models import Count
 from users.serializers import UserProfileImageSerializer
 
 
+class SearchByUsername(APIView):
+    def get(self, request):
+        username = request.data.get('username')
+        print("username : ", username)
+        pass
+
+
 class TaskStaticsIView(APIView):
     def get(self, request):
         task_managers = ProjectProgress.objects.values_list(
@@ -614,6 +621,8 @@ class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
+    uncompleted_project_task_list_for_current_page = []
+    user_for_search = ""
 
     # get 요청에 대해 처리
     def get(self, request):
@@ -626,6 +635,11 @@ class UncompletedTaskListView(APIView):
         # period option 가져 오기
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        self.user_for_search = request.query_params.get(
+            "username_for_search", "")
+
+        print("self.user_for_search : ", self.user_for_search)
 
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
@@ -645,8 +659,12 @@ class UncompletedTaskListView(APIView):
                 task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
 
         # total count 초기화
-        count_for_all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-            task_completed=False).count()
+        if self.user_for_search == "":
+            count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+                task_completed=False).count()
+        else:
+            count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+                task_completed=False, task_manager__username=self.user_for_search).count()
 
         print("count_for_all_uncompleted_project_task_list : ",
               count_for_all_uncompleted_project_task_list)
@@ -657,19 +675,36 @@ class UncompletedTaskListView(APIView):
         # 페이지에 해당하는 list 정보 초기화
         start = (page - 1) * self.task_number_for_one_page
         end = start + self.task_number_for_one_page
-        uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
-            start:end]
+
+        if self.user_for_search != "":
+            print("#####################################")
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                task_manager__username=self.user_for_search)
+        else:
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
+                start:end]
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
-            uncompleted_project_task_list_for_current_page, many=True)
+            self.uncompleted_project_task_list_for_current_page, many=True)
 
-        count_for_ready = self.all_uncompleted_project_task_list.filter(
-            in_progress=False).count()
-        count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-            in_progress=True, is_testing=False, task_completed=False).count()
-        count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-            in_progress=True, is_testing=True, task_completed=False).count()
+        if self.user_for_search == "":
+            count_for_ready = self.all_uncompleted_project_task_list.filter(
+                in_progress=False).count()
+            count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=False, task_completed=False).count()
+            count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=True, task_completed=False).count()
+        else:
+            serializer = ProjectProgressListSerializer(
+                self.uncompleted_project_task_list_for_current_page, many=True)
+            # , task_manager = self.user_for_search
+            count_for_ready = self.all_uncompleted_project_task_list.filter(
+                in_progress=False, task_manager__username=self.user_for_search).count()
+            count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
+            count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
 
         # 리스트 직렬화
         data = serializer.data
