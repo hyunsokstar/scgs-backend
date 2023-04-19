@@ -185,7 +185,8 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "elapsed_time_from_started_at",
             "time_consumed_from_start_to_complete",
             "time_left_to_due_date",
-            "check_result_by_tester"
+            "check_result_by_tester",
+            "score_by_tester"
         )
 
     def get_started_at_formatted(self, obj):
