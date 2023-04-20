@@ -39,9 +39,11 @@ class ProjectProgress(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
     completed_at = models.DateTimeField(blank=True, null=True)
-
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
+    
+    cash_prize = models.IntegerField(default = 0)
+    is_urgent_request = models.BooleanField(default = False)
 
     @property
     def started_at(self):

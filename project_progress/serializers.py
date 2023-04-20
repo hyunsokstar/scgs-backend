@@ -55,6 +55,7 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
 
 # 0407 여기에 추가 해야 함
 
+
 class TestSerializerForOneTask(ModelSerializer):
 
     testers_for_test = TestersForTestSerializer(many=True)
@@ -142,7 +143,10 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "task_images",
             "task_comments",
             "extra_tasks",
-            "tests_for_tasks"
+            "tests_for_tasks",
+            "cash_prize",
+            "is_urgent_request"
+            
         )
 
     def get_started_at_formatted(self, obj):
