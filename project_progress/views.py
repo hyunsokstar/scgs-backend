@@ -621,7 +621,7 @@ class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
-    uncompleted_project_task_list_for_current_page = []
+    completed_project_task_list_for_current_page = []
     user_for_search = ""
 
     # get 요청에 대해 처리
@@ -636,9 +636,9 @@ class UncompletedTaskListView(APIView):
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
 
+        # 검색을 위한 user name 가져오기 (필수 아님)
         self.user_for_search = request.query_params.get(
             "username_for_search", "")
-
         print("self.user_for_search : ", self.user_for_search)
 
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
@@ -728,6 +728,8 @@ class CompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_completed_project_task_list = []
+    completed_project_task_list_for_current_page = []
+    user_for_search = ""
 
     def get(self, request):
         print("uncompleted task 요청 check !!")
@@ -741,6 +743,11 @@ class CompletedTaskListView(APIView):
 
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        # 검색을 위한 user name 가져오기 (필수 아님)
+        self.user_for_search = request.query_params.get(
+            "username_for_search", "")
+        print("self.user_for_search : ", self.user_for_search)
 
         if period_option == "all":
             self.all_completed_project_task_list = ProjectProgress.objects.filter(
@@ -759,10 +766,15 @@ class CompletedTaskListView(APIView):
                 task_completed=True, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
 
         # total count 초기화
-        count_for_all_completed_project_task_list = ProjectProgress.objects.filter(
-            task_completed=True).count()
-        print("count_for_all_uncompleted_project_task_list : ",
-              count_for_all_completed_project_task_list)
+        if self.user_for_search == "":
+            count_for_all_completed_project_task_list = self.all_completed_project_task_list.filter(
+                task_completed=True).count()
+
+        else:
+            count_for_all_completed_project_task_list = self.all_completed_project_task_list.filter(
+                task_completed=True, task_manager__username=self.user_for_search).count()
+            print("count_for_all_uncompleted_project_task_list : ",
+                  count_for_all_completed_project_task_list)
 
         self.totalCountForTask = math.trunc(
             count_for_all_completed_project_task_list)
@@ -770,13 +782,17 @@ class CompletedTaskListView(APIView):
         # 페이지에 해당하는 list 정보 초기화
         start = (page - 1) * self.task_number_for_one_page
         end = start + self.task_number_for_one_page
-        completed_project_task_list_for_current_page = self.all_completed_project_task_list[
-            start:end]
 
-        serializer = ProjectProgressListSerializer(
-            completed_project_task_list_for_current_page, many=True)
+        if self.user_for_search != "":
+            self.completed_project_task_list_for_current_page = self.all_completed_project_task_list.filter(
+                task_manager__username=self.user_for_search)
+        else:
+            self.completed_project_task_list_for_current_page = self.all_completed_project_task_list[
+                start:end]
 
         # 직렬화
+        serializer = ProjectProgressListSerializer(
+            self.completed_project_task_list_for_current_page, many=True)   
         data = serializer.data
 
         # count_for_ready = self.all_completed_project_task_list.filter(
