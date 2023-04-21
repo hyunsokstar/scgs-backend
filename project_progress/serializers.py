@@ -1,6 +1,6 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest
+from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
@@ -159,6 +159,37 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     #     return project.task_manager == request.user
 
 
+class ChallegersForCachPrizeSerializer(serializers.ModelSerializer):
+
+    challenger = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = ChallengersForCashPrize
+        fields = (
+            "pk",
+            "task",
+            "challenger"
+        )
+
+
+class UncompletedTaskSerializerForCashPrize(serializers.ModelSerializer):
+    challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
+    task_manager = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "pk",
+            "task",
+            "task_manager",
+            "writer",
+            "current_status",
+            "is_task_for_cash_prize",
+            "challegers_for_cach_prize",
+            "cash_prize"
+        )
+
+
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -167,6 +198,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = TinyUserSerializer(read_only=True)
+    # challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
 
     class Meta:
         model = ProjectProgress

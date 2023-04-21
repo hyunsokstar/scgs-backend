@@ -2,13 +2,44 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
+from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
+
+class UpatedChallengersForCashPrize(APIView):
+
+    def put(self, request, taskPk):
+        message = ""
+        print("put 요청 확인 : pk ", taskPk)
+
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        is_challenger_aready_exists = ChallengersForCashPrize.objects.filter(
+            task=taskPk, challenger=request.user).exists()
+
+        if is_challenger_aready_exists == False:
+            task = ProjectProgress.objects.get(pk=taskPk)
+            new_challenger_for_test = ChallengersForCashPrize(
+                task=task, challenger=request.user)
+            new_challenger_for_test.save()
+            message = "챌린저 등록 성공"
+
+        else:
+            ChallengersForCashPrize.objects.filter(
+                task=taskPk).delete()
+            message = "챌린저 등록 취소 성공 !"
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 
 class UncompletedTasksWithCashPrize(APIView):
@@ -78,7 +109,7 @@ class UncompletedTasksWithCashPrize(APIView):
                 start:end]
 
         # 직렬화
-        serializer = ProjectProgressListSerializer(
+        serializer = UncompletedTaskSerializerForCashPrize(
             self.uncompleted_project_task_list_for_current_page, many=True)
 
         if self.user_for_search == "":
@@ -89,7 +120,7 @@ class UncompletedTasksWithCashPrize(APIView):
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False).count()
         else:
-            serializer = ProjectProgressListSerializer(
+            serializer = UncompletedTaskSerializerForCashPrize(
                 self.uncompleted_project_task_list_for_current_page, many=True)
             # , task_manager = self.user_for_search
             count_for_ready = self.all_uncompleted_project_task_list.filter(
@@ -314,13 +345,6 @@ class UpatedTestPassedForTasksView(APIView):
 
 
 class UpatedTestersForTestPkView(APIView):
-
-    # def get_object(self, request, pk):
-    #     try:
-    #         return TestersForTest.objects.get(test=pk, tester=request.user)
-    #     except TestersForTest.DoesNotExist:
-    #         print("TestersForTest 에서 못찾았습니다.")
-    #         raise NotFound
 
     def put(self, request, testPk):
         message = ""

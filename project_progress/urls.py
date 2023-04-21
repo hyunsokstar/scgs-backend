@@ -11,7 +11,6 @@ urlpatterns = [
     path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('task-status', views.TaskStatusListView.as_view(), name="task_status_view"),
 
-
     path("tasks-with-cash-prize/uncompleted", views.UncompletedTasksWithCashPrize.as_view(), name ="completed_task_list"),
 
     path("uncompleted", views.UncompletedTaskListView.as_view(), name ="completed_task_list"),
@@ -50,5 +49,6 @@ urlpatterns = [
     path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view()),
     path("TestForTasks/<int:testPk>/delete", views.DeleteTestForTasksView.as_view()),
     path("TestForTasks/<int:testPk>/update/testers", views.UpatedTestersForTestPkView.as_view()),
+    path("<int:taskPk>/challengers-for-cash-prize/update", views.UpatedChallengersForCashPrize.as_view()),
     path("TestForTasks/<int:testPk>/update", views.UpatedTestPassedForTasksView.as_view())
 ]

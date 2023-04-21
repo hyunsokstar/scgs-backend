@@ -241,6 +241,24 @@ class TestersForTest(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+class ChallengersForCashPrize(models.Model):
+    task = models.ForeignKey(                  # 어떤 태스크의 테스트
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="challegers_for_cach_prize",
+        blank=True,
+        null=True,
+    )
+
+    challenger = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
 
 class TaskComment(models.Model):
     task = models.ForeignKey(
