@@ -1106,7 +1106,6 @@ class ProjectProgressView(APIView):
 
 # ProjectProgress 모델에 대해 pk 에 해당하는 completed 를 이전과 반대로 update
 class UpdateTaskCompetedView(APIView):
-
     def get_object(self, pk):
         try:
             return ProjectProgress.objects.get(pk=pk)
@@ -1130,6 +1129,35 @@ class UpdateTaskCompetedView(APIView):
             project_task.current_status = "completed"
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+    
+class update_task_for_is_task_for_cash_prize(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.is_task_for_cash_prize:
+            message = "상금 대상에서 비상금 대상으로 update"
+            project_task.is_task_for_cash_prize = False
+
+        else:
+            message = "상금 대상으로 update"
+            project_task.is_task_for_cash_prize = True
 
         project_task.save()
 
