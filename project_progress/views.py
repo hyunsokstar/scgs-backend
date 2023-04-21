@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
 
+
 class UpatedChallengersForCashPrize(APIView):
 
     def put(self, request, taskPk):
@@ -114,27 +115,32 @@ class UncompletedTasksWithCashPrize(APIView):
 
         if self.user_for_search == "":
             count_for_ready = self.all_uncompleted_project_task_list.filter(
-                in_progress=False).count()
+                in_progress=False, is_task_for_cash_prize=True).count()
             count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-                in_progress=True, is_testing=False, task_completed=False).count()
+                in_progress=True, is_testing=False, task_completed=False, is_task_for_cash_prize=True).count()
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-                in_progress=True, is_testing=True, task_completed=False).count()
+                in_progress=True, is_testing=True, task_completed=False, is_task_for_cash_prize=True).count()
         else:
             serializer = UncompletedTaskSerializerForCashPrize(
                 self.uncompleted_project_task_list_for_current_page, many=True)
             # , task_manager = self.user_for_search
             count_for_ready = self.all_uncompleted_project_task_list.filter(
-                in_progress=False, task_manager__username=self.user_for_search).count()
+                in_progress=False, task_manager__username=self.user_for_search, is_task_for_cash_prize=True).count()
             count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-                in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
+                in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search, is_task_for_cash_prize=True).count()
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-                in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
+                in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search, is_task_for_cash_prize=True).count()
+
+        print("count_for_ready,count_for_in_progress, count_for_in_testing : ",
+              count_for_ready, count_for_in_progress, count_for_in_testing)
 
         # 리스트 직렬화
         data = serializer.data
 
         # 작성자 목록
-        writers_info = get_writers_info(complete_status=False)
+        writers_info = get_writers_info_for_cash_prize(complete_status=False)
+
+        print("writers_info : ", writers_info)
 
         response_data = {
             "writers_info": writers_info,
@@ -186,6 +192,23 @@ class TaskStaticsIView(APIView):
         return Response(response_data)
 
 
+def get_writers_info_for_cash_prize(complete_status):
+    print("complete_status2 : ", complete_status)
+    task_manager_counts = ProjectProgress.objects.filter(task_completed=complete_status, is_task_for_cash_prize = True).values(
+        'task_manager__username', 'task_manager__profile_image').annotate(count=Count('id'))
+    print("task_manager_counts : ", task_manager_counts)
+
+    task_managers_info = []
+    for task_manager_count in task_manager_counts:
+        writer_info = {
+            "username": task_manager_count['task_manager__username'],
+            "profile_image": task_manager_count['task_manager__profile_image'],
+            "task_count": task_manager_count['count']
+        }
+        task_managers_info.append(writer_info)
+
+    return task_managers_info
+
 def get_writers_info(complete_status):
     print("complete_status2 : ", complete_status)
     task_manager_counts = ProjectProgress.objects.filter(task_completed=complete_status).values(
@@ -200,10 +223,6 @@ def get_writers_info(complete_status):
             "task_count": task_manager_count['count']
         }
         task_managers_info.append(writer_info)
-
-    # result_data = {
-        # "writersInfo": task_managers_info
-    # }
 
     return task_managers_info
 
@@ -1221,6 +1240,80 @@ class UpdateScoreByTesterView(APIView):
         return Response(result_data, status=HTTP_200_OK)
 
 
+class Update(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.check_result_by_tester:
+            message = "완료에서 비완료로 update"
+            project_task.check_result_by_tester = False
+            # project_task.task_completed = False
+            # project_task.current_status = "testing"
+            # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            message = "비완료에서 완료로 update"
+            project_task.check_result_by_tester = True
+            # project_task.task_completed = True
+            # project_task.current_status = "completed"
+            # new_completed_at = timezone.localtime()
+            # project_task.completed_at = new_completed_at  # 현재 시간 저장
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
+class UpdateCheckForCashPrize(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.check_for_cash_prize:
+            message = "완료에서 비완료로 cash task check update"
+            project_task.check_for_cash_prize = False
+            # project_task.task_completed = False
+            # project_task.current_status = "testing"
+            # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            message = "비완료에서 완료로 cash task check update"
+            project_task.check_for_cash_prize = True
+            # project_task.task_completed = True
+            # project_task.current_status = "completed"
+            # new_completed_at = timezone.localtime()
+            # project_task.completed_at = new_completed_at  # 현재 시간 저장
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class UpdateCheckResultByTesterView(APIView):
     def get_object(self, pk):
         try:
@@ -1257,6 +1350,7 @@ class UpdateCheckResultByTesterView(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+
 class UpdateForCashPrizeForTask(APIView):
     def get_object(self, pk):
         try:
@@ -1284,6 +1378,7 @@ class UpdateForCashPrizeForTask(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateProjectTaskImportance(APIView):
     def get_object(self, pk):

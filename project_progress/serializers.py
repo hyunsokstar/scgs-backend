@@ -186,7 +186,8 @@ class UncompletedTaskSerializerForCashPrize(serializers.ModelSerializer):
             "current_status",
             "is_task_for_cash_prize",
             "challegers_for_cach_prize",
-            "cash_prize"
+            "cash_prize",
+            "check_for_cash_prize"
         )
 
 

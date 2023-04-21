@@ -23,6 +23,9 @@ urlpatterns = [
     path("<int:pk>/completed/update", views.UpdateTaskCompetedView.as_view()),
     path("<int:pk>/is_task_for_cash_prize/update", views.update_task_for_is_task_for_cash_prize.as_view()),
     path("<int:pk>/check-result/update", views.UpdateCheckResultByTesterView.as_view()),
+    path("<int:pk>/check_for_cash_prize/update", views.UpdateCheckForCashPrize.as_view()),
+
+
     path("<int:pk>/score-by-tester/update", views.UpdateScoreByTesterView.as_view()),
     path("<int:pk>/in_progress/update", views.UpdateTaskInProgressView.as_view()),
     path("<int:pk>/is_testing/update", views.UpdateTaskIsTestingView.as_view()),
