@@ -10,7 +10,13 @@ urlpatterns = [
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('task-status', views.TaskStatusListView.as_view(), name="task_status_view"),
+
+
+    path("tasks-with-cash-prize/uncompleted", views.UncompletedTasksWithCashPrize.as_view(), name ="completed_task_list"),
+
     path("uncompleted", views.UncompletedTaskListView.as_view(), name ="completed_task_list"),
+
+
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(), name ="uncompleted_task_list_for_me"),
     path("completed", views.CompletedTaskListView.as_view(), name ="completed_task_list"),
     path("completed/for-me", views.CompletedTaskListViewForMe.as_view(), name ="completed_task_list_for_me"),

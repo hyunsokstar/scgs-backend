@@ -29,6 +29,8 @@ class ProjectProgress(models.Model):
     check_result_by_tester = models.BooleanField(default=False)
     score_by_tester = models.IntegerField(default=0, null=True, blank=True)
 
+    is_success_for_cash_prize = models.BooleanField(default=False)
+
     current_status = models.CharField(
         max_length=20,
         choices=TaskStatusChoices.choices,
@@ -41,9 +43,10 @@ class ProjectProgress(models.Model):
     completed_at = models.DateTimeField(blank=True, null=True)
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
-    
+
     cash_prize = models.IntegerField(default = 0)
     is_urgent_request = models.BooleanField(default = False)
+    is_task_for_cash_prize = models.BooleanField(default=False)
 
     @property
     def started_at(self):

@@ -9,8 +9,113 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
-from users.serializers import UserProfileImageSerializer
 
+
+class UncompletedTasksWithCashPrize(APIView):
+    totalCountForTask = 0  # total_count 계산
+    task_number_for_one_page = 50  # 1 페이지에 몇개씩
+    all_uncompleted_project_task_list = []
+    completed_project_task_list_for_current_page = []
+    user_for_search = ""
+
+    # get 요청에 대해 처리
+    def get(self, request):
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # period option 가져 오기
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        # 검색을 위한 user name 가져오기 (필수 아님)
+        self.user_for_search = request.query_params.get(
+            "username_for_search", "")
+        print("self.user_for_search : ", self.user_for_search)
+
+        # self.all_uncompleted_project_task_list 초기화 하기 for period option
+        if period_option == "all":
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False).order_by('-is_testing', '-in_progress', '-created_at')
+        elif period_option == "within_a_week":
+            one_week_ago = datetime.now() - timedelta(days=7)
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "within_a_month":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+        elif period_option == "over_a_month_ago":
+            one_month_ago = datetime.now() - timedelta(days=30)
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+
+        # total count 초기화
+        if self.user_for_search == "":
+            count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+                task_completed=False).count()
+        else:
+            count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+                task_completed=False, task_manager__username=self.user_for_search).count()
+
+        print("count_for_all_uncompleted_project_task_list : ",
+              count_for_all_uncompleted_project_task_list)
+
+        self.totalCountForTask = math.trunc(
+            count_for_all_uncompleted_project_task_list)
+
+        # 페이지에 해당하는 list 정보 초기화
+        start = (page - 1) * self.task_number_for_one_page
+        end = start + self.task_number_for_one_page
+
+        if self.user_for_search != "":
+            print("#####################################")
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                task_manager__username=self.user_for_search)
+        else:
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
+                start:end]
+
+        # 직렬화
+        serializer = ProjectProgressListSerializer(
+            self.uncompleted_project_task_list_for_current_page, many=True)
+
+        if self.user_for_search == "":
+            count_for_ready = self.all_uncompleted_project_task_list.filter(
+                in_progress=False).count()
+            count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=False, task_completed=False).count()
+            count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=True, task_completed=False).count()
+        else:
+            serializer = ProjectProgressListSerializer(
+                self.uncompleted_project_task_list_for_current_page, many=True)
+            # , task_manager = self.user_for_search
+            count_for_ready = self.all_uncompleted_project_task_list.filter(
+                in_progress=False, task_manager__username=self.user_for_search).count()
+            count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
+            count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
+
+        # 리스트 직렬화
+        data = serializer.data
+
+        # 작성자 목록
+        writers_info = get_writers_info(complete_status=False)
+
+        response_data = {
+            "writers_info": writers_info,
+            "ProjectProgressList": data,
+            "count_for_ready": count_for_ready,
+            "count_for_in_progress": count_for_in_progress,
+            "count_for_in_testing": count_for_in_testing,
+            "totalPageCount": self.totalCountForTask,
+            "task_number_for_one_page": self.task_number_for_one_page
+        }
+        return Response(response_data, status=HTTP_200_OK)
 
 class SearchByUsername(APIView):
     def get(self, request):
@@ -644,7 +749,7 @@ class UncompletedTaskListView(APIView):
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False).order_by('-in_progress', '-created_at')
+                task_completed=False).order_by('-is_testing', '-in_progress', '-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
@@ -792,7 +897,7 @@ class CompletedTaskListView(APIView):
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
-            self.completed_project_task_list_for_current_page, many=True)   
+            self.completed_project_task_list_for_current_page, many=True)
         data = serializer.data
 
         # count_for_ready = self.all_completed_project_task_list.filter(
