@@ -15,7 +15,6 @@ class UncompletedTasksWithCashPrize(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
-    completed_project_task_list_for_current_page = []
     user_for_search = ""
 
     # get 요청에 대해 처리
@@ -38,27 +37,27 @@ class UncompletedTasksWithCashPrize(APIView):
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False).order_by('-is_testing', '-in_progress', '-created_at')
+                task_completed=False, is_task_for_cash_prize=True).order_by('is_task_for_cash_prize', '-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__gte=one_week_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
         elif period_option == "within_a_month":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__gte=one_month_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
         elif period_option == "over_a_month_ago":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__lt=one_month_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
 
         # total count 초기화
         if self.user_for_search == "":
             count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
-                task_completed=False).count()
+                task_completed=False, is_task_for_cash_prize=True).count()
         else:
             count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
-                task_completed=False, task_manager__username=self.user_for_search).count()
+                task_completed=False, task_manager__username=self.user_for_search, is_task_for_cash_prize=True).count()
 
         print("count_for_all_uncompleted_project_task_list : ",
               count_for_all_uncompleted_project_task_list)
@@ -73,7 +72,7 @@ class UncompletedTasksWithCashPrize(APIView):
         if self.user_for_search != "":
             print("#####################################")
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                task_manager__username=self.user_for_search)
+                task_manager__username=self.user_for_search, is_task_for_cash_prize=True)
         else:
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
                 start:end]
@@ -116,6 +115,7 @@ class UncompletedTasksWithCashPrize(APIView):
             "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
+
 
 class SearchByUsername(APIView):
     def get(self, request):
@@ -1138,7 +1138,8 @@ class UpdateTaskCompetedView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
+
+
 class update_task_for_is_task_for_cash_prize(APIView):
     def get_object(self, pk):
         try:
@@ -1154,6 +1155,7 @@ class update_task_for_is_task_for_cash_prize(APIView):
         if project_task.is_task_for_cash_prize:
             message = "상금 대상에서 비상금 대상으로 update"
             project_task.is_task_for_cash_prize = False
+            project_task.cash_prize = 0
 
         else:
             message = "상금 대상으로 update"
@@ -1231,6 +1233,33 @@ class UpdateCheckResultByTesterView(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+class UpdateForCashPrizeForTask(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("put 요청 확인")
+
+        # request body 에서 star_count 가져 오기
+        cash_prize_for_update = request.data.get("cash_prize_for_update")
+
+        # 해당 행 찾기
+        project_task = self.get_object(pk)
+        before_cash_prize = project_task.cash_prize
+
+        # 업데이트할 값 설정 후 save()
+        project_task.cash_prize = cash_prize_for_update
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": f'start point update success from {before_cash_prize} to {project_task.cash_prize} '
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
 
 class UpdateProjectTaskImportance(APIView):
     def get_object(self, pk):

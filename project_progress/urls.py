@@ -29,8 +29,12 @@ urlpatterns = [
     path("<int:pk>/is_testing/update", views.UpdateTaskIsTestingView.as_view()),
     path("<int:pk>/importance/update",
          views.UpdateProjectTaskImportance.as_view()),
-    path("extra_taks/<int:pk>/importance/update",
-         views.UpdateExtraTaskImportance.as_view()),
+
+    path("<int:pk>/importance/update",
+         views.UpdateProjectTaskImportance.as_view()),
+
+    path("<int:pk>/cash_prize/update",
+         views.UpdateForCashPrizeForTask.as_view()),
 
     path("<int:pk>/update_project_status_page/update", views.UpdateProjectStatusPageView.as_view()),
 
