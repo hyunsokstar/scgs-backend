@@ -935,9 +935,7 @@ class ProjectProgressDetailView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-1122
-
-
+# 1122
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
     total_page_count = 10  # 1 페이지에 몇개씩
@@ -982,7 +980,6 @@ class ProjectProgressView(APIView):
         return Response(data, status=HTTP_200_OK)
 
     def post(self, request):
-
         print("request.data['task_manager] : ", request.data['task_manager'])
 
         serializer = CreateProjectProgressSerializer(data=request.data)

@@ -146,7 +146,6 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "tests_for_tasks",
             "cash_prize",
             "is_urgent_request"
-            
         )
 
     def get_started_at_formatted(self, obj):
@@ -190,7 +189,8 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "time_consumed_from_start_to_complete",
             "time_left_to_due_date",
             "check_result_by_tester",
-            "score_by_tester"
+            "score_by_tester",
+            "cash_prize"
         )
 
     def get_started_at_formatted(self, obj):
