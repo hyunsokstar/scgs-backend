@@ -190,6 +190,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "time_left_to_due_date",
             "check_result_by_tester",
             "score_by_tester",
+            "is_task_for_cash_prize",
             "cash_prize"
         )
 
