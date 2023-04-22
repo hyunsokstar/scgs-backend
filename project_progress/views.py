@@ -43,7 +43,7 @@ class UpatedChallengersForCashPrize(APIView):
         return Response(result_data, status=HTTP_200_OK)
 
 
-class UncompletedTasksWithCashPrize(APIView):
+class TasksWithCashPrize(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
