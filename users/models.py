@@ -39,6 +39,7 @@ class User(AbstractUser):
     )
 
     profile_image = models.URLField(null=True, blank=True)
+    cash = models.IntegerField(default=0)    
 
 
 class UserPosition(CommonModel):
