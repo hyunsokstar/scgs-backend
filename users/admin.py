@@ -30,7 +30,8 @@ class CustomUserAdmin(UserAdmin):
                     'position',
                     'about_me',
                     'admin_level',
-                    'profile_image'
+                    'profile_image',
+                    'cash'
                 ),
                 "classes": ("wide",),
             },
