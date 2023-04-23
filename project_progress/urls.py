@@ -11,7 +11,7 @@ urlpatterns = [
     path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('task-status', views.TaskStatusListView.as_view(), name="task_status_view"),
 
-    path("tasks-with-cash-prize/uncompleted", views.TasksWithCashPrize.as_view(), name ="completed_task_list"),
+    path("tasks-with-cash-prize", views.TasksWithCashPrize.as_view(), name ="completed_task_list"),
 
     path("uncompleted", views.UncompletedTaskListView.as_view(), name ="completed_task_list"),
 

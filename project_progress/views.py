@@ -69,19 +69,19 @@ class TasksWithCashPrize(APIView):
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                is_task_for_cash_prize=True).order_by('is_task_for_cash_prize', '-created_at')
+                is_task_for_cash_prize=True).order_by('-check_for_cash_prize', '-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                created_at__gte=one_week_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
+                created_at__gte=one_week_ago, is_task_for_cash_prize=True).order_by('-check_for_cash_prize', '-created_at')
         elif period_option == "within_a_month":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                created_at__gte=one_month_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
+                created_at__gte=one_month_ago, is_task_for_cash_prize=True).order_by('-check_for_cash_prize', '-created_at')
         elif period_option == "over_a_month_ago":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                created_at__lt=one_month_ago, is_task_for_cash_prize=True).order_by('-in_progress', '-created_at')
+                created_at__lt=one_month_ago, is_task_for_cash_prize=True).order_by('-check_for_cash_prize', '-created_at')
 
         # total count 초기화
         if self.user_for_search == "":
@@ -195,7 +195,7 @@ class TaskStaticsIView(APIView):
 def get_writers_info_for_cash_prize(complete_status):
     print("complete_status2 : ", complete_status)
     task_manager_counts = ProjectProgress.objects.filter(is_task_for_cash_prize=True).values(
-        'task_manager__username', 'task_manager__profile_image', 'task_manager__cash').annotate(count=Count('id'))
+        'task_manager__username', 'task_manager__profile_image', 'task_manager__cash').annotate(count=Count('id')).order_by('-task_manager__cash')
     print("task_manager_counts : ", task_manager_counts)
 
     task_managers_info = []
