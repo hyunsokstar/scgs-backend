@@ -70,6 +70,8 @@ CUSTOM_APPS = [
     "api_docu.apps.ApiDocuConfig",
     "shortcut.apps.ShortcutConfig",
     "shortcut2.apps.Shortcut2Config",
+    "plankeeper.apps.PlankeeperConfig",
+    "study_note.apps.StudyNoteConfig"
 ]
 
 SYSTEM_APPS = [

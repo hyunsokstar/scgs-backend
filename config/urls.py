@@ -18,5 +18,6 @@ urlpatterns = [
     path("api/v1/api-docu/", include("api_docu.urls")),
     path("api/v1/shortcut/", include("shortcut.urls")),
     path("api/v1/shortcut2/", include("shortcut2.urls")),
-
+    path("api/v1/plankeeper/", include("plankeeper.urls")),
+    path("api/v1/study_note/", include("study_note.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
