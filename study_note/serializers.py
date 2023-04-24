@@ -1,6 +1,6 @@
 from users.serializers import UserProfileImageSerializer
 from rest_framework import serializers
-from .models import StudyNote
+from .models import StudyNote, StudyNoteContent
 
 class StudyNoteSerializer(serializers.ModelSerializer):
 
@@ -9,3 +9,9 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyNote
         fields = ['pk', 'title', 'description', 'writer']
+
+class StudyNoteContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudyNoteContent
+        fields = ['id', 'title', 'file_name', 'content', 'writer', 'created_at']
+        read_only_fields = ['id', 'created_at']        

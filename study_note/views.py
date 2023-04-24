@@ -2,7 +2,7 @@ from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import StudyNote, StudyNoteContent
-from .serializers import StudyNoteSerializer
+from .serializers import StudyNoteContentSerializer, StudyNoteSerializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
@@ -31,6 +31,12 @@ class StudyNoteDetailView(APIView):
             return StudyNote.objects.get(pk=pk)
         except StudyNote.DoesNotExist:
             raise NotFound
+
+    def get(self, request, pk):
+        study_note = self.get_object(pk)
+        note_contents = study_note.note_contents.all()
+        serializer = StudyNoteContentSerializer(note_contents, many=True)
+        return Response(serializer.data)
 
     def delete(self, request, pk):
         api_docu = self.get_object(pk)
