@@ -6,7 +6,44 @@ from .serializers import StudyNoteContentSerializer, StudyNoteSerializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
+from django.db.models import Count
 
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from .models import StudyNoteContent
+
+
+class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
+    def put(self, request, study_note_pk):
+        selected_buttons_data = request.data.get('selectedButtonsData', [])
+        print("selected_buttons_data : ", selected_buttons_data)
+        # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
+
+        # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
+        study_note_contents = StudyNoteContent.objects.filter(study_note__pk=study_note_pk, page__in=selected_buttons_data)
+        for study_note_content in study_note_contents:
+            study_note_content.page += 1
+            study_note_content.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+
+class StudyNoteContentsView(APIView):
+    def delete(self, request, study_note_pk):
+        selected_buttons_data = request.data
+
+        StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk,
+            page__in=selected_buttons_data
+        ).delete()
+
+        message = "노트에 대해  {} 페이지 삭제 완료".format(selected_buttons_data)
+
+        return Response({'message': message})
 
 class StudyNoteAPIView(APIView):
     def get(self, request):
@@ -24,7 +61,6 @@ class StudyNoteAPIView(APIView):
             return Response(serializer.data, status=HTTP_201_CREATED)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
-
 class StudyNoteDetailView(APIView):
     def get_object(self, pk):
         try:
@@ -32,17 +68,45 @@ class StudyNoteDetailView(APIView):
         except StudyNote.DoesNotExist:
             raise NotFound
 
+    # def get(self, request, pk):
+    #     study_note = self.get_object(pk)
+    #     current_page = request.GET.get('currentPage', 1)
+    #     print("current_page : ", current_page)
+    #     note_contents = study_note.note_contents.filter(page=current_page)
+    #     serializer = StudyNoteContentSerializer(note_contents, many=True)
+    #     return Response(serializer.data)
+
     def get(self, request, pk):
         study_note = self.get_object(pk)
-        note_contents = study_note.note_contents.all()
+        current_page = request.GET.get('currentPage', 1)
+        print("current_page : ", current_page)
+        note_contents = study_note.note_contents.filter(page=current_page)
+
         serializer = StudyNoteContentSerializer(note_contents, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        page_numbers = StudyNoteContent.objects.values('page').annotate(count=Count('id')).order_by('page')
+        exist_page_numbers = [page['page'] for page in page_numbers]
+
+        response_data = {
+            "exist_page_numbers": exist_page_numbers,
+            "data_for_study_note_contents": data,
+        }
+        
+        return Response(response_data, status=HTTP_200_OK)
+
+    # def get(self, request, pk):
+    #     page_count = StudyNoteContent.objects.values('page').annotate(count=Count('id')).order_by('page')
+    #     result = [page['page'] for page in page_count]
+    #     return Response(result)
+
 
     def delete(self, request, pk):
         api_docu = self.get_object(pk)
         api_docu.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class AddDummyDataForStudyNote(APIView):
     def post(self, request):
@@ -51,11 +115,12 @@ class AddDummyDataForStudyNote(APIView):
             description = f"This is a dummy note with index {i+1}"
             StudyNote.objects.create(title=title, description=description)
         return Response({"message": "Dummy data added successfully."})
-    
+
+
 class StudyNoteContentDummyAPI(APIView):
     def post(self, request):
         study_notes = StudyNote.objects.all()
-        print("study_notes :" , study_notes)
+        print("study_notes :", study_notes)
 
         for i in range(5):
             study_note_obj = random.choice(study_notes)
@@ -67,5 +132,5 @@ class StudyNoteContentDummyAPI(APIView):
                     writer=request.user,
                     study_note=study_note_obj,
                     # created_at=datetime.now() - timedelta(days=i),
-            )
-        return Response({"message": "Dummy data created successfully."})    
+                )
+        return Response({"message": "Dummy data created successfully."})

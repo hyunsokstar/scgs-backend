@@ -15,7 +15,7 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('study_note','title', 'file_name', 'content',)
+            'fields': ('study_note','title', 'file_name', 'content','page')
         }),
         ('Writer', {
             'fields': ('writer',)

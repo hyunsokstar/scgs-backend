@@ -13,5 +13,5 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 class StudyNoteContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyNoteContent
-        fields = ['id', 'title', 'file_name', 'content', 'writer', 'created_at']
+        fields = ['pk', 'title', 'file_name', 'content', 'writer', 'created_at', 'page']
         read_only_fields = ['id', 'created_at']        
