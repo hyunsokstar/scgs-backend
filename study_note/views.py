@@ -29,6 +29,20 @@ class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
             study_note_content.save()
 
         return Response(status=status.HTTP_200_OK)
+    
+class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
+    def put(self, request, study_note_pk):
+        selected_buttons_data = request.data.get('selectedButtonsData', [])
+        print("selected_buttons_data : ", selected_buttons_data)
+        # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
+
+        # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
+        study_note_contents = StudyNoteContent.objects.filter(study_note__pk=study_note_pk, page__in=selected_buttons_data)
+        for study_note_content in study_note_contents:
+            study_note_content.page -= 1
+            study_note_content.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 
