@@ -7,13 +7,20 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_2
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
 from django.db.models import Count
-
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from .models import StudyNoteContent
+
+
+class StudyNoteContentView(APIView):
+    def delete(self, request, content_pk):
+        try:
+            content = StudyNoteContent.objects.get(pk=content_pk)
+            content.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except StudyNoteContent.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class StudyNoteContentsView(APIView):
