@@ -16,6 +16,29 @@ from rest_framework import status
 from .models import StudyNoteContent
 
 
+class StudyNoteContentsView(APIView):
+    def post(self, request, study_note_pk):
+        study_note_pk = int(study_note_pk)
+        current_page_number = int(request.data["current_page_number"])
+        title = request.data["title"]
+        file = request.data["file"]
+        content = request.data["content"]
+
+        # StudyNoteContent 모델 생성
+        note_content = StudyNoteContent.objects.create(
+            study_note_id=study_note_pk,
+            title=title,
+            file_name=file,
+            content=content,
+            writer=request.user,  # 작성자는 현재 요청한 유저로 설정
+            page=current_page_number,
+        )
+
+        print("note_content : ", note_content)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+
 class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
         selected_buttons_data = request.data.get('selectedButtonsData', [])
@@ -23,13 +46,15 @@ class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
         # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
-        study_note_contents = StudyNoteContent.objects.filter(study_note__pk=study_note_pk, page__in=selected_buttons_data)
+        study_note_contents = StudyNoteContent.objects.filter(
+            study_note__pk=study_note_pk, page__in=selected_buttons_data)
         for study_note_content in study_note_contents:
             study_note_content.page += 1
             study_note_content.save()
 
         return Response(status=status.HTTP_200_OK)
-    
+
+
 class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
         selected_buttons_data = request.data.get('selectedButtonsData', [])
@@ -37,7 +62,8 @@ class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
         # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
-        study_note_contents = StudyNoteContent.objects.filter(study_note__pk=study_note_pk, page__in=selected_buttons_data)
+        study_note_contents = StudyNoteContent.objects.filter(
+            study_note__pk=study_note_pk, page__in=selected_buttons_data)
         for study_note_content in study_note_contents:
             study_note_content.page -= 1
             study_note_content.save()
@@ -45,8 +71,7 @@ class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-
-class StudyNoteContentsView(APIView):
+class DeleteNoteContentsForSelectedPage(APIView):
     def delete(self, request, study_note_pk):
         selected_buttons_data = request.data
 
@@ -58,6 +83,7 @@ class StudyNoteContentsView(APIView):
         message = "노트에 대해  {} 페이지 삭제 완료".format(selected_buttons_data)
 
         return Response({'message': message})
+
 
 class StudyNoteAPIView(APIView):
     def get(self, request):
@@ -74,6 +100,7 @@ class StudyNoteAPIView(APIView):
             serializer.save(writer=request.user)
             return Response(serializer.data, status=HTTP_201_CREATED)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
 
 class StudyNoteDetailView(APIView):
     def get_object(self, pk):
@@ -99,21 +126,21 @@ class StudyNoteDetailView(APIView):
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
 
-        page_numbers = StudyNoteContent.objects.values('page').annotate(count=Count('id')).order_by('page')
+        page_numbers = StudyNoteContent.objects.values(
+            'page').annotate(count=Count('id')).order_by('page')
         exist_page_numbers = [page['page'] for page in page_numbers]
 
         response_data = {
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
         }
-        
+
         return Response(response_data, status=HTTP_200_OK)
 
     # def get(self, request, pk):
     #     page_count = StudyNoteContent.objects.values('page').annotate(count=Count('id')).order_by('page')
     #     result = [page['page'] for page in page_count]
     #     return Response(result)
-
 
     def delete(self, request, pk):
         api_docu = self.get_object(pk)

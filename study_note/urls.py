@@ -3,7 +3,9 @@ from . import views
 
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
-    path('contents/<int:study_note_pk>', views.StudyNoteContentsView.as_view(), name='StudyNoteAPIView'),
+    path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()), # 특정 노트의 contents 에 대한 crud
+    path('contents/<int:study_note_pk>', views.DeleteNoteContentsForSelectedPage.as_view()), # 특정 노트의 페이지에 대해 delete
+
     path('<int:pk>', views.StudyNoteDetailView.as_view(), name='api_docu_detail'),
     path('<int:study_note_pk>/contents/minus-one-page-for-selected-page', views.MinusOnePageForSelectedPageForStudyNoteContents.as_view()),
     path('<int:study_note_pk>/contents/plus-one-page-for-selected-page', views.PlusOnePageForSelectedPageForStudyNoteContents.as_view()),
