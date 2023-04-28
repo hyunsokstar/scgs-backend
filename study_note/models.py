@@ -39,14 +39,11 @@ class StudyNoteContent(models.Model):
         on_delete=models.CASCADE,
     )    
 
+    order = models.IntegerField(default=1)
+
     created_at = models.DateTimeField(default=timezone.now)
 
     page = models.IntegerField(default=1)
 
     def __str__(self):
         return self.title
-
-# pk
-# title, writer
-# file_name
-# content

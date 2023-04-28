@@ -202,6 +202,7 @@ class TechNoteContentsView(APIView):
             raise NotFound
 
     def get(self, request, fk):
+        print("content list !!!!!!!!!!!!!!!!!!")
         tech_note = self.get_object(fk)
         print("tech_note : ", tech_note)
         tech_note_contents = TechNoteContent.objects.filter(tech_note=fk)
@@ -212,9 +213,6 @@ class TechNoteContentsView(APIView):
         return Response({"success": "true", "tech_note_title": tech_note.title, "data": serializer.data})
 
     def post(self, request, fk):
-        # print("request.data : ", request.data)
-        # print("request.data['task_manager] : ", request.data['task_manager'])
-        # print("hi")
         serializer = SerializerForCreateTechNoteContent(data=request.data)
 
         if serializer.is_valid():

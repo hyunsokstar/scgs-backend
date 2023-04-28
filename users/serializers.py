@@ -3,6 +3,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
 
+
 class UserProfileImageSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -12,6 +13,7 @@ class UserProfileImageSerializer(ModelSerializer):
             "profile_image"
         )
 
+
 class UsersForCreateSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -19,6 +21,7 @@ class UsersForCreateSerializer(ModelSerializer):
             "pk",
             "username"
         )
+
 
 class UserNameSerializer(ModelSerializer):
     class Meta:
@@ -30,6 +33,7 @@ class UserNameSerializer(ModelSerializer):
             "position",
         )
 
+
 class UserPositionSerializer(ModelSerializer):
     class Meta:
         model = UserPosition
@@ -37,7 +41,7 @@ class UserPositionSerializer(ModelSerializer):
             "pk",
             "position_name"
         )
-    
+
 
 class AddMultiUserSerializer(ModelSerializer):
 
@@ -85,6 +89,7 @@ class UserProfileSerializer(ModelSerializer):
             'about_me',
             'admin_level',
             'profile_image',
+            'is_edit_mode_for_study_note_contents'
         )
 
 

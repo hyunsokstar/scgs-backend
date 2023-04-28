@@ -11,6 +11,88 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import StudyNoteContent
+from django.db.models import Max
+from django.shortcuts import get_object_or_404
+
+# 1122
+class DeleteNoteContentsForChecked(APIView):
+    def delete(self, request):
+        selected_buttons_data = request.data  # [1, 2, 3, 5]
+        print("selected_buttons_data : ", selected_buttons_data)
+        
+        deleted_count = StudyNoteContent.objects.filter(pk__in=selected_buttons_data).delete()[0]
+        
+        return Response({
+            'message': f'{deleted_count} StudyNoteContent instances deleted.'
+        })
+
+class order_plus_one_for_note_content(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNote.objects.get(pk=pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, content_pk):
+        # 해당하는 객체 찾기
+        content = get_object_or_404(StudyNoteContent, pk=content_pk)
+
+        # 먼저 +1 인거 -1 처리
+        # order 값이 증가된 객체보다 큰 값을 가지는 다른 객체들의 order 값을 1씩 감소시키기
+        other_content = StudyNoteContent.objects.get(
+            study_note=content.study_note,
+            order=content.order + 1
+        )
+
+        study_note = self.get_object(content.study_note.pk)
+        note_contents_after_order_update = study_note.note_contents.filter(
+            page=content.page).order_by('order')
+
+        # order 값을 1 증가시키고 저장
+        content.order += 1
+        content.save()
+
+        other_content.order -= 1
+        other_content.save()
+
+        serializer = StudyNoteContentSerializer(
+            note_contents_after_order_update, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class order_minus_one_for_note_content(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNote.objects.get(pk=pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, content_pk):
+        # 해당하는 객체 찾기
+        content = get_object_or_404(StudyNoteContent, pk=content_pk)
+
+        # 먼저 +1 인거 -1 처리
+        # order 값이 증가된 객체보다 큰 값을 가지는 다른 객체들의 order 값을 1씩 감소시키기
+        other_content = StudyNoteContent.objects.get(
+            study_note=content.study_note,
+            order=content.order - 1
+        )
+        other_content.order += 1
+        other_content.save()
+
+        study_note = self.get_object(content.study_note.pk)
+        note_contents_after_order_update = study_note.note_contents.filter(
+            page=content.page).order_by('order')
+
+        # order 값을 1 증가시키고 저장
+        content.order -= 1
+        content.save()
+
+        serializer = StudyNoteContentSerializer(
+            note_contents_after_order_update, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class StudyNoteContentView(APIView):
@@ -31,6 +113,10 @@ class StudyNoteContentsView(APIView):
         file = request.data["file"]
         content = request.data["content"]
 
+        # 이전 order 값 중 최대값 구하기
+        max_order = StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk).aggregate(Max('order'))['order__max'] or 0
+
         # StudyNoteContent 모델 생성
         note_content = StudyNoteContent.objects.create(
             study_note_id=study_note_pk,
@@ -39,6 +125,7 @@ class StudyNoteContentsView(APIView):
             content=content,
             writer=request.user,  # 작성자는 현재 요청한 유저로 설정
             page=current_page_number,
+            order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
         )
 
         print("note_content : ", note_content)
@@ -128,7 +215,8 @@ class StudyNoteDetailView(APIView):
         study_note = self.get_object(pk)
         current_page = request.GET.get('currentPage', 1)
         print("current_page : ", current_page)
-        note_contents = study_note.note_contents.filter(page=current_page)
+        note_contents = study_note.note_contents.filter(
+            page=current_page).order_by('order')
 
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data

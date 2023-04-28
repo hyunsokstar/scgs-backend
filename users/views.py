@@ -15,8 +15,63 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.conf import settings
 import jwt
 
+# class UpatedTestPassedForTasksView(APIView):
+#     def get_object(self, pk):
+#         try:
+#             return User.objects.get(pk=pk)
+#         except User.DoesNotExist:
+#             raise NotFound
+
+#     def put(self, request, testPk):
+#         message = ""
+#         print("put 요청 확인 : pk ", testPk)
+#         user = self.get_object(testPk)
+
+#         if user.is_edit_mode_for_study_note_contents:
+#             message = "update for is_edit_mode_for_study_note_contents to off!"
+#             user.is_edit_mode_for_study_note_contents = False
+#         else:
+#             message = "test_passed to success!"
+#             user.is_edit_mode_for_study_note_contents = True
+
+#         user.save()
+
+#         result_data = {
+#             "success": True,
+#             "message": message,
+#         }
+
+#         return Response(result_data, status=status.HTTP_200_OK)
 
 # Create your views here.
+class UpdateViewForEditModeForStudyNoteContent(APIView):
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, userPk):
+        message = ""
+        print("put 요청 확인 : pk ", userPk)
+        user = self.get_object(userPk)
+
+        if user.is_edit_mode_for_study_note_contents:
+            message = "update for is_edit_mode_for_study_note_contents to off!"
+            user.is_edit_mode_for_study_note_contents = False
+        else:
+            message = "test_passed to success!"
+            user.is_edit_mode_for_study_note_contents = True
+
+        user.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=status.HTTP_200_OK)
+
 class UserNameListView (APIView):
     def get(self, request):
         users = User.objects.all()
@@ -163,7 +218,6 @@ class UserPhotos(APIView):
 
 
 class Me(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
