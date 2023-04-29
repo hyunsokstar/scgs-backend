@@ -16,6 +16,49 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
 # 1122
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import StudyNoteContent
+from .serializers import StudyNoteContentSerializer
+
+
+class StudyNoteContentReOrderAPIView(APIView):
+    def put(self, request, pk):
+        try:
+            study_note_contents = StudyNoteContent.objects.filter(
+                study_note__pk=pk)
+
+            print("study_note_contents : ", study_note_contents)
+
+            reordered_contents_list = request.data.get(
+                'reordered_contents_list', [])
+            print("reordered_contents_list : ", reordered_contents_list)
+
+            for item in reordered_contents_list:
+                pk_for_update = item['content_pk']
+                order_for_update = item['order']
+
+                print("pk_for_update, order_for_update : ", pk_for_update, order_for_update)
+
+                study_note_content =  study_note_contents.get(
+                    pk=pk_for_update)
+                study_note_content.order = order_for_update
+                study_note_content.save()
+
+
+            study_note_contents = StudyNoteContent.objects.filter(
+                study_note__pk=pk, page=1)
+
+            print("study_note_contents : ", study_note_contents)                
+
+            # serializer = StudyNoteContentSerializer(study_note_content, many=True)
+            # return Response(serializer.data, status=status.HTTP_200_OK)
+
+            return Response({'success': 'Study note content order updated successfully.'}, status=status.HTTP_200_OK)
+
+        except StudyNoteContent.DoesNotExist:
+            return Response({'error': 'Study note content does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class SearchContentListView(APIView):
