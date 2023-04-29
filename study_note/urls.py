@@ -2,7 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),    
     path('contents/delete-for-checked', views.DeleteNoteContentsForChecked.as_view(), name='StudyNoteAPIView'),    
     path('contents/<int:content_pk>', views.StudyNoteContentView.as_view()),
@@ -14,5 +13,6 @@ urlpatterns = [
     path('<int:study_note_pk>/contents/minus-one-page-for-selected-page', views.MinusOnePageForSelectedPageForStudyNoteContents.as_view()),
     path('<int:study_note_pk>/contents/plus-one-page-for-selected-page', views.PlusOnePageForSelectedPageForStudyNoteContents.as_view()),
     path('create-dummy', views.AddDummyDataForStudyNote.as_view(), name='AddDummyDataForStudyNote'),
-    path('create-dummy-content', views.StudyNoteContentDummyAPI.as_view(), name='AddDummyDataForStudyNote')
+    path('create-dummy-content', views.StudyNoteContentDummyAPI.as_view(), name='AddDummyDataForStudyNote'),
+    path('content/search', views.SearchContentListView.as_view()),
 ]

@@ -13,18 +13,49 @@ from rest_framework import status
 from .models import StudyNoteContent
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 # 1122
+
+
+class SearchContentListView(APIView):
+    def get(self, request):
+        study_note_pk = request.query_params.get('study_note_pk')
+        search_term = request.query_params.get('searchTerm')
+
+        print("search_term : ", search_term)
+
+        # 필요한 로직 수행
+        queryset = StudyNoteContent.objects.filter(study_note=study_note_pk)
+
+        print("queryset : ", queryset)
+
+        if search_term:
+            queryset = queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(content__icontains=search_term)
+            )
+        print("queryset2 : ", queryset)
+
+        serializer = StudyNoteContentSerializer(queryset, many=True)
+
+        print("serializer.data : ", serializer.data)
+
+        return Response(serializer.data)
+
+
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
         selected_buttons_data = request.data  # [1, 2, 3, 5]
         print("selected_buttons_data : ", selected_buttons_data)
-        
-        deleted_count = StudyNoteContent.objects.filter(pk__in=selected_buttons_data).delete()[0]
-        
+
+        deleted_count = StudyNoteContent.objects.filter(
+            pk__in=selected_buttons_data).delete()[0]
+
         return Response({
             'message': f'{deleted_count} StudyNoteContent instances deleted.'
         })
+
 
 class order_plus_one_for_note_content(APIView):
     def get_object(self, pk):
@@ -115,7 +146,7 @@ class StudyNoteContentsView(APIView):
 
         # 이전 order 값 중 최대값 구하기
         max_order = StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk).aggregate(Max('order'))['order__max'] or 0
+            study_note_id=study_note_pk, page=current_page_number).aggregate(Max('order'))['order__max'] or 0
 
         # StudyNoteContent 모델 생성
         note_content = StudyNoteContent.objects.create(
