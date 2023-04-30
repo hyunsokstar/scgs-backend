@@ -178,6 +178,16 @@ class StudyNoteContentView(APIView):
         except StudyNoteContent.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+    def put(self, request, content_pk, format=None):
+        study_note_content = StudyNoteContent.objects.get(pk=content_pk)
+        
+        study_note_content.title = request.data.get('title', study_note_content.title)
+        study_note_content.file_name = request.data.get('file_name', study_note_content.file_name)
+        study_note_content.content = request.data.get('content', study_note_content.content)
+        
+        study_note_content.save()
+        
+        return Response(status=status.HTTP_200_OK)
 
 class StudyNoteContentsView(APIView):
     def post(self, request, study_note_pk):
