@@ -10,6 +10,19 @@ from datetime import datetime, timedelta
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
 
+# DeleteTasksForChecked
+
+class DeleteTasksForChecked(APIView):
+    def delete(self, request):
+        selected_buttons_data = request.data  # [1, 2, 3, 5]
+        print("selected_buttons_data : ", selected_buttons_data)
+
+        deleted_count = ProjectProgress.objects.filter(
+            pk__in=selected_buttons_data).delete()[0]
+
+        return Response({
+            'message': f'{deleted_count} StudyNoteContent instances deleted.'
+        })
 
 class UpatedChallengersForCashPrize(APIView):
 
