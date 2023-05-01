@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import datetime
+import pytz
 
 
 class ProjectProgress(models.Model):
@@ -9,7 +10,7 @@ class ProjectProgress(models.Model):
         in_progress = ("in_progress", "작업중")
         testing = ("testing", "테스트중")
         completed = ("completed", "완료")
-    
+
     task_manager = models.ForeignKey(
         "users.User",
         blank=True,
@@ -44,11 +45,12 @@ class ProjectProgress(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
     completed_at = models.DateTimeField(blank=True, null=True)
+    # 마감일
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
 
-    cash_prize = models.IntegerField(default = 0)
-    is_urgent_request = models.BooleanField(default = False)
+    cash_prize = models.IntegerField(default=0)
+    is_urgent_request = models.BooleanField(default=False)
     is_task_for_cash_prize = models.BooleanField(default=False)
 
     @property
@@ -77,16 +79,15 @@ class ProjectProgress(models.Model):
         else:
             return "미정"
 
-    def due_date_formatted(self):
-        local_due_date = self.due_date
-        print("local_due_date : ", local_due_date)
-        due_date_str = ""
-        if (local_due_date == None or local_due_date == ""):
-            due_date_str = "미정"
-        else:
-            due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
-            print("due_date_str : ", due_date_str)
+    def due_date_formatted(self, client_timezone='Asia/Seoul'):
+        if self.due_date is None:
+            return "미정"
 
+        local_due_date = timezone.localtime(self.due_date)
+        local_due_date = pytz.timezone(client_timezone).normalize(local_due_date)
+        due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
+        print("due_date_str : ", due_date_str)
+        return due_date_str
         return due_date_str
 
     def elapsed_time_from_started_at(self):
@@ -121,18 +122,29 @@ class ProjectProgress(models.Model):
         else:
             return "미정"
 
-    def time_left_to_due_date(self):
-        due_date = timezone.localtime(self.due_date)
-        now = timezone.now()
-        time_left_to_due_date = round(
-            (due_date - now).total_seconds() / 60)  # 총 몇분
+    def time_left_to_due_date(self, client_timezone='Asia/Seoul'):
+        if self.due_date is not None and self.started_at_utc is not None:
+            # 로컬 타임존으로 변환
+            local_due_date = timezone.localtime(self.due_date)
+            local_started_at = timezone.localtime(self.started_at_utc)
 
-        # 분(minute) 단위로 계산한 값을 시간(hour)과 분(minute)으로 변환
-        hours, minutes = divmod(time_left_to_due_date, 60)
+            # 시간 차이 계산
+            time_left = local_due_date - local_started_at
 
-        # 시간 분 형식의 문자열로 변환
-        time_left_to_due_date_str = f"{hours}시간 {minutes}분"
+            # 응답 문자열 생성
+            if time_left.total_seconds() < 0:
+                hours, seconds = divmod(abs(time_left).seconds, 3600)
+                minutes = seconds // 60
+                time_left_to_due_date_str = f"초과 : {hours}시간 {minutes}분"
+            else:
+                hours, seconds = divmod(time_left.seconds, 3600)
+                minutes = seconds // 60
+                time_left_to_due_date_str = f"{hours}시간 {minutes}분"
+        else:
+            time_left_to_due_date_str = "미정"
+
         return time_left_to_due_date_str
+
 
 
 
@@ -243,6 +255,7 @@ class TestersForTest(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class ChallengersForCashPrize(models.Model):
     task = models.ForeignKey(                  # 어떤 태스크의 테스트
