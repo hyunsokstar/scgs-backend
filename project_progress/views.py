@@ -15,19 +15,33 @@ from django.utils import timezone
 
 class UpdateViewForTaskDueDateForChecked(APIView):
     def put(self, request):
-        checked_row_pks = request.data  # checkedRowPks 배열 자체를 가져옵니다.
+        duration_option = request.data.get("duration_option")  # duration_option 값을 가져옵니다.
+        checked_row_pks = request.data.get("checkedRowPks")  # checkedRowPks 값을 가져옵니다.
 
         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
         updated_count = 0
-        for pk in checked_row_pks:
-            try:
-                task = ProjectProgress.objects.get(pk=pk)
-                task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(timezone.now()).date(), time(hour=19)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
-                task.started_at_utc = timezone.localtime(timezone.now()).astimezone(timezone.utc)  # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
-                task.save()
-                updated_count += 1
-            except ProjectProgress.DoesNotExist:
-                pass
+
+        if duration_option == "until-noon":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(timezone.now()).date(), time(hour=12)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                    task.started_at_utc = timezone.localtime(timezone.now()).astimezone(timezone.utc)  # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
+                
+        elif duration_option == "until-evening":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(timezone.now()).date(), time(hour=19)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                    task.started_at_utc = timezone.localtime(timezone.now()).astimezone(timezone.utc)  # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
 
         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
