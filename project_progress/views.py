@@ -48,18 +48,14 @@ class UpdateForTaskManagerForChecked(APIView):
 
 class taskListForChecked(APIView):
     def get(self, request):
-        # checked_row_pks = request.query_params.get('checkedRowPks')
         checked_row_pks = request.query_params.getlist('checkedRowPks[]')
-
         print("체크된 pks for task list1 : ", checked_row_pks)
         print("체크된 pks for task list : ", checked_row_pks)
-
         # pk_list = checked_row_pks.split(',')
         # pk_list = [int(pk) for pk in pk_list]
-
         # all_project_tasks = ProjectProgress.objects.all()
-
-        pk_list = [int(pk) for pk in ','.join(checked_row_pks).split(',')]
+        # pk_list = [int(pk) for pk in ','.join(checked_row_pks).split(',')]
+        pk_list = [int(pk) for pk in checked_row_pks if pk]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)
 
         total_count = all_project_tasks.count()
@@ -213,7 +209,8 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                     task = ProjectProgress.objects.get(pk=pk)
                     today = timezone.localtime(timezone.now()).date()
                     # 이번 달의 마지막 날짜 구하기
-                    last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+                    last_day_of_month = today.replace(
+                        day=calendar.monthrange(today.year, today.month)[1])
                     task.due_date = timezone.make_aware(
                         datetime.combine(last_day_of_month, time(hour=19)))
                     task.started_at_utc = timezone.localtime(
@@ -222,7 +219,6 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                     updated_count += 1
                 except ProjectProgress.DoesNotExist:
                     pass
-
 
         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
@@ -819,7 +815,7 @@ class TaskStatusListView(APIView):
         if (task_manager == ""):
             print("no manager !!!!!!!!!!!!!!!!!! :", task_manager)
             self.all_tasks = self.all_tasks.filter(
-                created_at__gte=self.date_from, 
+                created_at__gte=self.date_from,
                 importance__gte=importance
             )
             print("self.all_tasks : ", self.all_tasks.count())
@@ -827,7 +823,7 @@ class TaskStatusListView(APIView):
         else:
             self.all_tasks = self.all_tasks.filter(
                 created_at__gte=self.date_from, importance__gte=importance,
-                task_manager= task_manager
+                task_manager=task_manager
             )
             print("self.all_tasks : ", self.all_tasks.count())
 
@@ -1021,6 +1017,10 @@ class UncompletedTaskListView(APIView):
         # period option 가져 오기
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
+        # task_status_for_search
+        task_status_option = request.query_params.get(
+            "task_status_for_search", "")
+        print("task_status_option : ", task_status_option)
 
         # 검색을 위한 user name 가져오기 (필수 아님)
         self.user_for_search = request.query_params.get(
@@ -1069,6 +1069,10 @@ class UncompletedTaskListView(APIView):
         else:
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
                 start:end]
+
+        if task_status_option != "":
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                current_status=task_status_option)
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
