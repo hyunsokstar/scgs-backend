@@ -792,18 +792,20 @@ class TaskStatusListView(APIView):
 
     def get_all_tasks(self, request):
 
+        task_manager = ""
         date_range = request.query_params.get('dateRange', 'thisMonth')
+
         task_manager = request.query_params.get(
-            'taskManagerForFiltering', 'no_manager')
+            'taskManagerForFiltering', '')
         importance = request.query_params.get('importance', 1)
         # is_requested_for_help = request.query_params.get('isRequestedForHelp', False)
         # is_bounty_task = request.query_params.get('isBountyTask', False)
 
-        print("date_range, task_manager, importance : ",
-              date_range, task_manager, importance)
+        # print("date_range, task_manager, importance : ",
+        #       date_range, task_manager, importance)
 
-        if (task_manager != ""):
-            task_manager = User.objects.get(pk=task_manager)
+        # if (task_manager != ""):
+        #     task_manager = User.objects.get(pk=task_manager)
 
         if (date_range == "thisMonth"):
             self.date_from = timezone.now() - timedelta(days=30)
@@ -817,14 +819,17 @@ class TaskStatusListView(APIView):
         if (task_manager == ""):
             print("no manager !!!!!!!!!!!!!!!!!! :", task_manager)
             self.all_tasks = self.all_tasks.filter(
-                created_at__gte=self.date_from, importance__gte=importance
+                created_at__gte=self.date_from, 
+                importance__gte=importance
             )
-        else:
-            print("manager is exist !!!!!!!!!!!!! : ", task_manager)
             print("self.all_tasks : ", self.all_tasks.count())
+
+        else:
             self.all_tasks = self.all_tasks.filter(
-                created_at__gte=self.date_from, importance__gte=importance, task_manager=task_manager
+                created_at__gte=self.date_from, importance__gte=importance,
+                task_manager= task_manager
             )
+            print("self.all_tasks : ", self.all_tasks.count())
 
         return self.all_tasks
 
