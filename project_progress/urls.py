@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
+    path('update-task-manager-for-checked', views.UpdateForTaskManagerForChecked.as_view()),
+    path('task-list-for-checked', views.taskListForChecked.as_view(), name='project_progress'),
     path('update-task-due-date-for-checked', views.UpdateViewForTaskDueDateForChecked.as_view()),
 
     path('delete-for-checked', views.DeleteTasksForChecked.as_view(), name='project_progress'),
