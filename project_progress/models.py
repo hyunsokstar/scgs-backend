@@ -84,7 +84,8 @@ class ProjectProgress(models.Model):
             return "미정"
 
         local_due_date = timezone.localtime(self.due_date)
-        local_due_date = pytz.timezone(client_timezone).normalize(local_due_date)
+        local_due_date = pytz.timezone(
+            client_timezone).normalize(local_due_date)
         due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
         print("due_date_str : ", due_date_str)
         return due_date_str
@@ -135,17 +136,17 @@ class ProjectProgress(models.Model):
             if time_left.total_seconds() < 0:
                 hours, seconds = divmod(abs(time_left).seconds, 3600)
                 minutes = seconds // 60
-                time_left_to_due_date_str = f"초과 : {hours}시간 {minutes}분"
+                time_left_to_due_date_str = f"{hours}시간 {minutes}분 초과"
             else:
-                hours, seconds = divmod(time_left.seconds, 3600)
-                minutes = seconds // 60
-                time_left_to_due_date_str = f"{hours}시간 {minutes}분"
-        else:
-            time_left_to_due_date_str = "미정"
+                days, remainder = divmod(time_left.total_seconds(), 86400)
+                hours, seconds = divmod(remainder, 3600)
+                minutes = (seconds % 3600) // 60
+                if days > 0:
+                    time_left_to_due_date_str = f"{int(days)}일 {int(hours)}시간 {int(minutes)}분 남음"
+                else:
+                    time_left_to_due_date_str = f"{int(hours)}시간 {int(minutes)}분 남음"
 
         return time_left_to_due_date_str
-
-
 
 
 class ExtraTask(models.Model):

@@ -1,9 +1,10 @@
+import calendar
 import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -19,19 +20,23 @@ from django.utils import timezone
 #         checked_row_pks = request.data.get('checkedRowPks', [])            # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
 #         selected_manager_pk = request.data.get('task_manager', None)        # ex) task_manager 는 ProjectProgress 의 task_manager의 pk
 
+
 class UpdateForTaskManagerForChecked(APIView):
     def put(self, request, *args, **kwargs):
-        checked_row_pks = request.data.get('checkedRowPks', [])            # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
-        selected_manager_pk = request.data.get('task_manager', None)        # ex) task_manager 는 ProjectProgress 의 task_manager
+        # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
+        checked_row_pks = request.data.get('checkedRowPks', [])
+        # ex) task_manager 는 ProjectProgress 의 task_manager
+        selected_manager_pk = request.data.get('task_manager', None)
 
         if not checked_row_pks or not selected_manager_pk:
-            return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid data"}, status=HTTP_400_BAD_REQUEST)
 
         # 선택된 관리자를 가져옴
         selected_manager = User.objects.get(pk=selected_manager_pk)
 
         # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져옴
-        project_progress_list = ProjectProgress.objects.filter(pk__in=checked_row_pks)
+        project_progress_list = ProjectProgress.objects.filter(
+            pk__in=checked_row_pks)
 
         # 모든 가져온 ProjectProgress 객체의 task_manager를 selected_manager로 업데이트
         for project_progress in project_progress_list:
@@ -39,7 +44,6 @@ class UpdateForTaskManagerForChecked(APIView):
             project_progress.save()
 
         return Response({"success": "Task manager updated"}, status=HTTP_200_OK)
-
 
 
 class taskListForChecked(APIView):
@@ -54,10 +58,10 @@ class taskListForChecked(APIView):
         # pk_list = [int(pk) for pk in pk_list]
 
         # all_project_tasks = ProjectProgress.objects.all()
-        
+
         pk_list = [int(pk) for pk in ','.join(checked_row_pks).split(',')]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)
-        
+
         total_count = all_project_tasks.count()
         serializer = ProjectProgressListSerializer(
             all_project_tasks, many=True)
@@ -76,6 +80,52 @@ class taskListForChecked(APIView):
         return Response(data, status=HTTP_200_OK)
 
 
+# class UpdateViewForTaskDueDateForChecked(APIView):
+#     def put(self, request):
+#         # duration_option 값을 가져옵니다.
+#         duration_option = request.data.get("duration_option")
+#         # checkedRowPks 값을 가져옵니다.
+#         checked_row_pks = request.data.get("checkedRowPks")
+
+#         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
+#         updated_count = 0
+
+#         if duration_option == "noon":
+#             for pk in checked_row_pks:
+#                 try:
+#                     task = ProjectProgress.objects.get(pk=pk)
+#                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+#                         timezone.now()).date(), time(hour=12)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+#                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+#                     task.started_at_utc = timezone.localtime(
+#                         timezone.now()).astimezone(timezone.utc)
+#                     task.save()
+#                     updated_count += 1
+#                 except ProjectProgress.DoesNotExist:
+#                     pass
+
+#         elif duration_option == "evening":
+#             for pk in checked_row_pks:
+#                 try:
+#                     task = ProjectProgress.objects.get(pk=pk)
+#                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+#                         timezone.now()).date(), time(hour=19)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+#                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+#                     task.started_at_utc = timezone.localtime(
+#                         timezone.now()).astimezone(timezone.utc)
+#                     task.save()
+#                     updated_count += 1
+#                 except ProjectProgress.DoesNotExist:
+#                     pass
+
+#         elif duration_option == "tomorrow":
+#         elif duration_option == "day-after-tomorrow":
+#         elif duration_option == "this-week":
+#         elif duration_option == "this-month":
+
+
+#         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
+#         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
 class UpdateViewForTaskDueDateForChecked(APIView):
     def put(self, request):
         # duration_option 값을 가져옵니다.
@@ -83,10 +133,12 @@ class UpdateViewForTaskDueDateForChecked(APIView):
         # checkedRowPks 값을 가져옵니다.
         checked_row_pks = request.data.get("checkedRowPks")
 
+        print("duration_option : ", duration_option)
+
         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
         updated_count = 0
 
-        if duration_option == "until-noon":
+        if duration_option == "noon":
             for pk in checked_row_pks:
                 try:
                     task = ProjectProgress.objects.get(pk=pk)
@@ -100,7 +152,7 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                 except ProjectProgress.DoesNotExist:
                     pass
 
-        elif duration_option == "until-evening":
+        elif duration_option == "evening":
             for pk in checked_row_pks:
                 try:
                     task = ProjectProgress.objects.get(pk=pk)
@@ -113,6 +165,64 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                     updated_count += 1
                 except ProjectProgress.DoesNotExist:
                     pass
+
+        elif duration_option == "tomorrow":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = timezone.make_aware(datetime.combine(
+                        timezone.localtime(timezone.now()).date() + timedelta(days=1), time(hour=19)))
+                    task.started_at_utc = timezone.localtime(
+                        timezone.now()).astimezone(timezone.utc)
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
+
+        elif duration_option == "day-after-tomorrow":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = timezone.make_aware(datetime.combine(
+                        timezone.localtime(timezone.now()).date() + timedelta(days=2), time(hour=19)))
+                    task.started_at_utc = timezone.localtime(
+                        timezone.now()).astimezone(timezone.utc)
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
+
+        elif duration_option == "this-week":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    today = timezone.localtime(timezone.now()).date()
+                    end_of_week = today + timedelta(days=(6 - today.weekday()))
+                    task.due_date = timezone.make_aware(
+                        datetime.combine(end_of_week, time(hour=19)))
+                    task.started_at_utc = timezone.localtime(
+                        timezone.now()).astimezone(timezone.utc)
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
+
+        elif duration_option == "this-month":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    today = timezone.localtime(timezone.now()).date()
+                    # 이번 달의 마지막 날짜 구하기
+                    last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+                    task.due_date = timezone.make_aware(
+                        datetime.combine(last_day_of_month, time(hour=19)))
+                    task.started_at_utc = timezone.localtime(
+                        timezone.now()).astimezone(timezone.utc)
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
+
 
         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
