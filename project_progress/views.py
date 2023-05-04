@@ -959,6 +959,11 @@ class UncompletedTaskListViewForMe(APIView):
         # period option (기간에 대해 검색)
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
+        
+        # task_status_for_search
+        task_status_option = request.query_params.get(
+            "task_status_for_search", "")
+        print("task_status_option : ", task_status_option)
 
         self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
             task_completed=False, task_manager=request.user).order_by('-in_progress', '-created_at')
@@ -970,6 +975,10 @@ class UncompletedTaskListViewForMe(APIView):
 
         uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
             start:end]
+
+        if task_status_option != "":
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                current_status=task_status_option)
 
         serializer = ProjectProgressListSerializer(
             uncompleted_project_task_list_for_current_page, many=True)
