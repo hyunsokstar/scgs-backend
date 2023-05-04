@@ -14,7 +14,6 @@ from datetime import datetime, time
 from django.utils import timezone
 
 # taskListForChecked 1122
-
 # class UpdateForTaskManagerForChecked(APIView):
 #     def put(self, request, *args, **kwargs):
 #         checked_row_pks = request.data.get('checkedRowPks', [])            # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
@@ -984,6 +983,12 @@ class UncompletedTaskListViewForMe(APIView):
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 current_status=task_status_option)
             
+        if due_date_option_for_filtering == "undecided":
+            noon = time(hour=12, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), noon)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date=None)
+
         if due_date_option_for_filtering == "until-noon":
             noon = time(hour=12, minute=10, second=0)
             deadline = datetime.combine(datetime.today(), noon)
@@ -996,11 +1001,18 @@ class UncompletedTaskListViewForMe(APIView):
             deadline = datetime.combine(datetime.today(), evening)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
+            
+        if due_date_option_for_filtering == "until-tomorrow":
+            print("due_date_option_for_filtering !!!!!!!!!!!! ")
+            evening = time(hour=19, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), evening)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
 
         if due_date_option_for_filtering == "until-the-day-after-tomorrow":
             print("due_date_option_for_filtering tomorrow !!!!!!!!!!!! ")
-            tomorrow = datetime.today() + timedelta(days=1)
-            evening = time(hour=19, minute=0, second=0)
+            tomorrow = datetime.today() + timedelta(days=2)
+            evening = time(hour=19, minute=10, second=0)
             deadline = datetime.combine(tomorrow, evening)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)            
