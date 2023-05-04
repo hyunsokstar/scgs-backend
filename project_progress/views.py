@@ -45,6 +45,29 @@ class UpdateForTaskManagerForChecked(APIView):
         return Response({"success": "Task manager updated"}, status=HTTP_200_OK)
 
 
+class UpdateForTaskImportanceForChecked(APIView):
+    def put(self, request, *args, **kwargs):
+        # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
+        checked_row_pks = request.data.get('checkedRowPks', [])
+        # ex) task_manager 는 ProjectProgress 의 task_manager
+        importance = request.data.get('importance', None)
+
+        print("importance:", importance)
+
+        # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져옴
+        project_progress_list = ProjectProgress.objects.filter(
+            pk__in=checked_row_pks)
+
+        # 모든 가져온 ProjectProgress 객체의 task_manager를 selected_manager로 업데이트
+        for project_progress in project_progress_list:
+            project_progress.importance = importance
+            project_progress.save()
+
+        message = f"Task importance updated to {importance}."
+
+        return Response({"message": message}, status=HTTP_200_OK)
+
+
 class taskListForChecked(APIView):
     def get(self, request):
         checked_row_pks = request.query_params.getlist('checkedRowPks[]')
@@ -982,7 +1005,7 @@ class UncompletedTaskListViewForMe(APIView):
         if task_status_option != "":
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 current_status=task_status_option)
-            
+
         if due_date_option_for_filtering == "undecided":
             noon = time(hour=12, minute=10, second=0)
             deadline = datetime.combine(datetime.today(), noon)
@@ -994,14 +1017,14 @@ class UncompletedTaskListViewForMe(APIView):
             deadline = datetime.combine(datetime.today(), noon)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
-            
+
         if due_date_option_for_filtering == "until-evening":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
             evening = time(hour=19, minute=10, second=0)
             deadline = datetime.combine(datetime.today(), evening)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
-            
+
         if due_date_option_for_filtering == "until-tomorrow":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
             evening = time(hour=19, minute=10, second=0)
@@ -1015,29 +1038,32 @@ class UncompletedTaskListViewForMe(APIView):
             evening = time(hour=19, minute=10, second=0)
             deadline = datetime.combine(tomorrow, evening)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                due_date__lte=deadline)            
-                   
+                due_date__lte=deadline)
+
         if due_date_option_for_filtering == "until-this-week":
             print("due_date_option_for_filtering this week !!!!!!!!!!!! ")
             today = datetime.today()
             # 이번 주의 마지막 날짜 계산
             last_day_of_week = today + timedelta(days=(6 - today.weekday()))
             # 이번 주 마지막 날짜의 오후 11시 59분 59초까지
-            deadline = datetime.combine(last_day_of_week, time(hour=23, minute=59, second=59))
+            deadline = datetime.combine(
+                last_day_of_week, time(hour=23, minute=59, second=59))
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                due_date__lte=deadline)                  
-            
+                due_date__lte=deadline)
+
         if due_date_option_for_filtering == "until-this-month":
             print("due_date_option_for_filtering this month !!!!!!!!!!!! ")
             today = datetime.today()
             # 이번 달의 마지막 날짜 계산
-            last_day_of_month = datetime(today.year, today.month, 1) + timedelta(days=32)
-            last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
+            last_day_of_month = datetime(
+                today.year, today.month, 1) + timedelta(days=32)
+            last_day_of_month = last_day_of_month.replace(
+                day=1) - timedelta(days=1)
             # 이번 달 마지막 날짜의 오후 11시 59분 59초까지
-            deadline = datetime.combine(last_day_of_month, time(hour=23, minute=59, second=59))
+            deadline = datetime.combine(
+                last_day_of_month, time(hour=23, minute=59, second=59))
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                due_date__lte=deadline)                   
-
+                due_date__lte=deadline)
 
         serializer = ProjectProgressListSerializer(
             uncompleted_project_task_list_for_current_page, many=True)
