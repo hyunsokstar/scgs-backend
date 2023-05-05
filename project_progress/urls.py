@@ -20,13 +20,13 @@ urlpatterns = [
     path("tasks-with-cash-prize", views.TasksWithCashPrize.as_view(), name ="completed_task_list"),
 
     path("uncompleted", views.UncompletedTaskListView.as_view(), name ="completed_task_list"),
-
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(), name ="uncompleted_task_list_for_me"),
     path("completed", views.CompletedTaskListView.as_view(), name ="completed_task_list"),
     path("completed/for-me", views.CompletedTaskListViewForMe.as_view(), name ="completed_task_list_for_me"),
 
     path("<int:pk>/completed/update", views.UpdateTaskCompetedView.as_view()),
     path("<int:pk>/is_task_for_cash_prize/update", views.update_task_for_is_task_for_cash_prize.as_view()),
+    path("<int:pk>/is_task_for_urgent/update", views.update_task_for_is_task_for_urgent.as_view()),
     path("<int:pk>/check-result/update", views.UpdateCheckResultByTesterView.as_view()),
     path("<int:pk>/check_for_cash_prize/update", views.UpdateCheckForCashPrize.as_view()),
 

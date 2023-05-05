@@ -226,6 +226,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "check_result_by_tester",
             "score_by_tester",
             "is_task_for_cash_prize",
+            "is_task_for_urgent",
             "cash_prize"
         )
 

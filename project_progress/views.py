@@ -1119,11 +1119,26 @@ class UncompletedTaskListView(APIView):
         # 검색을 위한 user name 가져오기 (필수 아님)
         self.user_for_search = request.query_params.get(
             "username_for_search", "")
-        print("self.user_for_search : ", self.user_for_search)
         due_date_option_for_filtering = request.query_params.get(
             "due_date_option_for_filtering", "")
-        print("due_date_option_for_filtering : ",
-              due_date_option_for_filtering)
+        rating_for_filter_option = request.query_params.get(
+            "rating_for_filter_option", "")
+        #   isForUrgent,
+        #   checkForCashPrize
+        isForUrgent = request.query_params.get(
+            "isForUrgent", False)
+        
+        checkForCashPrize = request.query_params.get(
+            "checkForCashPrize", False)
+        
+        # print("self.user_for_search : ", self.user_for_search)
+        # print("due_date_option_for_filtering : ",
+        #       due_date_option_for_filtering)
+        # print("rating_for_filter_option : ",
+        #       rating_for_filter_option)
+        print("isForUrgent : ", isForUrgent)
+        print("checkForCashPrize : ",
+              checkForCashPrize)
 
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
@@ -1228,8 +1243,21 @@ class UncompletedTaskListView(APIView):
             # 이번 달 마지막 날짜의 오후 11시 59분 59초까지
             deadline = datetime.combine(
                 last_day_of_month, time(hour=23, minute=59, second=59))
-            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
+
+        if int(rating_for_filter_option) > 0:
+            print("rating_for_filter_option : ", rating_for_filter_option)
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                importance=rating_for_filter_option)   
+
+        if isForUrgent == "true":
+          self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                is_task_for_urgent=True)                           
+        if checkForCashPrize == "true": 
+          self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                is_task_for_cash_prize=True)                           
+
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
@@ -1611,6 +1639,37 @@ class update_task_for_is_task_for_cash_prize(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+    
+class update_task_for_is_task_for_urgent(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        message = ""
+        print("put 요청 확인")
+        project_task = self.get_object(pk)
+
+        if project_task.is_task_for_urgent :
+            message = "긴급 업무 대상에서 비긴급 업무로 update"
+            project_task.is_task_for_urgent  = False
+            project_task.cash_prize = 0
+
+        else:
+            message = "비긴급 업무 대상에서 긴급 업무로 update"
+            project_task.is_task_for_urgent  = True
+
+        project_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+    
 
 
 class UpdateScoreByTesterView(APIView):

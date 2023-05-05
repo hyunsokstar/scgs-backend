@@ -29,6 +29,7 @@ class ProjectProgress(models.Model):
     task_completed = models.BooleanField(default=False)
     check_result_by_tester = models.BooleanField(default=False)
 
+    is_task_for_urgent = models.BooleanField(default=False)
     check_for_cash_prize = models.BooleanField(default=False)
 
     score_by_tester = models.IntegerField(default=0, null=True, blank=True)
