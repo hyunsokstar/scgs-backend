@@ -44,6 +44,28 @@ class UpdateForTaskManagerForChecked(APIView):
 
         return Response({"success": "Task manager updated"}, status=HTTP_200_OK)
 
+class UpdateForTaskClassificationForChecked(APIView):
+    def put(self, request, *args, **kwargs):
+        # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
+        checked_row_pks = request.data.get('checkedRowPks', [])
+        # ex) task_manager 는 ProjectProgress 의 task_manager
+        task_classification = request.data.get('task_classification', None)
+
+        print("task_classification:", task_classification)
+
+        # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져옴
+        project_progress_list = ProjectProgress.objects.filter(
+            pk__in=checked_row_pks)
+
+        # 모든 가져온 ProjectProgress 객체의 task_manager를 selected_manager로 업데이트
+        for project_progress in project_progress_list:
+            project_progress.task_classification = task_classification
+            project_progress.save()
+
+        message = f"Task task_classification updated to {task_classification}."
+
+        return Response({"message": message}, status=HTTP_200_OK)
+
 
 class UpdateForTaskImportanceForChecked(APIView):
     def put(self, request, *args, **kwargs):
