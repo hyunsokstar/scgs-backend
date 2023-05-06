@@ -5,6 +5,16 @@ import pytz
 
 
 class ProjectProgress(models.Model):
+    class TaskClassificationChoices(models.TextChoices):
+        CRUD = ("crud", "CRUD 작업")
+        NEW_FUTURE = ("new-future", "새로운 기능 개발")
+        TROUBLE_SHOOTING = ("trouble-shooting", "문제 해결 작업")
+        UI_TASK = ("ui-task", "UI 작업")
+        REFACTORING = ("refactoring", "리팩토링 작업")
+        OPTIMIZATION = ("optimization", "최적화 작업")
+        BOILTER_PATE = ("boiler-plate", "보일러 플레이트 만들기")
+        TEST_CODE = ("test-code", "테스트 코드 작성")
+
     class TaskStatusChoices(models.TextChoices):
         ready = ("ready", "준비")
         in_progress = ("in_progress", "작업중")
@@ -21,6 +31,13 @@ class ProjectProgress(models.Model):
 
     task = models.CharField(max_length=80, default="")
     task_description = models.TextField(max_length=300, default="")
+
+    task_classification = models.CharField(
+        max_length=20,
+        choices=TaskClassificationChoices.choices,
+        default=TaskClassificationChoices.CRUD,
+    )
+
     writer = models.CharField(max_length=50, blank=True, null=True)
     importance = models.IntegerField(default=1, blank=True, null=True)
 
@@ -89,7 +106,6 @@ class ProjectProgress(models.Model):
             client_timezone).normalize(local_due_date)
         due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
         print("due_date_str : ", due_date_str)
-        return due_date_str
         return due_date_str
 
     def elapsed_time_from_started_at(self):

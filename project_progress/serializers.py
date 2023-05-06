@@ -207,6 +207,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
         model = ProjectProgress
         fields = (
             "pk",
+            "task_classification",
             "task",
             "writer",
             "task_manager",
@@ -262,4 +263,5 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "task_manager",
             "importance",
             "task_completed",
+            "task_classification"
         )
