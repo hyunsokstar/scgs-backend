@@ -43,16 +43,6 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # Application definition
 
-# INSTALLED_APPS = [
-#     "django.contrib.admin",
-#     "django.contrib.auth",
-#     "django.contrib.contenttypes",
-#     "django.contrib.sessions",
-#     "django.contrib.messages",
-#     "django.contrib.staticfiles",
-#     "houses.apps.HousesConfig",
-# ]
-
 CUSTOM_APPS = [
     "users.apps.UsersConfig",
     "rooms.apps.RoomsConfig",
@@ -71,7 +61,8 @@ CUSTOM_APPS = [
     "shortcut.apps.ShortcutConfig",
     "shortcut2.apps.Shortcut2Config",
     "plankeeper.apps.PlankeeperConfig",
-    "study_note.apps.StudyNoteConfig"
+    "study_note.apps.StudyNoteConfig",
+    "plan_maker.apps.PlanMakerConfig",
 ]
 
 SYSTEM_APPS = [

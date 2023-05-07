@@ -22,7 +22,7 @@ class ShortCutListView(APIView):
 
     # step2 한 페이지당 목록 개수(per_page), 목록 총 개수(totalCount) 정의 하기
     toalCountForShortcut = 0
-    per_page = 5
+    per_page = 50
 
     # step4 목록 가져오는 함수 정의
     def get_shortcut_list(self):
@@ -59,7 +59,8 @@ class ShortCutListView(APIView):
 
         data = {
             "totalCount": self.toalCountForShortcut,
-            "shortcut_list": serializer.data
+            "shortcut_list": serializer.data,
+            "task_number_for_one_page":self.per_page
         }
         return Response(data, status=HTTP_200_OK)
 
