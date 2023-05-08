@@ -5,6 +5,19 @@ from .serializers import LongTermPlanSerializer
 from .models import LongTermPlan
 
 
+class LongTermPlanDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return LongTermPlan.objects.get(pk=pk)
+        except LongTermPlan.DoesNotExist:
+            raise status.NOT_FOUND
+    
+    def delete(self, request, pk):
+        plan_obj = self.get_object(pk)
+        plan_obj.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class LongTermPlanListAPIView(APIView):
     def get(self, request):
         plans = LongTermPlan.objects.all()
