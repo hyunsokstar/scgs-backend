@@ -1,9 +1,21 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import LongTermPlanSerializer
-from .models import LongTermPlan
+from .serializers import LongTermPlanSerializer, LongTermPlanContentsSerializer
+from .models import LongTermPlan , LongTermPlanContents
 
+class LongTermPlanContentsView(APIView):
+    def get(self, request, pk, format=None):
+        try:
+            long_term_plan = LongTermPlan.objects.get(pk=pk)
+
+            print("long_term_plan : ", long_term_plan)
+
+            contents = LongTermPlanContents.objects.filter(long_term_plan=long_term_plan)
+            serializer = LongTermPlanContentsSerializer(contents, many=True)
+            return Response(serializer.data)
+        except LongTermPlan.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)    
 
 class LongTermPlanDetailView(APIView):
     def get_object(self, pk):

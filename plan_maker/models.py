@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+
 # from datetime import datetime
 
 
@@ -27,3 +28,34 @@ class LongTermPlan(models.Model):
         )
     
     created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return '%s: %s' % (self.title, self.category)
+
+class LongTermPlanContents(models.Model):
+
+    class PlanTypeChoices(models.TextChoices):
+        PROJECT = 'project', 'Project'
+        TASK = 'task', 'Task'
+        MILESTONE  = 'milestone', 'Milestone'
+
+    long_term_plan = models.ForeignKey(
+        "plan_maker.LongTermPlan",
+        on_delete=models.CASCADE,
+        related_name="contents",
+        blank=True,
+        null=True,
+    )
+
+    start = models.DateField()
+    end = models.DateField()
+    name = models.CharField(max_length=255) # 일정 이름
+    progress = models.IntegerField() # 일정 진행률
+    type = models.CharField(choices=PlanTypeChoices.choices, max_length=20, default=PlanTypeChoices.TASK) # "project" or "task"
+    hideChildren = models.BooleanField(default=False)
+    displayOrder = models.IntegerField() # 정렬 순서
+    project = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='plans') 
+    dependencies = models.TextField(null=True, blank=True) # 어떤 일정과 연결 되는지 
+
+    def __str__(self):
+        return self.name    

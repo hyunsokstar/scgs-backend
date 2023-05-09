@@ -1,6 +1,12 @@
 from users.serializers import UserProfileImageSerializer
 from rest_framework import serializers
-from .models import LongTermPlan
+from .models import LongTermPlan, LongTermPlanContents
+
+
+class LongTermPlanContentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LongTermPlanContents
+        fields = ['pk', 'long_term_plan', 'start', 'end', 'name', 'progress', 'type', 'hideChildren', 'displayOrder', 'project', 'dependencies']
 
 
 class LongTermPlanSerializer(serializers.ModelSerializer):
