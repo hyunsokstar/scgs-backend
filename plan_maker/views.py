@@ -5,6 +5,17 @@ from .serializers import LongTermPlanSerializer, LongTermPlanContentsSerializer
 from .models import LongTermPlan, LongTermPlanContents
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
+class DeletePlanContentsForChecked(APIView):
+    def delete(self, request):
+        selected_buttons_data = request.data  # [1, 2, 3, 5]
+        print("selected_buttons_data : ", selected_buttons_data)
+
+        deleted_count = LongTermPlanContents.objects.filter(
+            pk__in=selected_buttons_data).delete()[0]
+
+        return Response({
+            'message': f'{deleted_count} Plan Contents instances deleted.'
+        })
 
 class LongTermPlanContentsUpdateView(APIView):
     def put(self, request):
