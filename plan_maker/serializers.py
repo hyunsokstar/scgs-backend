@@ -6,7 +6,15 @@ from .models import LongTermPlan, LongTermPlanContents
 class LongTermPlanContentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LongTermPlanContents
-        fields = ['pk', 'long_term_plan', 'start', 'end', 'name', 'progress', 'type', 'hideChildren', 'displayOrder', 'project', 'dependencies']
+        fields = ['id',
+                  'long_term_plan',
+                  'start',
+                  'end',
+                  'name',
+                  'progress',
+                  'displayOrder',
+                  'dependencies'
+                  ]
 
 
 class LongTermPlanSerializer(serializers.ModelSerializer):
@@ -28,4 +36,4 @@ class LongTermPlanSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         writer = self.context['writer']
         validated_data['writer'] = writer
-        return super().create(validated_data)        
+        return super().create(validated_data)
