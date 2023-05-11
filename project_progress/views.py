@@ -44,6 +44,7 @@ class UpdateForTaskManagerForChecked(APIView):
 
         return Response({"success": "Task manager updated"}, status=HTTP_200_OK)
 
+
 class UpdateForTaskClassificationForChecked(APIView):
     def put(self, request, *args, **kwargs):
         # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
@@ -177,6 +178,17 @@ class UpdateViewForTaskDueDateForChecked(APIView):
 
         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
         updated_count = 0
+
+        if duration_option == "undetermined":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = None
+                    task.started_at_utc = None
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass
 
         if duration_option == "noon":
             for pk in checked_row_pks:
@@ -1149,10 +1161,10 @@ class UncompletedTaskListView(APIView):
         #   checkForCashPrize
         isForUrgent = request.query_params.get(
             "isForUrgent", False)
-        
+
         checkForCashPrize = request.query_params.get(
             "checkForCashPrize", False)
-        
+
         # print("self.user_for_search : ", self.user_for_search)
         # print("due_date_option_for_filtering : ",
         #       due_date_option_for_filtering)
@@ -1230,8 +1242,9 @@ class UncompletedTaskListView(APIView):
 
         if due_date_option_for_filtering == "until-tomorrow":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
+            tomorrow = datetime.today() + timedelta(days=1)
             evening = time(hour=19, minute=10, second=0)
-            deadline = datetime.combine(datetime.today(), evening)
+            deadline = datetime.combine(tomorrow, evening)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
 
@@ -1268,18 +1281,18 @@ class UncompletedTaskListView(APIView):
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
 
-        if int(rating_for_filter_option) > 0:
-            print("rating_for_filter_option : ", rating_for_filter_option)
-            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                importance=rating_for_filter_option)   
+        if rating_for_filter_option != "":
+            if int(rating_for_filter_option) > 0:
+                print("rating_for_filter_option : ", rating_for_filter_option)
+                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                    importance=rating_for_filter_option)
 
         if isForUrgent == "true":
-          self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                is_task_for_urgent=True)                           
-        if checkForCashPrize == "true": 
-          self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                is_task_for_cash_prize=True)                           
-
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                is_task_for_urgent=True)
+        if checkForCashPrize == "true":
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                is_task_for_cash_prize=True)
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
@@ -1309,6 +1322,19 @@ class UncompletedTaskListView(APIView):
         # 작성자 목록
         writers_info = get_writers_info(complete_status=False)
 
+        # 오늘까지인 task 총 개수
+        deadline = datetime.combine(datetime.today(), time(hour=21))
+        total_task_count_for_today = ProjectProgress.objects.filter(
+            due_date__lte=deadline).count()
+        completed_task_count_for_today = ProjectProgress.objects.filter(
+            task_completed=True, due_date__lte=deadline).count()
+
+        achievement_rate_for_today = 0  # 기본값으로 0 설정
+
+        if total_task_count_for_today != 0:
+            achievement_rate_for_today = (completed_task_count_for_today / total_task_count_for_today) * 100
+            achievement_rate_for_today = round(achievement_rate_for_today)
+
         response_data = {
             "writers_info": writers_info,
             "ProjectProgressList": data,
@@ -1316,8 +1342,12 @@ class UncompletedTaskListView(APIView):
             "count_for_in_progress": count_for_in_progress,
             "count_for_in_testing": count_for_in_testing,
             "totalPageCount": self.totalCountForTask,
-            "task_number_for_one_page": self.task_number_for_one_page
+            "task_number_for_one_page": self.task_number_for_one_page,
+            "total_task_count_for_today": total_task_count_for_today,
+            "completed_task_count_for_today": completed_task_count_for_today,
+            "achievement_rate_for_today": achievement_rate_for_today
         }
+
         return Response(response_data, status=HTTP_200_OK)
 
 
@@ -1661,7 +1691,8 @@ class update_task_for_is_task_for_cash_prize(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
+
+
 class update_task_for_is_task_for_urgent(APIView):
     def get_object(self, pk):
         try:
@@ -1674,14 +1705,14 @@ class update_task_for_is_task_for_urgent(APIView):
         print("put 요청 확인")
         project_task = self.get_object(pk)
 
-        if project_task.is_task_for_urgent :
+        if project_task.is_task_for_urgent:
             message = "긴급 업무 대상에서 비긴급 업무로 update"
-            project_task.is_task_for_urgent  = False
+            project_task.is_task_for_urgent = False
             project_task.cash_prize = 0
 
         else:
             message = "비긴급 업무 대상에서 긴급 업무로 update"
-            project_task.is_task_for_urgent  = True
+            project_task.is_task_for_urgent = True
 
         project_task.save()
 
@@ -1691,7 +1722,6 @@ class update_task_for_is_task_for_urgent(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
 
 
 class UpdateScoreByTesterView(APIView):
