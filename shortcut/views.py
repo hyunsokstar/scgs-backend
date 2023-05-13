@@ -4,22 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 
-from .models import ShortCut, Tags
-from .serializers import SerializerForInsertToShortcut, ShortCutSerializer
+from .models import ShortCut, Tags, RelatedShortcut
+from .serializers import SerializerForInsertToShortcut, ShortCutSerializer, RelatedShortcutSerializer
 from django.db import transaction
 
 
 class ShortCutListView(APIView):
-    # def get(self, request):
-    #     print("shortcut list 요청 받음")
-    #     shortcuts = ShortCut.objects.all()
-    #     serializer = ShortCutSerializer(shortcuts, many=True)
-    #     response_data = {
-    #         'success': True,
-    #         'shortcut_list': serializer.data,
-    #     }
-    #     return Response(response_data, status=status.HTTP_200_OK)
-
     # step2 한 페이지당 목록 개수(per_page), 목록 총 개수(totalCount) 정의 하기
     toalCountForShortcut = 0
     per_page = 50
@@ -60,7 +50,7 @@ class ShortCutListView(APIView):
         data = {
             "totalCount": self.toalCountForShortcut,
             "shortcut_list": serializer.data,
-            "task_number_for_one_page":self.per_page
+            "task_number_for_one_page": self.per_page
         }
         return Response(data, status=HTTP_200_OK)
 
@@ -115,6 +105,21 @@ class ShortCutDetailView(APIView):
             return ShortCut.objects.get(pk=pk)
         except ShortCut.DoesNotExist:
             raise NotFound
+
+    def get(self, request, pk):
+        shortcut = self.get_object(pk)
+        related_shortcuts = RelatedShortcut.objects.filter(shortcut=shortcut)
+
+        shortcut_serializer = ShortCutSerializer(shortcut)
+        related_shortcuts_serializer = RelatedShortcutSerializer(
+            related_shortcuts, many=True)
+
+        data = {
+            "data_for_original_shortcut": shortcut_serializer.data,
+            "data_for_related_shortcut": related_shortcuts_serializer.data,
+        }
+
+        return Response(data, status=HTTP_200_OK)
 
     def delete(self, request, pk):
         shortcut = self.get_object(pk)

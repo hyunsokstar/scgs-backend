@@ -96,10 +96,6 @@ class taskListForChecked(APIView):
         checked_row_pks = request.query_params.getlist('checkedRowPks[]')
         print("체크된 pks for task list1 : ", checked_row_pks)
         print("체크된 pks for task list : ", checked_row_pks)
-        # pk_list = checked_row_pks.split(',')
-        # pk_list = [int(pk) for pk in pk_list]
-        # all_project_tasks = ProjectProgress.objects.all()
-        # pk_list = [int(pk) for pk in ','.join(checked_row_pks).split(',')]
         pk_list = [int(pk) for pk in checked_row_pks if pk]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)
 

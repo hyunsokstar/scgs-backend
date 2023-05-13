@@ -12,6 +12,8 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 
 
 class StudyNoteContentSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
     class Meta:
         model = StudyNoteContent
         fields = ['pk', 'title', 'file_name', 'content',
