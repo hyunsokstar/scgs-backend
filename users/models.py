@@ -43,7 +43,7 @@ class User(AbstractUser):
 
     # 스터디 노트 콘텐츠 리스트 에디터 모드
     is_edit_mode_for_study_note_contents = models.BooleanField(default=False)
-
+    task_in_progress = models.CharField(max_length=50, default="crud 작업중")
 
 class UserPosition(CommonModel):
     position_name = models.CharField(max_length=30)

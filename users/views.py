@@ -2,7 +2,7 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import AddMultiUserSerializer, PrivateUserSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
 from users.models import User, UserPosition
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -15,33 +15,13 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.conf import settings
 import jwt
 
-# class UpatedTestPassedForTasksView(APIView):
-#     def get_object(self, pk):
-#         try:
-#             return User.objects.get(pk=pk)
-#         except User.DoesNotExist:
-#             raise NotFound
 
-#     def put(self, request, testPk):
-#         message = ""
-#         print("put 요청 확인 : pk ", testPk)
-#         user = self.get_object(testPk)
+class MembersTaskStatus(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        serializer = TaskStatusForTeamMembersSerializer(users, many=True)
+        return Response(serializer.data)
 
-#         if user.is_edit_mode_for_study_note_contents:
-#             message = "update for is_edit_mode_for_study_note_contents to off!"
-#             user.is_edit_mode_for_study_note_contents = False
-#         else:
-#             message = "test_passed to success!"
-#             user.is_edit_mode_for_study_note_contents = True
-
-#         user.save()
-
-#         result_data = {
-#             "success": True,
-#             "message": message,
-#         }
-
-#         return Response(result_data, status=status.HTTP_200_OK)
 
 # Create your views here.
 class UpdateViewForEditModeForStudyNoteContent(APIView):

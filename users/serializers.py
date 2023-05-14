@@ -2,7 +2,47 @@ from medias.serializers import ProfilePhotoSerializer
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
+from project_progress.models import ProjectProgress
+from django.utils import timezone
 
+
+class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
+    position = serializers.StringRelatedField()
+    total_count_for_task = serializers.SerializerMethodField()
+    completed_count_for_task = serializers.SerializerMethodField()
+    uncompleted_count_for_task = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'profile_image',
+            'position',
+            'cash',
+            'total_count_for_task',
+            'uncompleted_count_for_task',
+            'completed_count_for_task',
+            'task_in_progress'
+        ]
+
+    def get_total_count_for_task(self, obj):
+        return ProjectProgress.objects.filter(task_manager=obj).count()
+
+    def get_completed_count_for_task(self, obj):
+        end_of_today = timezone.now().replace(hour=23, minute=59, second=59)
+        return ProjectProgress.objects.filter(task_manager=obj, completed_at__lte=end_of_today, current_status=ProjectProgress.TaskStatusChoices.completed).count()
+
+    def get_uncompleted_count_for_task(self, obj):
+        end_of_today = timezone.now().replace(hour=23, minute=59, second=59)
+        return ProjectProgress.objects.filter(task_manager=obj, due_date__lte=end_of_today).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
+
+
+# class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
+#     position = serializers.StringRelatedField()
+
+#     class Meta:
+#         model = User
+#         fields = ['username', 'position']
 
 class UserProfileImageSerializer(ModelSerializer):
     class Meta:
