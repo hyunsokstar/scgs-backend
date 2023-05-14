@@ -3,10 +3,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
+from django.http import Http404
+
 
 from .models import ShortCut, Tags, RelatedShortcut
 from .serializers import SerializerForInsertToShortcut, ShortCutSerializer, RelatedShortcutSerializer
 from django.db import transaction
+
+class DeketeRekatedShortCutView(APIView):
+    def get_object(self, pk):
+        try:
+            return RelatedShortcut.objects.get(pk=pk)
+        except RelatedShortcut.DoesNotExist:
+            raise Http404
+
+    def delete(self, request, pk, format=None):
+        related_shortcut = self.get_object(pk)
+        related_shortcut.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ShortCutListView(APIView):
@@ -106,6 +120,24 @@ class ShortCutDetailView(APIView):
         except ShortCut.DoesNotExist:
             raise NotFound
 
+    def post(self, request, pk):
+        shortcut_id = pk 
+        shortcut_content = request.data.get('shortcut_content')
+        description = request.data.get('description')
+
+        # Create a new RelatedShortcut instance
+        related_shortcut = RelatedShortcut.objects.create(
+            shortcut_id=shortcut_id,
+            shortcut_content=shortcut_content,
+            description=description
+        )
+
+        # Serialize the created instance
+        serializer = RelatedShortcutSerializer(related_shortcut)
+
+        # Return the serialized data in the response
+        return Response(serializer.data)
+
     def get(self, request, pk):
         shortcut = self.get_object(pk)
         related_shortcuts = RelatedShortcut.objects.filter(shortcut=shortcut)
@@ -118,8 +150,9 @@ class ShortCutDetailView(APIView):
             "data_for_original_shortcut": shortcut_serializer.data,
             "data_for_related_shortcut": related_shortcuts_serializer.data,
         }
-
         return Response(data, status=HTTP_200_OK)
+    
+class RelatedShortcutView(APIView):   
 
     def delete(self, request, pk):
         shortcut = self.get_object(pk)
@@ -131,7 +164,6 @@ class ShortCutDetailView(APIView):
         print("shortcut update 요청 확인")
         print("request.data", request.data)
         print("pk : ", pk)
-
         shortcut = self.get_object(pk)
         print("shortcut : ", shortcut)
 
