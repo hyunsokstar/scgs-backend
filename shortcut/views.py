@@ -10,6 +10,7 @@ from .models import ShortCut, Tags, RelatedShortcut
 from .serializers import SerializerForInsertToShortcut, ShortCutSerializer, RelatedShortcutSerializer
 from django.db import transaction
 
+
 class DeleteRelatedShortcutForCheckedRow(APIView):
     def delete(self, request):
         selected_rows = request.data.get('selectedRows', [])
@@ -132,8 +133,29 @@ class ShortCutDetailView(APIView):
         except ShortCut.DoesNotExist:
             raise NotFound
 
+    def put(self, request, pk):
+        shortcut = self.get_object(pk)
+        shortcut_data = request.data
+
+        shortcut.shortcut = shortcut_data.get('shortcut', shortcut.shortcut)
+        shortcut.description = shortcut_data.get(
+            'description', shortcut.description)
+        shortcut.classification = shortcut_data.get(
+            'classification', shortcut.classification)
+
+        # Clear the existing tags and add new ones
+        shortcut.tags.clear()
+        for tag_name in shortcut_data.get('tags', []):
+            tag, _ = Tags.objects.get_or_create(name=tag_name)
+            shortcut.tags.add(tag)
+
+        shortcut.save()
+
+        serializer = ShortCutSerializer(shortcut)
+        return Response({"success": True, "data": serializer.data})
+
     def post(self, request, pk):
-        shortcut_id = pk 
+        shortcut_id = pk
         shortcut_content = request.data.get('shortcut_content')
         description = request.data.get('description')
 
@@ -163,8 +185,9 @@ class ShortCutDetailView(APIView):
             "data_for_related_shortcut": related_shortcuts_serializer.data,
         }
         return Response(data, status=HTTP_200_OK)
-    
-class RelatedShortcutView(APIView):   
+
+
+class RelatedShortcutView(APIView):
 
     def delete(self, request, pk):
         shortcut = self.get_object(pk)
