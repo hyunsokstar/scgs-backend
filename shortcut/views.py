@@ -10,6 +10,18 @@ from .models import ShortCut, Tags, RelatedShortcut
 from .serializers import SerializerForInsertToShortcut, ShortCutSerializer, RelatedShortcutSerializer
 from django.db import transaction
 
+class DeleteRelatedShortcutForCheckedRow(APIView):
+    def delete(self, request):
+        selected_rows = request.data.get('selectedRows', [])
+
+        try:
+            # 선택된 RelatedShortcut 모델들을 삭제
+            RelatedShortcut.objects.filter(id__in=selected_rows).delete()
+            return Response("RelatedShortcut 모델 삭제 성공")
+        except Exception as e:
+            return Response(str(e), status=500)
+
+
 class DeketeRekatedShortCutView(APIView):
     def get_object(self, pk):
         try:
