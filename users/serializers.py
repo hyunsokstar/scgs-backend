@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import SkillForFrameWork, User, UserPosition
 from project_progress.models import ProjectProgress
 from django.utils import timezone
+from datetime import datetime, time
 
 
 class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
@@ -25,10 +26,10 @@ class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
             'total_count_for_task',
             'uncompleted_count_for_task',
             'completed_count_for_task',
-            'task_in_progress',
             'total_count_for_task_for_today',
             'count_for_uncompleted_task_for_today',
-            'count_for_completed_task_for_today'
+            'count_for_completed_task_for_today',
+            'task_in_progress'
         ]
 
     def get_total_count_for_task(self, obj):
@@ -41,13 +42,19 @@ class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
         return ProjectProgress.objects.filter(task_manager=obj).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
 
     def get_total_count_for_task_for_today(self, obj):
-        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate()).count()
-
-    def get_count_for_uncompleted_task_for_today(self, obj):
-        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate(), current_status=ProjectProgress.TaskStatusChoices.completed).count()
+        today_start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = timezone.localtime().replace(hour=23, minute=59, second=59, microsecond=999999)
+        return ProjectProgress.objects.filter(task_manager=obj, due_date__range=(today_start, today_end)).count()
 
     def get_count_for_completed_task_for_today(self, obj):
-        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate()).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
+        today_start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = timezone.localtime().replace(hour=23, minute=59, second=59, microsecond=999999)
+        return ProjectProgress.objects.filter(task_manager=obj, due_date__range=(today_start, today_end), current_status=ProjectProgress.TaskStatusChoices.completed).count()
+
+    def get_count_for_uncompleted_task_for_today(self, obj):
+        today_start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = timezone.localtime().replace(hour=23, minute=59, second=59, microsecond=999999)
+        return ProjectProgress.objects.filter(task_manager=obj, due_date__range=(today_start, today_end)).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
 
 
 class UserProfileImageSerializer(ModelSerializer):
