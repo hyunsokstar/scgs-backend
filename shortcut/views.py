@@ -133,6 +133,11 @@ class ShortCutDetailView(APIView):
         except ShortCut.DoesNotExist:
             raise NotFound
 
+    def delete(self, request, pk):
+        shortcut = self.get_object(pk)
+        shortcut.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)        
+
     def put(self, request, pk):
         shortcut = self.get_object(pk)
         shortcut_data = request.data
