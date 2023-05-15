@@ -11,6 +11,9 @@ class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
     total_count_for_task = serializers.SerializerMethodField()
     completed_count_for_task = serializers.SerializerMethodField()
     uncompleted_count_for_task = serializers.SerializerMethodField()
+    total_count_for_task_for_today = serializers.SerializerMethodField()
+    count_for_uncompleted_task_for_today = serializers.SerializerMethodField()
+    count_for_completed_task_for_today = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -22,27 +25,30 @@ class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
             'total_count_for_task',
             'uncompleted_count_for_task',
             'completed_count_for_task',
-            'task_in_progress'
+            'task_in_progress',
+            'total_count_for_task_for_today',
+            'count_for_uncompleted_task_for_today',
+            'count_for_completed_task_for_today'
         ]
 
     def get_total_count_for_task(self, obj):
         return ProjectProgress.objects.filter(task_manager=obj).count()
 
     def get_completed_count_for_task(self, obj):
-        end_of_today = timezone.now().replace(hour=23, minute=59, second=59)
-        return ProjectProgress.objects.filter(task_manager=obj, completed_at__lte=end_of_today, current_status=ProjectProgress.TaskStatusChoices.completed).count()
+        return ProjectProgress.objects.filter(task_manager=obj, current_status=ProjectProgress.TaskStatusChoices.completed).count()
 
     def get_uncompleted_count_for_task(self, obj):
-        end_of_today = timezone.now().replace(hour=23, minute=59, second=59)
-        return ProjectProgress.objects.filter(task_manager=obj, due_date__lte=end_of_today).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
+        return ProjectProgress.objects.filter(task_manager=obj).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
 
+    def get_total_count_for_task_for_today(self, obj):
+        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate()).count()
 
-# class TaskStatusForTeamMembersSerializer(serializers.ModelSerializer):
-#     position = serializers.StringRelatedField()
+    def get_count_for_uncompleted_task_for_today(self, obj):
+        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate(), current_status=ProjectProgress.TaskStatusChoices.completed).count()
 
-#     class Meta:
-#         model = User
-#         fields = ['username', 'position']
+    def get_count_for_completed_task_for_today(self, obj):
+        return ProjectProgress.objects.filter(task_manager=obj, due_date=timezone.localdate()).exclude(current_status=ProjectProgress.TaskStatusChoices.completed).count()
+
 
 class UserProfileImageSerializer(ModelSerializer):
     class Meta:

@@ -20,7 +20,9 @@ class MembersTaskStatus(APIView):
     def get(self, request):
         users = User.objects.all()
         serializer = TaskStatusForTeamMembersSerializer(users, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+        data.sort(key=lambda x: x['total_count_for_task'], reverse=True)
+        return Response(data)
 
 
 # Create your views here.
