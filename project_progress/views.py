@@ -7,11 +7,9 @@ from project_progress.serializers import CreateCommentSerializerForTask, CreateE
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
-from datetime import datetime, time
-from django.utils import timezone
 
 # taskListForChecked 1122
 # class UpdateForTaskManagerForChecked(APIView):
@@ -600,7 +598,7 @@ class ProjectProgressCommentView(APIView):
         if serializer.is_valid():
             print("serializer 유효함")
             try:
-                # original_task = self.get_object(taskPk)S
+                # original_task = self.get_object(taskPk)
                 test_for_task = serializer.save(writer=request.user)
                 serializer = CreateExtraTaskSerializer(test_for_task)
 
@@ -1328,7 +1326,8 @@ class UncompletedTaskListView(APIView):
         achievement_rate_for_today = 0  # 기본값으로 0 설정
 
         if total_task_count_for_today != 0:
-            achievement_rate_for_today = (completed_task_count_for_today / total_task_count_for_today) * 100
+            achievement_rate_for_today = (
+                completed_task_count_for_today / total_task_count_for_today) * 100
             achievement_rate_for_today = round(achievement_rate_for_today)
 
         response_data = {
@@ -1556,7 +1555,6 @@ class ProjectProgressDetailView(APIView):
         project_task = self.get_object(pk)
         project_task.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-
 
 # 1122
 class ProjectProgressView(APIView):

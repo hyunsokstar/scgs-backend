@@ -2,18 +2,184 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import AddMultiUserSerializer, PrivateUserSerializer, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, SerializerForCreateForUserTaskComment, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
 from users.models import User, UserPosition
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 
 # 임포트 관련
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-# from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
+from rest_framework.status import HTTP_200_OK
+from project_progress.models import ProjectProgress
+from project_progress.serializers import ProjectProgressListSerializer
+from datetime import datetime, time, timedelta
+import math
 
-from django.conf import settings
-import jwt
+class CreateViewForUserTaskComment(APIView):
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        serializer = SerializerForCreateForUserTaskComment(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                owner = self.get_object(pk)
+                test_for_task = serializer.save(writer=request.user)
+                serializer = SerializerForCreateForUserTaskComment(test_for_task)
+
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+
+
+class UncompletedTaskDataForSelectedUser(APIView):
+
+    totalCountForTask = 0  # total_count 계산
+    task_number_for_one_page = 50  # 1 페이지에 몇개씩
+    all_uncompleted_project_task_list = []
+    user_for_search = ""
+
+    # get 요청에 대해
+    def get(self, request, pk):
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # period option (기간에 대해 검색)
+        period_option = request.query_params.get(
+            "selectedPeriodOptionForUncompletedTaskList", "all")
+
+        user = User.objects.get(id=pk)
+
+        # task_status_for_search
+        task_status_option = request.query_params.get(
+            "task_status_for_search", "")
+        print("task_status_option : ", task_status_option)
+        due_date_option_for_filtering = request.query_params.get(
+            "due_date_option_for_filtering", "")
+        print("due_date_option_for_filtering : ",
+              due_date_option_for_filtering)
+
+        self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+            task_completed=False, task_manager=user).order_by('-in_progress', '-created_at')
+        
+        print("self.all_uncompleted_project_task_list : ", self.all_uncompleted_project_task_list)
+
+        count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.count()
+        print("총개수 for My Task : ", count_for_all_uncompleted_project_task_list)
+
+        start = (page - 1) * self.task_number_for_one_page
+        end = start + self.task_number_for_one_page
+
+        uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
+            start:end]
+
+        if task_status_option != "":
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                current_status=task_status_option)
+
+        if due_date_option_for_filtering == "undecided":
+            noon = time(hour=12, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), noon)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date=None)
+
+        if due_date_option_for_filtering == "until-noon":
+            noon = time(hour=12, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), noon)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        if due_date_option_for_filtering == "until-evening":
+            print("due_date_option_for_filtering !!!!!!!!!!!! ")
+            evening = time(hour=19, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), evening)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        if due_date_option_for_filtering == "until-tomorrow":
+            print("due_date_option_for_filtering !!!!!!!!!!!! ")
+            evening = time(hour=19, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), evening)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        if due_date_option_for_filtering == "until-the-day-after-tomorrow":
+            print("due_date_option_for_filtering tomorrow !!!!!!!!!!!! ")
+            tomorrow = datetime.today() + timedelta(days=2)
+            evening = time(hour=19, minute=10, second=0)
+            deadline = datetime.combine(tomorrow, evening)
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        if due_date_option_for_filtering == "until-this-week":
+            print("due_date_option_for_filtering this week !!!!!!!!!!!! ")
+            today = datetime.today()
+            # 이번 주의 마지막 날짜 계산
+            last_day_of_week = today + timedelta(days=(6 - today.weekday()))
+            # 이번 주 마지막 날짜의 오후 11시 59분 59초까지
+            deadline = datetime.combine(
+                last_day_of_week, time(hour=23, minute=59, second=59))
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        if due_date_option_for_filtering == "until-this-month":
+            print("due_date_option_for_filtering this month !!!!!!!!!!!! ")
+            today = datetime.today()
+            # 이번 달의 마지막 날짜 계산
+            last_day_of_month = datetime(
+                today.year, today.month, 1) + timedelta(days=32)
+            last_day_of_month = last_day_of_month.replace(
+                day=1) - timedelta(days=1)
+            # 이번 달 마지막 날짜의 오후 11시 59분 59초까지
+            deadline = datetime.combine(
+                last_day_of_month, time(hour=23, minute=59, second=59))
+            uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+
+        serializer = ProjectProgressListSerializer(
+            uncompleted_project_task_list_for_current_page, many=True)
+
+        self.totalCountForTask = math.trunc(
+            count_for_all_uncompleted_project_task_list)
+
+        count_for_ready = self.all_uncompleted_project_task_list.filter(
+            in_progress=False).count()
+        count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=False, task_completed=False).count()
+        count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+            in_progress=True, is_testing=True, task_completed=False).count()
+
+        user_info = TaskStatusForTeamMembersSerializer(user).data
+
+        # step5 응답
+        data = serializer.data
+        data = {
+            "user_info": user_info,
+            "ProjectProgressList": data,
+            "task_number_for_one_page": self.task_number_for_one_page,
+            "totalPageCount": self.totalCountForTask,
+            "count_for_ready": count_for_ready,
+            "task_number_for_one_page": self.task_number_for_one_page,
+            "count_for_in_progress": count_for_in_progress,
+            "count_for_in_testing": count_for_in_testing,
+        }
+
+        return Response(data, status=HTTP_200_OK)
 
 
 class MembersTaskStatus(APIView):
@@ -53,6 +219,7 @@ class UpdateViewForEditModeForStudyNoteContent(APIView):
         }
 
         return Response(result_data, status=status.HTTP_200_OK)
+
 
 class UserNameListView (APIView):
     def get(self, request):
@@ -173,7 +340,8 @@ class UserPhotos(APIView):
         if request.user != user:
             raise PermissionDenied  # 현재 로그인한 사람이 아닐 경우 접근 거부
 
-        serializer = UserProfileImageSerializer(user, data = request.data, partial=True)
+        serializer = UserProfileImageSerializer(
+            user, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()

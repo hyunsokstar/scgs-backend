@@ -1,8 +1,19 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, SkillForFrameWork, UserPosition
+from .models import User, SkillForFrameWork, UserPosition, UserTaskComment
+from django.utils import timezone
 
 # Register your models here.
+
+
+@admin.register(UserTaskComment)
+class UserTaskCommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'writer', 'comment', 'like_count',
+                    'created_at_formatted')
+    search_fields = ('writer__username', 'comment')
+
+    def has_add_permission(self, request):
+        return True
 
 
 @admin.register(UserPosition)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from common.models import CommonModel
+from django.utils import timezone
 
 # Create your models here.
 
@@ -45,6 +46,7 @@ class User(AbstractUser):
     is_edit_mode_for_study_note_contents = models.BooleanField(default=False)
     task_in_progress = models.CharField(max_length=50, default="crud 작업중")
 
+
 class UserPosition(CommonModel):
     position_name = models.CharField(max_length=30)
 
@@ -63,6 +65,37 @@ class SkillForFrameWork(CommonModel):
 
     class Meta:
         verbose_name_plural = "SkillForFrameWork"
+
+
+class UserTaskComment(models.Model):
+
+    owner = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="user_task_comments",
+    )
+    
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        # related_name="user_task_comments",
+    )
+
+    comment = models.CharField(max_length=100)
+    like_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    # is_edit_mode = models.BooleanField(default=False)
+
+    def created_at_formatted(self):
+        if (self.created_at != None):
+            local_created_at = timezone.localtime(self.created_at)
+            return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"
 
 # 파이썬 활용 능력 + 문서화
 # 노트로 정리 + git 공유
