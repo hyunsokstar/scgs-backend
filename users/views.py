@@ -47,7 +47,7 @@ class CreateViewForUserTaskComment(APIView):
         if serializer.is_valid():
             print("serializer 유효함")
             try:
-                owner = self.get_object(pk)
+                owner = self.get_object(userPk)
                 test_for_task = serializer.save(writer=request.user)
                 serializer = SerializerForCreateForUserTaskComment(
                     test_for_task)
