@@ -11,7 +11,8 @@ urlpatterns = [
     path("multi-users", views.AddMultiUsersView.as_view()),
     path("multi-users/delete", views.DeleteMultiUsersView.as_view()),
     path("<int:pk>", views.UserProfile.as_view()),
-    path("<int:pk>/comment", views.CreateViewForUserTaskComment.as_view()),
+    path("<int:userPk>/comment", views.CreateViewForUserTaskComment.as_view()),
+    path("comment/<int:commentPk>/delete", views.DeleteViewForUserCommentTaskByPk.as_view()),
 
     path("<int:pk>/comment", views.UserProfile.as_view()),
     path("<int:pk>/task-data-for-uncompleted", views.UncompletedTaskDataForSelectedUser.as_view()),

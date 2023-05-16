@@ -3,18 +3,33 @@ from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import AddMultiUserSerializer, PrivateUserSerializer, SerializerForCreateForUserTaskComment, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
-from users.models import User, UserPosition
+from users.models import User, UserPosition, UserTaskComment
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 
 # 임포트 관련
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 from project_progress.models import ProjectProgress
 from project_progress.serializers import ProjectProgressListSerializer
 from datetime import datetime, time, timedelta
 import math
+
+
+class DeleteViewForUserCommentTaskByPk(APIView):
+    def get_object(self, pk):
+        try:
+            return UserTaskComment.objects.get(pk=pk)
+        except UserTaskComment.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, commentPk):
+        comment_obj = self.get_object(commentPk)
+        comment_obj.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
 
 class CreateViewForUserTaskComment(APIView):
     def get_object(self, pk):
@@ -23,7 +38,7 @@ class CreateViewForUserTaskComment(APIView):
         except User.DoesNotExist:
             raise NotFound
 
-    def post(self, request, pk):
+    def post(self, request, userPk):
         if not request.user.is_authenticated:
             raise NotAuthenticated
 
@@ -34,7 +49,8 @@ class CreateViewForUserTaskComment(APIView):
             try:
                 owner = self.get_object(pk)
                 test_for_task = serializer.save(writer=request.user)
-                serializer = SerializerForCreateForUserTaskComment(test_for_task)
+                serializer = SerializerForCreateForUserTaskComment(
+                    test_for_task)
 
                 return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
 
@@ -76,8 +92,9 @@ class UncompletedTaskDataForSelectedUser(APIView):
 
         self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
             task_completed=False, task_manager=user).order_by('-in_progress', '-created_at')
-        
-        print("self.all_uncompleted_project_task_list : ", self.all_uncompleted_project_task_list)
+
+        print("self.all_uncompleted_project_task_list : ",
+              self.all_uncompleted_project_task_list)
 
         count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.count()
         print("총개수 for My Task : ", count_for_all_uncompleted_project_task_list)
