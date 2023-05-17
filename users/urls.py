@@ -16,6 +16,7 @@ urlpatterns = [
 
     path("<int:pk>/comment", views.UserProfile.as_view()),
     path("<int:pk>/task-data-for-uncompleted", views.UncompletedTaskDataForSelectedUser.as_view()),
+    path("<int:pk>/task-data-for-completed", views.CompletedTaskDataForSelectedUser.as_view()),
 
     path("<int:userPk>/EditModeForStudyNoteForContent/update",
          views.UpdateViewForEditModeForStudyNoteContent.as_view()),
