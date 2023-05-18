@@ -15,6 +15,69 @@ import pandas as pd
 
 # util 함수
 
+
+def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
+    # Get the date a month ago from now
+    one_month_ago = timezone.now() - timedelta(days=30)
+
+    # Query the database with additional filter condition for the specific user
+    user_tasks = ProjectProgress.objects.filter(
+        task_manager__pk=userPk,
+        current_status=ProjectProgress.TaskStatusChoices.completed,
+        completed_at__gte=one_month_ago
+    ).annotate(
+        date=TruncDate('completed_at')
+    ).values('date').annotate(
+        myCompletedCount=Count('id')
+    ).order_by('date')
+
+    # Query the database for all tasks in the same date range
+    all_tasks = ProjectProgress.objects.filter(
+        current_status=ProjectProgress.TaskStatusChoices.completed,
+        completed_at__gte=one_month_ago
+    ).annotate(
+        date=TruncDate('completed_at')
+    ).values('date').annotate(
+        totalCompletedCount=Count('id')
+    ).order_by('date')
+
+    # Format the results to match the format you want
+    user_task_data = {task['date'].strftime('%m-%d'): task['myCompletedCount'] for task in user_tasks}
+    all_task_data = {task['date'].strftime('%m-%d'): task['totalCompletedCount'] for task in all_tasks}
+
+    # Generate a list of all dates within the last month
+    date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    all_dates = {date.strftime('%m-%d'): {'myCompletedCount': 0, 'totalCompletedCount': 0} for date in date_range}
+
+    # Merge the task data with all_dates
+    for date in all_dates.keys():
+        all_dates[date]['myCompletedCount'] = user_task_data.get(date, 0)
+        all_dates[date]['totalCompletedCount'] = all_task_data.get(date, 0)
+
+    # Convert the merged data to the desired format
+    data = [{'name': date, 'myCompletedCount': count_info['myCompletedCount'], 'totalCompletedCount': count_info['totalCompletedCount']} for date, count_info in all_dates.items()]
+
+    return data
+
+class TaskStaticsIViewForPersnalUser(APIView):
+    def get(self, request, userPk):
+
+        username = User.objects.get(id=userPk).username
+
+        response_data = {
+            "username": username,
+            "task_count_for_month": []
+        }  
+        
+        staticsForDailyCompletedTaskCountForMonth = getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk)
+        response_data["task_count_for_month"] = staticsForDailyCompletedTaskCountForMonth
+
+        return Response(response_data)
+
+
+
+
+
 def getStaticsForDailyCompletedTaskCountForMonth():
     # Get the date a month ago from now
     one_month_ago = timezone.now() - timedelta(days=30)
@@ -43,49 +106,6 @@ def getStaticsForDailyCompletedTaskCountForMonth():
     data = [{'name': date, 'completedCount': count} for date, count in all_dates.items()]
 
     return data
-
-# def getStaticsForDailyCompletedTaskCountForMonth():
-#     # Get the date a month ago from now
-#     one_month_ago = timezone.now() - timedelta(days=30)
-
-#     # Query the database for completed tasks
-#     completed_tasks = ProjectProgress.objects.filter(
-#         current_status=ProjectProgress.TaskStatusChoices.completed,
-#         completed_at__gte=one_month_ago
-#     ).annotate(
-#         date=TruncDate('completed_at')
-#     ).values('date').annotate(
-#         completedCount=Count('id')
-#     ).order_by('date')
-
-#     # Query the database for total tasks
-#     total_tasks = ProjectProgress.objects.filter(
-#         created_at__gte=one_month_ago
-#     ).annotate(
-#         date=TruncDate('created_at')
-#     ).values('date').annotate(
-#         totalTaskCount=Count('id')
-#     ).order_by('date')
-
-#     # Format the results to match the format you want
-#     completed_task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in completed_tasks}
-#     total_task_data = {task['date'].strftime('%m-%d'): task['totalTaskCount'] for task in total_tasks}
-
-#     # Generate a list of all dates within the last month
-#     date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
-#     all_dates = {date.strftime('%m-%d'): {'completedCount': 0, 'totalTaskCount': 0} for date in date_range}
-
-#     # Merge the task data with all_dates
-#     for date, count in completed_task_data.items():
-#         all_dates[date]['completedCount'] = count
-
-#     for date, count in total_task_data.items():
-#         all_dates[date]['totalTaskCount'] = count
-
-#     # Convert the merged data to the desired format
-#     data = [{'name': date, 'completedCount': task_data['completedCount'], 'totalTaskCount': task_data['totalTaskCount']} for date, task_data in all_dates.items()]
-
-#     return data
 
 
 class DailyCompletedTasks(APIView):

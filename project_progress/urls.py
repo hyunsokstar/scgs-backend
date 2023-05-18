@@ -19,8 +19,10 @@ urlpatterns = [
          name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
-    path('task-statics', views.TaskStaticsIView.as_view(),
-         name="task_statics_for_month"),
+    path('task-statics', views.TaskStaticsIView.as_view()),
+    path('<int:userPk>/daily-task-count',
+         views.TaskStaticsIViewForPersnalUser.as_view()),
+
     path('writer-info', views.TaskMangerInfo.as_view()),
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('extra_tasks/<int:pk>', views.ExtraTasks.as_view(), name='extra_tasks'),

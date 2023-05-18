@@ -5,6 +5,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path("", views.Users.as_view()),
+    # path("<int:userPk>/daily-task-count", views.MembersTaskStatus.as_view()),
     path("members-task-status", views.MembersTaskStatus.as_view()),
     path("me", views.Me.as_view()),
     path("only-user-name", views.UserNameListView.as_view()),
