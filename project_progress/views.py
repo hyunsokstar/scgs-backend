@@ -10,12 +10,151 @@ from django.utils import timezone
 from datetime import datetime, timedelta, time
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
+from django.db.models.functions import TruncDate
+import pandas as pd
 
-# taskListForChecked 1122
-# class UpdateForTaskManagerForChecked(APIView):
-#     def put(self, request, *args, **kwargs):
-#         checked_row_pks = request.data.get('checkedRowPks', [])            # ex) checkedRowPks 는 [1,2,3,6] ProjectProgress 의 pk
-#         selected_manager_pk = request.data.get('task_manager', None)        # ex) task_manager 는 ProjectProgress 의 task_manager의 pk
+# util 함수
+
+def getStaticsForDailyCompletedTaskCountForMonth():
+    # Get the date a month ago from now
+    one_month_ago = timezone.now() - timedelta(days=30)
+
+    # Query the database
+    tasks = ProjectProgress.objects.filter(
+        current_status=ProjectProgress.TaskStatusChoices.completed,
+        completed_at__gte=one_month_ago
+    ).annotate(
+        date=TruncDate('completed_at')
+    ).values('date').annotate(
+        completedCount=Count('id')
+    ).order_by('date')
+
+    # Format the results to match the format you want
+    task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in tasks}
+
+    # Generate a list of all dates within the last month
+    date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    all_dates = {date.strftime('%m-%d'): 0 for date in date_range}
+
+    # Merge the task data with all_dates
+    all_dates.update(task_data)
+
+    # Convert the merged data to the desired format
+    data = [{'name': date, 'completedCount': count} for date, count in all_dates.items()]
+
+    return data
+
+# def getStaticsForDailyCompletedTaskCountForMonth():
+#     # Get the date a month ago from now
+#     one_month_ago = timezone.now() - timedelta(days=30)
+
+#     # Query the database for completed tasks
+#     completed_tasks = ProjectProgress.objects.filter(
+#         current_status=ProjectProgress.TaskStatusChoices.completed,
+#         completed_at__gte=one_month_ago
+#     ).annotate(
+#         date=TruncDate('completed_at')
+#     ).values('date').annotate(
+#         completedCount=Count('id')
+#     ).order_by('date')
+
+#     # Query the database for total tasks
+#     total_tasks = ProjectProgress.objects.filter(
+#         created_at__gte=one_month_ago
+#     ).annotate(
+#         date=TruncDate('created_at')
+#     ).values('date').annotate(
+#         totalTaskCount=Count('id')
+#     ).order_by('date')
+
+#     # Format the results to match the format you want
+#     completed_task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in completed_tasks}
+#     total_task_data = {task['date'].strftime('%m-%d'): task['totalTaskCount'] for task in total_tasks}
+
+#     # Generate a list of all dates within the last month
+#     date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+#     all_dates = {date.strftime('%m-%d'): {'completedCount': 0, 'totalTaskCount': 0} for date in date_range}
+
+#     # Merge the task data with all_dates
+#     for date, count in completed_task_data.items():
+#         all_dates[date]['completedCount'] = count
+
+#     for date, count in total_task_data.items():
+#         all_dates[date]['totalTaskCount'] = count
+
+#     # Convert the merged data to the desired format
+#     data = [{'name': date, 'completedCount': task_data['completedCount'], 'totalTaskCount': task_data['totalTaskCount']} for date, task_data in all_dates.items()]
+
+#     return data
+
+
+class DailyCompletedTasks(APIView):
+    def get(self, request, format=None):
+        # Get the date a month ago from now
+        one_month_ago = timezone.now() - timedelta(days=30)
+
+        # Query the database
+        tasks = ProjectProgress.objects.filter(
+            current_status=ProjectProgress.TaskStatusChoices.completed,
+            completed_at__gte=one_month_ago
+        ).annotate(
+            date=TruncDate('completed_at')
+        ).values('date').annotate(
+            completedCount=Count('id')
+        ).order_by('date')
+
+        # Format the results to match the format you want
+        task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in tasks}
+
+        # Generate a list of all dates within the last month
+        date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+        all_dates = {date.strftime('%m-%d'): 0 for date in date_range}
+
+        # Merge the task data with all_dates
+        all_dates.update(task_data)
+
+        # Convert the merged data to the desired format
+        data = [{'name': date, 'completedCount': count} for date, count in all_dates.items()]
+
+        return Response(data)
+
+class TaskStaticsIView(APIView):
+    def get(self, request):
+        task_managers = ProjectProgress.objects.values_list(
+            'task_manager', flat=True).distinct()
+
+        response_data = {
+            "managers": [],
+            "task_count_for_month": []
+        }        
+
+        for manager in task_managers:
+            completed_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=True).count()
+            count_for_testing_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=True).count()
+            uncompleted_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=False).count()
+            total_count_for_uncompleted_task = uncompleted_count_for_task + count_for_testing_task
+            total_count_for_completed_task = uncompleted_count_for_task + \
+                count_for_testing_task + completed_count_for_task
+            task_manager = User.objects.get(pk=manager).username
+
+            manager_data = {
+                "task_manager": task_manager,
+                "completed_count_for_task": completed_count_for_task,
+                "count_for_testing_task": count_for_testing_task,
+                "uncompleted_count_for_task": uncompleted_count_for_task,
+                "total_count_for_uncompleted_task": total_count_for_uncompleted_task,
+                "total_count_for_completed_task": total_count_for_completed_task
+            }
+            response_data["managers"].append(manager_data)
+
+            staticsForDailyCompletedTaskCountForMonth = getStaticsForDailyCompletedTaskCountForMonth()
+            response_data["task_count_for_month"] = staticsForDailyCompletedTaskCountForMonth
+
+
+        return Response(response_data)
 
 
 class UpdateForTaskManagerForChecked(APIView):
@@ -437,35 +576,7 @@ class SearchByUsername(APIView):
         pass
 
 
-class TaskStaticsIView(APIView):
-    def get(self, request):
-        task_managers = ProjectProgress.objects.values_list(
-            'task_manager', flat=True).distinct()
 
-        response_data = []
-        for manager in task_managers:
-            completed_count_for_task = ProjectProgress.objects.filter(
-                task_manager=manager, task_completed=True).count()
-            count_for_testing_task = ProjectProgress.objects.filter(
-                task_manager=manager, task_completed=False, is_testing=True).count()
-            uncompleted_count_for_task = ProjectProgress.objects.filter(
-                task_manager=manager, task_completed=False, is_testing=False).count()
-            total_count_for_uncompleted_task = uncompleted_count_for_task + count_for_testing_task
-            total_count_for_completed_task = uncompleted_count_for_task + \
-                count_for_testing_task + completed_count_for_task
-            task_manager = User.objects.get(pk=manager).username
-
-            manager_data = {
-                "task_manager": task_manager,
-                "completed_count_for_task": completed_count_for_task,
-                "count_for_testing_task": count_for_testing_task,
-                "uncompleted_count_for_task": uncompleted_count_for_task,
-                "total_count_for_uncompleted_task": total_count_for_uncompleted_task,
-                "total_count_for_completed_task": total_count_for_completed_task
-            }
-            response_data.append(manager_data)
-
-        return Response(response_data)
 
 
 def get_writers_info_for_cash_prize(complete_status):
