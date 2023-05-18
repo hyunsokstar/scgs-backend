@@ -1289,6 +1289,10 @@ class UncompletedTaskListView(APIView):
 
         checkForCashPrize = request.query_params.get(
             "checkForCashPrize", False)
+        
+        groupByOption = request.query_params.get(
+            "groupByOption", "")
+        print("groupByOption : ", groupByOption)
 
         # print("self.user_for_search : ", self.user_for_search)
         # print("due_date_option_for_filtering : ",
@@ -1418,6 +1422,14 @@ class UncompletedTaskListView(APIView):
         if checkForCashPrize == "true":
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 is_task_for_cash_prize=True)
+
+        if groupByOption != "":
+            if groupByOption == "member":
+                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by('task_manager')
+            if groupByOption == "time":
+                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by('due_date')
+                
+            
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
