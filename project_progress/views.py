@@ -120,6 +120,8 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
         totalCompletedCount=Count('id')
     ).order_by('date')
 
+    print("all_tasks :::::::::::::::::::::::", all_tasks)
+
     # Format the results to match the format you want
     user_task_data = {task['date'].strftime(
         '%m-%d'): task['myCompletedCount'] for task in user_tasks}
@@ -139,9 +141,11 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
         all_dates[date]['myCompletedCount'] = user_task_data.get(date, 0)
         all_dates[date]['totalCompletedCount'] = all_task_data.get(date, 0)
 
+
     # Convert the merged data to the desired format
     data = [{'name': date, 'myCompletedCount': count_info['myCompletedCount'],
              'totalCompletedCount': count_info['totalCompletedCount']} for date, count_info in all_dates.items()]
+    print("data :::::::::::::::::::", data )
 
     return data
 
