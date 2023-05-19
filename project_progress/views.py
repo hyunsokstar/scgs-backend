@@ -19,6 +19,7 @@ from django.http import JsonResponse
 # 1122
 
 # update
+# todo: statics 날짜 범위 조정
 class TaskStatusViewForToday(APIView):
     def get(self, request):
         seoul_tz = pytz.timezone('Asia/Seoul')
