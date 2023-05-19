@@ -24,32 +24,37 @@ class TaskStatusViewForToday(APIView):
         seoul_tz = pytz.timezone('Asia/Seoul')
         now = datetime.now().astimezone(seoul_tz)
 
-        morning_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        morning_end = now.replace(hour=13, minute=0, second=0, microsecond=0)
+        morning_start = now.replace(hour=0, minute=0)
+        morning_end = now.replace(hour=13, minute=0)
 
         afternoon_start = morning_end
         afternoon_end = now.replace(
-            hour=23, minute=59, second=59, microsecond=999999)
+            hour=23, minute=59)
+
+        night_start = now.replace(hour=19, minute=1, second=0)
+        night_end = now.replace(hour=23, minute=59, second=59)
+
 
         morning_tasks = ProjectProgress.objects.filter(
-            Q(task_completed=False) &
+            # Q(task_completed=False) &
             Q(due_date__gte=morning_start) &
             Q(due_date__lt=morning_end)
-        )
+        ).order_by("task_completed")
         afternoon_tasks = ProjectProgress.objects.filter(
-            Q(task_completed=False) &
+            # Q(task_completed=False) &
             Q(due_date__gte=afternoon_start) &
             Q(due_date__lt=afternoon_end)
-        )
-        for_money_tasks = ProjectProgress.objects.filter(
-            Q(task_completed=False) &
-            Q(is_task_for_cash_prize=True)
-        )
+        ).order_by("task_completed")
+        night_tasks = ProjectProgress.objects.filter(
+            # Q(task_completed=False) &
+            Q(due_date__gte=night_start) &
+            Q(due_date__lt=night_end)
+        ).order_by("task_completed")
 
         response_data = {
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
-            "for_money_tasks": TaskSerializerForToday(for_money_tasks, many=True).data
+            "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
         }
 
         return Response(response_data, status=HTTP_200_OK)
