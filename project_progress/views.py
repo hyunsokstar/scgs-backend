@@ -34,7 +34,6 @@ class TaskStatusViewForToday(APIView):
         night_start = now.replace(hour=19, minute=1, second=0)
         night_end = now.replace(hour=23, minute=59, second=59)
 
-
         morning_tasks = ProjectProgress.objects.filter(
             # Q(task_completed=False) &
             Q(due_date__gte=morning_start) &
@@ -59,9 +58,6 @@ class TaskStatusViewForToday(APIView):
 
         return Response(response_data, status=HTTP_200_OK)
 
-
-
-    
     # def get(self, request):
     #     seoul_tz = pytz.timezone('Asia/Seoul')
     #     now = datetime.now().astimezone(seoul_tz)
@@ -92,7 +88,15 @@ class TaskStatusViewForToday(APIView):
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     # Get the date a month ago from now
-    one_month_ago = timezone.now() - timedelta(days=30)
+    # Set the timezone to 'Asia/Seoul'
+    seoul_tz = pytz.timezone('Asia/Seoul')
+
+    # Get the current time in the 'Asia/Seoul' timezone
+    now = datetime.now(seoul_tz)
+    print("완료 현황 for User hahahahahahahahahahaha : ", now)
+
+    # Get the date a month ago from now
+    one_month_ago = now - timedelta(days=30)
 
     # Query the database with additional filter condition for the specific user
     user_tasks = ProjectProgress.objects.filter(
@@ -122,8 +126,10 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
         '%m-%d'): task['totalCompletedCount'] for task in all_tasks}
 
     # Generate a list of all dates within the last month
-    date_range = pd.date_range(
-        end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    # date_range = pd.date_range(
+    #     end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    date_range = pd.date_range(end=now, periods=30).to_pydatetime().tolist()
+
     all_dates = {date.strftime(
         '%m-%d'): {'myCompletedCount': 0, 'totalCompletedCount': 0} for date in date_range}
 
