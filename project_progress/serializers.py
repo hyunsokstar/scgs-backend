@@ -8,6 +8,8 @@ from rest_framework.serializers import ModelSerializer
 
 
 class TaskSerializerForToday(serializers.ModelSerializer):
+    task_manager = UserProfileImageSerializer()
+
     class Meta:
         model = ProjectProgress
         fields = [
