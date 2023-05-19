@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
+    path('task-status-view-for-today', views.TaskStatusViewForToday.as_view()),
     path('DailyCompletedTasks', views.DailyCompletedTasks.as_view()),
     path('update-task-manager-for-checked',
          views.UpdateForTaskManagerForChecked.as_view()),

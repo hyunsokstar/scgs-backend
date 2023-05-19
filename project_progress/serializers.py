@@ -7,6 +7,21 @@ from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 
 
+class TaskSerializerForToday(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectProgress
+        fields = [
+            "id",
+            "task",
+            "task_manager",
+            "task_completed",
+            "current_status",
+            "is_urgent_request",
+            "is_task_for_cash_prize",
+            "due_date"
+        ]
+
+
 class TestersForTestSerializer(serializers.ModelSerializer):
     tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
 

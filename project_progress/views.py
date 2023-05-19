@@ -3,7 +3,7 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
@@ -12,8 +12,69 @@ from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskCom
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
+import pytz
+from django.db.models import Q
+from django.http import JsonResponse
 
-# util 함수
+# 1122
+
+
+class TaskStatusViewForToday(APIView):
+    def get(self, request):
+        seoul_tz = pytz.timezone('Asia/Seoul')
+        now = datetime.now().astimezone(seoul_tz)
+
+        morning_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        morning_end = now.replace(hour=12, minute=0, second=0, microsecond=0)
+
+        afternoon_start = morning_end
+        afternoon_end = now.replace(
+            hour=23, minute=59, second=59, microsecond=999999)
+
+        morning_tasks = ProjectProgress.objects.filter(
+            Q(task_completed=False) &
+            Q(due_date__gte=morning_start) &
+            Q(due_date__lt=morning_end)
+        )
+        afternoon_tasks = ProjectProgress.objects.filter(
+            Q(task_completed=False) &
+            Q(due_date__gte=afternoon_start) &
+            Q(due_date__lt=afternoon_end)
+        )
+
+        response_data = {
+            "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
+            "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data
+        }
+        
+        return Response(response_data, status=HTTP_200_OK)
+    
+    # def get(self, request):
+    #     seoul_tz = pytz.timezone('Asia/Seoul')
+    #     now = datetime.now().astimezone(seoul_tz)
+
+    #     morning_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    #     morning_end = now.replace(hour=12, minute=0, second=0, microsecond=0)
+
+    #     afternoon_start = morning_end
+    #     afternoon_end = now.replace(
+    #         hour=23, minute=59, second=59, microsecond=999999)
+
+    #     morning_tasks = ProjectProgress.objects.filter(
+    #         Q(task_completed=False, due_date__gte=morning_start) & Q(
+    #             due_date__lt=morning_end)
+    #     )
+    #     afternoon_tasks = ProjectProgress.objects.filter(
+    #         Q(task_completed=False, due_date__gte=afternoon_start) & Q(
+    #             due_date__lt=afternoon_end)
+    #     )
+
+    #     response_data = {
+    #         "morning_tasks": list(morning_tasks.values()),
+    #         "afternoon_tasks": list(afternoon_tasks.values())
+    #     }
+
+    #     return JsonResponse(response_data)
 
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
@@ -42,12 +103,16 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     ).order_by('date')
 
     # Format the results to match the format you want
-    user_task_data = {task['date'].strftime('%m-%d'): task['myCompletedCount'] for task in user_tasks}
-    all_task_data = {task['date'].strftime('%m-%d'): task['totalCompletedCount'] for task in all_tasks}
+    user_task_data = {task['date'].strftime(
+        '%m-%d'): task['myCompletedCount'] for task in user_tasks}
+    all_task_data = {task['date'].strftime(
+        '%m-%d'): task['totalCompletedCount'] for task in all_tasks}
 
     # Generate a list of all dates within the last month
-    date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
-    all_dates = {date.strftime('%m-%d'): {'myCompletedCount': 0, 'totalCompletedCount': 0} for date in date_range}
+    date_range = pd.date_range(
+        end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    all_dates = {date.strftime(
+        '%m-%d'): {'myCompletedCount': 0, 'totalCompletedCount': 0} for date in date_range}
 
     # Merge the task data with all_dates
     for date in all_dates.keys():
@@ -55,9 +120,11 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
         all_dates[date]['totalCompletedCount'] = all_task_data.get(date, 0)
 
     # Convert the merged data to the desired format
-    data = [{'name': date, 'myCompletedCount': count_info['myCompletedCount'], 'totalCompletedCount': count_info['totalCompletedCount']} for date, count_info in all_dates.items()]
+    data = [{'name': date, 'myCompletedCount': count_info['myCompletedCount'],
+             'totalCompletedCount': count_info['totalCompletedCount']} for date, count_info in all_dates.items()]
 
     return data
+
 
 class TaskStaticsIViewForPersnalUser(APIView):
     def get(self, request, userPk):
@@ -67,15 +134,13 @@ class TaskStaticsIViewForPersnalUser(APIView):
         response_data = {
             "username": username,
             "task_count_for_month": []
-        }  
-        
-        staticsForDailyCompletedTaskCountForMonth = getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk)
+        }
+
+        staticsForDailyCompletedTaskCountForMonth = getStaticsForDailyCompletedTaskCountForMonthForPernalUser(
+            userPk)
         response_data["task_count_for_month"] = staticsForDailyCompletedTaskCountForMonth
 
         return Response(response_data)
-
-
-
 
 
 def getStaticsForDailyCompletedTaskCountForMonth():
@@ -93,17 +158,20 @@ def getStaticsForDailyCompletedTaskCountForMonth():
     ).order_by('date')
 
     # Format the results to match the format you want
-    task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in tasks}
+    task_data = {task['date'].strftime(
+        '%m-%d'): task['completedCount'] for task in tasks}
 
     # Generate a list of all dates within the last month
-    date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+    date_range = pd.date_range(
+        end=timezone.now().date(), periods=30).to_pydatetime().tolist()
     all_dates = {date.strftime('%m-%d'): 0 for date in date_range}
 
     # Merge the task data with all_dates
     all_dates.update(task_data)
 
     # Convert the merged data to the desired format
-    data = [{'name': date, 'completedCount': count} for date, count in all_dates.items()]
+    data = [{'name': date, 'completedCount': count}
+            for date, count in all_dates.items()]
 
     return data
 
@@ -124,19 +192,23 @@ class DailyCompletedTasks(APIView):
         ).order_by('date')
 
         # Format the results to match the format you want
-        task_data = {task['date'].strftime('%m-%d'): task['completedCount'] for task in tasks}
+        task_data = {task['date'].strftime(
+            '%m-%d'): task['completedCount'] for task in tasks}
 
         # Generate a list of all dates within the last month
-        date_range = pd.date_range(end=timezone.now().date(), periods=30).to_pydatetime().tolist()
+        date_range = pd.date_range(
+            end=timezone.now().date(), periods=30).to_pydatetime().tolist()
         all_dates = {date.strftime('%m-%d'): 0 for date in date_range}
 
         # Merge the task data with all_dates
         all_dates.update(task_data)
 
         # Convert the merged data to the desired format
-        data = [{'name': date, 'completedCount': count} for date, count in all_dates.items()]
+        data = [{'name': date, 'completedCount': count}
+                for date, count in all_dates.items()]
 
         return Response(data)
+
 
 class TaskStaticsIView(APIView):
     def get(self, request):
@@ -146,7 +218,7 @@ class TaskStaticsIView(APIView):
         response_data = {
             "managers": [],
             "task_count_for_month": []
-        }        
+        }
 
         for manager in task_managers:
             completed_count_for_task = ProjectProgress.objects.filter(
@@ -172,7 +244,6 @@ class TaskStaticsIView(APIView):
 
             staticsForDailyCompletedTaskCountForMonth = getStaticsForDailyCompletedTaskCountForMonth()
             response_data["task_count_for_month"] = staticsForDailyCompletedTaskCountForMonth
-
 
         return Response(response_data)
 
@@ -594,9 +665,6 @@ class SearchByUsername(APIView):
         username = request.data.get('username')
         print("username : ", username)
         pass
-
-
-
 
 
 def get_writers_info_for_cash_prize(complete_status):
@@ -1289,7 +1357,7 @@ class UncompletedTaskListView(APIView):
 
         checkForCashPrize = request.query_params.get(
             "checkForCashPrize", False)
-        
+
         groupByOption = request.query_params.get(
             "groupByOption", "")
         print("groupByOption : ", groupByOption)
@@ -1425,11 +1493,11 @@ class UncompletedTaskListView(APIView):
 
         if groupByOption != "":
             if groupByOption == "member":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by('task_manager')
+                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
+                    'task_manager')
             if groupByOption == "time":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by('due_date')
-                
-            
+                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
+                    'due_date')
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
@@ -1700,6 +1768,8 @@ class ProjectProgressDetailView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 # 1122
+
+
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
     total_page_count = 10  # 1 페이지에 몇개씩
