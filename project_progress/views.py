@@ -41,13 +41,19 @@ class TaskStatusViewForToday(APIView):
             Q(due_date__gte=afternoon_start) &
             Q(due_date__lt=afternoon_end)
         )
+        for_money_tasks = ProjectProgress.objects.filter(
+            Q(task_completed=False) &
+            Q(is_task_for_cash_prize=True)
+        )
 
         response_data = {
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
-            "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data
+            "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
+            "for_money_tasks": TaskSerializerForToday(for_money_tasks, many=True).data
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
 
     
