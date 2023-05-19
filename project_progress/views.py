@@ -25,7 +25,7 @@ class TaskStatusViewForToday(APIView):
         now = datetime.now().astimezone(seoul_tz)
 
         morning_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        morning_end = now.replace(hour=12, minute=0, second=0, microsecond=0)
+        morning_end = now.replace(hour=13, minute=0, second=0, microsecond=0)
 
         afternoon_start = morning_end
         afternoon_end = now.replace(
@@ -46,8 +46,10 @@ class TaskStatusViewForToday(APIView):
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data
         }
-        
+
         return Response(response_data, status=HTTP_200_OK)
+
+
     
     # def get(self, request):
     #     seoul_tz = pytz.timezone('Asia/Seoul')
