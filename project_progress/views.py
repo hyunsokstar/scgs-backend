@@ -1792,7 +1792,15 @@ class ProjectProgressDetailView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 # 1122
-
+due_date_mapping = {
+    'this-morning': timezone.now().replace(hour=0, minute=0, ),
+    'this-evening': timezone.now().replace(hour=19, minute=0),
+    'this-night': timezone.now().replace(hour=0, minute=0) + timedelta(days=1),
+    'tomorrow': timezone.now().replace(hour=12, minute=0) + timedelta(days=1),
+    'day-after-tomorrow': timezone.now().replace(hour=12, minute=0) + timedelta(days=2),
+    'this-week': timezone.now().replace(hour=12, minute=0) + timedelta(days=7 - timezone.now().weekday()),
+    'this-month': timezone.now().replace(day=1, hour=12, minute=0) + timedelta(days=32 - timezone.now().day),
+}
 
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
@@ -1839,16 +1847,15 @@ class ProjectProgressView(APIView):
 
     def post(self, request):
         print("request.data['task_manager] : ", request.data['task_manager'])
+        due_date_option = request.data.get('due_date')
+        print("due_date_option :::::::::::::::::::::::: ", due_date_option)    # this-evening    
 
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
-            # if request.user.is_authenticated:
-            #     project_progress = serializer.save(task_manager=request.user)
-            # else:
-            #     project_progress = serializer.save()
-            task_manager = User.objects.get(pk=request.data['task_manager'])
+            task_manager = User.objects.get(pk=request.data['task_manager'])    
 
             project_progress = serializer.save(task_manager=task_manager)
+
             return Response(CreateProjectProgressSerializer(project_progress).data)
 
         else:

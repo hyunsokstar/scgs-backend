@@ -5,6 +5,8 @@ from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
+from datetime import timedelta, datetime
+import pytz
 
 
 class TaskSerializerForToday(serializers.ModelSerializer):
@@ -267,6 +269,24 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
         return obj.time_left_to_due_date()
 
 
+def get_current_time_in_seoul():
+    seoul_tz = pytz.timezone('Asia/Seoul')
+    return datetime.now(seoul_tz)
+
+def get_due_date_mapping_value(value):
+    now_in_seoul = get_current_time_in_seoul()
+    due_date_mapping = {
+        'this-morning': now_in_seoul.replace(hour=12, minute=0),
+        'this-evening': now_in_seoul.replace(hour=19, minute=0),
+        'this-night': now_in_seoul.replace(hour=23, minute=59),
+        'tomorrow': now_in_seoul.replace(hour=19, minute=0) + timedelta(days=1),
+        'day-after-tomorrow': now_in_seoul.replace(hour=19, minute=0) + timedelta(days=2),
+        'this-week': now_in_seoul.replace(hour=19, minute=0) + timedelta(days=7 - now_in_seoul.weekday()),
+        'this-month': now_in_seoul.replace(day=1, hour=19, minute=0) + timedelta(days=32 - now_in_seoul.day),
+    }
+    return due_date_mapping.get(value, None)
+
+
 class CreateProjectProgressSerializer(serializers.ModelSerializer):
 
     task_manager = TinyUserSerializer(read_only=True)
@@ -280,5 +300,15 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
             "task_manager",
             "importance",
             "task_completed",
-            "task_classification"
+            "task_classification",
+            "due_date"
         )
+
+    def to_internal_value(self, data):
+        due_date_option = data.get('due_date')
+        if due_date_option:
+            due_date = get_due_date_mapping_value(due_date_option)
+            if due_date is not None:
+                data['due_date'] = due_date
+
+        return super().to_internal_value(data)

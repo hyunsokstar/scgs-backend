@@ -143,6 +143,7 @@ class ProjectProgress(models.Model):
 
     def time_left_to_due_date(self, client_timezone='Asia/Seoul'):
         time_left_to_due_date_str = ""
+        print("self.due_date ::::::::::::::::::::::::::::", self.due_date   )
 
         if self.due_date is not None and self.started_at_utc is not None:
             # 로컬 타임존으로 변환
