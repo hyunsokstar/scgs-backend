@@ -13,8 +13,9 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
 import pytz
-from django.db.models import Q
+from django.db.models import Q, F, Max
 from django.http import JsonResponse
+
 
 # 1122
 
@@ -22,18 +23,38 @@ from django.http import JsonResponse
 # todo: statics 날짜 범위 조정
 
 
+# class UpdateTaskTimeOptionAndOrder(APIView):
+#     def put(self, request):
+#         taskPk = request.data.get('taskPk')
+#         time_option = request.data.get('time_option')
+#         orgin_task_id = request.data.get('orgin_task_id')
+#         ordering_option = request.data.get('ordering_option')
+
+#         # Received data:
+#         # taskPk=102,
+#         # orgin_task_id=104,
+#         # time_option=afternoon_tasks,
+#         # ordering_option=switch_order_of_two_tasks
+
+#         print(f"""
+#         received data :
+#         taskPk={taskPk},
+#         time_option={time_option},
+#         orgin_task_id={orgin_task_id},
+#         ordering_option={ordering_option}
+#         """)
+
+#         # 이제 taskPk, time_option, orgin_task_id, ordering_option 변수를 사용할 수 있습니다.
+#         # ... (여기에 로직 코드를 추가하십시오.)
+
+#         return Response(status=HTTP_200_OK)
+
 class UpdateTaskTimeOptionAndOrder(APIView):
     def put(self, request):
         taskPk = request.data.get('taskPk')
         time_option = request.data.get('time_option')
         orgin_task_id = request.data.get('orgin_task_id')
         ordering_option = request.data.get('ordering_option')
-
-        # Received data:
-        # taskPk=102,
-        # orgin_task_id=104,
-        # time_option=afternoon_tasks,
-        # ordering_option=switch_order_of_two_tasks
 
         print(f"""
         received data :
@@ -43,11 +64,96 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         ordering_option={ordering_option}
         """)
 
+        if ordering_option == "switch_order_of_two_tasks":
+            # Fetch taskPk object
+            task_to_update = ProjectProgress.objects.get(pk=taskPk)
 
-        # 이제 taskPk, time_option, orgin_task_id, ordering_option 변수를 사용할 수 있습니다.
-        # ... (여기에 로직 코드를 추가하십시오.)
+            # Determine due_date based on time_option
+            if time_option == 'morning_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=12, minute=59)))
+            elif time_option == 'afternoon_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=18, minute=59)))
+            elif time_option == 'night_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=23, minute=59)))
 
-        return Response(status=HTTP_200_OK)
+            print("time_option 11111111 ::::::::::::::::::::: ", time_option)
+
+            # Assign time_option to due_date_option
+            task_to_update.due_date_option = time_option
+
+            # Fetch orgin_task_id object
+            origin_task = ProjectProgress.objects.get(pk=orgin_task_id)
+            task_to_update.order = origin_task.order -1
+
+            print("origin_task.order 22222222  ::::::::::  ", origin_task.order)
+            # .exclude(id=taskPk)
+
+            filtered_records = ProjectProgress.objects.filter(
+                due_date_option=time_option).filter(order__lt=origin_task.order).order_by("-order")
+
+            print("filtered_records 3333 :::::::::: ", filtered_records)
+
+
+            # origin_task.order
+            order_offset = 2
+            for record in filtered_records:
+                record.order = origin_task.order - order_offset
+                record.save()
+                order_offset += 1
+
+            task_to_update.save()
+
+            filtered_records = ProjectProgress.objects.filter(
+                due_date_option=time_option)            
+
+            for i, record in enumerate(filtered_records, start=1):
+                record.order = i
+                record.save()
+                print("new order : " ,record.order)
+
+        elif ordering_option == "move_to_last":
+            task_to_update = ProjectProgress.objects.get(pk=taskPk)            
+            task_to_update.due_date_option = time_option
+
+            # Fetch orgin_task_id object
+            origin_tasks = ProjectProgress.objects.filter(due_date_option=time_option)
+
+            # Find the largest order in origin_tasks
+            max_order = origin_tasks.aggregate(Max('order'))['order__max']
+
+            if time_option == 'morning_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=12, minute=59)))
+            elif time_option == 'afternoon_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=18, minute=59)))
+            elif time_option == 'night_tasks':
+                task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=23, minute=59)))  
+                              
+            if max_order is not None:
+                task_to_update.order = max_order + 1
+                print("time_option : ", time_option)
+                task_to_update.due_date_option = time_option
+            else:
+                task_to_update.order = 1
+                print("time_option : ", time_option)
+                task_to_update.due_date_option = time_option                
+
+            task_to_update.save()
+
+            filtered_records = ProjectProgress.objects.filter(
+                due_date_option=time_option)            
+
+            for i, record in enumerate(filtered_records, start=1):
+                record.order = i
+                record.save()
+                print("new order : " ,record.order)
+
+            return Response(status=HTTP_200_OK)
 
 
 class TaskStatusViewForToday(APIView):
@@ -69,17 +175,17 @@ class TaskStatusViewForToday(APIView):
             # Q(task_completed=False) &
             Q(due_date__gte=morning_start) &
             Q(due_date__lt=morning_end)
-        ).order_by("task_completed")
+        ).order_by("task_completed", "order")
         afternoon_tasks = ProjectProgress.objects.filter(
             # Q(task_completed=False) &
             Q(due_date__gte=afternoon_start) &
             Q(due_date__lt=afternoon_end)
-        ).order_by("task_completed")
+        ).order_by("task_completed", "order")
         night_tasks = ProjectProgress.objects.filter(
             # Q(task_completed=False) &
             Q(due_date__gte=night_start) &
             Q(due_date__lt=night_end)
-        ).order_by("task_completed")
+        ).order_by("task_completed", "order")
 
         response_data = {
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,

@@ -278,7 +278,7 @@ def get_due_date_mapping_value(value):
     now_in_seoul = get_current_time_in_seoul()
     due_date_mapping = {
         'morning_tasks': now_in_seoul.replace(hour=12, minute=59),
-        'evening_tasks': now_in_seoul.replace(hour=18, minute=59),
+        'afternoon_tasks': now_in_seoul.replace(hour=18, minute=59),
         'night_tasks': now_in_seoul.replace(hour=23, minute=59),
         'tomorrow': now_in_seoul.replace(hour=18, minute=59) + timedelta(days=1),
         'day-after-tomorrow': now_in_seoul.replace(hour=18, minute=59) + timedelta(days=2),
