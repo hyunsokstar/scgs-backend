@@ -20,6 +20,8 @@ from django.http import JsonResponse
 
 # update
 # todo: statics 날짜 범위 조정
+
+
 class TaskStatusViewForToday(APIView):
     def get(self, request):
         seoul_tz = pytz.timezone('Asia/Seoul')
@@ -30,9 +32,9 @@ class TaskStatusViewForToday(APIView):
 
         afternoon_start = morning_end
         afternoon_end = now.replace(
-            hour=23, minute=59)
+            hour=18, minute=59, second=10)
 
-        night_start = now.replace(hour=19, minute=1, second=0)
+        night_start = now.replace(hour=19, minute=0, second=0)
         night_end = now.replace(hour=23, minute=59, second=59)
 
         morning_tasks = ProjectProgress.objects.filter(
@@ -141,11 +143,10 @@ def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
         all_dates[date]['myCompletedCount'] = user_task_data.get(date, 0)
         all_dates[date]['totalCompletedCount'] = all_task_data.get(date, 0)
 
-
     # Convert the merged data to the desired format
     data = [{'name': date, 'myCompletedCount': count_info['myCompletedCount'],
              'totalCompletedCount': count_info['totalCompletedCount']} for date, count_info in all_dates.items()]
-    print("data :::::::::::::::::::", data )
+    print("data :::::::::::::::::::", data)
 
     return data
 
@@ -443,7 +444,7 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                 try:
                     task = ProjectProgress.objects.get(pk=pk)
                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-                        timezone.now()).date(), time(hour=12)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                        timezone.now()).date(), time(hour=12, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
                     task.started_at_utc = timezone.localtime(
                         timezone.now()).astimezone(timezone.utc)
@@ -457,7 +458,7 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                 try:
                     task = ProjectProgress.objects.get(pk=pk)
                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-                        timezone.now()).date(), time(hour=19)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                        timezone.now()).date(), time(hour=18, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
                     task.started_at_utc = timezone.localtime(
                         timezone.now()).astimezone(timezone.utc)
@@ -1271,7 +1272,7 @@ class UncompletedTaskListViewForMe(APIView):
 
         if due_date_option_for_filtering == "until-evening":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
-            evening = time(hour=19, minute=10, second=0)
+            evening = time(hour=19, minute=1, second=0)
             deadline = datetime.combine(datetime.today(), evening)
             uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
@@ -1791,6 +1792,7 @@ class ProjectProgressDetailView(APIView):
         project_task.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
+
 # 1122
 due_date_mapping = {
     'this-morning': timezone.now().replace(hour=0, minute=0, ),
@@ -1801,6 +1803,7 @@ due_date_mapping = {
     'this-week': timezone.now().replace(hour=12, minute=0) + timedelta(days=7 - timezone.now().weekday()),
     'this-month': timezone.now().replace(day=1, hour=12, minute=0) + timedelta(days=32 - timezone.now().day),
 }
+
 
 class ProjectProgressView(APIView):
     totalCount = 0  # total_count 계산
@@ -1848,11 +1851,12 @@ class ProjectProgressView(APIView):
     def post(self, request):
         print("request.data['task_manager] : ", request.data['task_manager'])
         due_date_option = request.data.get('due_date')
-        print("due_date_option :::::::::::::::::::::::: ", due_date_option)    # this-evening    
+        print("due_date_option :::::::::::::::::::::::: ",
+              due_date_option)    # this-evening
 
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
-            task_manager = User.objects.get(pk=request.data['task_manager'])    
+            task_manager = User.objects.get(pk=request.data['task_manager'])
 
             project_progress = serializer.save(task_manager=task_manager)
 

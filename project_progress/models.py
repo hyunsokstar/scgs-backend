@@ -31,6 +31,8 @@ class ProjectProgress(models.Model):
     )
 
     task = models.CharField(max_length=80, default="")
+    order = models.IntegerField(default=None, null=True, blank=True)
+
     task_description = models.TextField(max_length=300, default="")
 
     task_classification = models.CharField(
@@ -71,6 +73,15 @@ class ProjectProgress(models.Model):
     cash_prize = models.IntegerField(default=0)
     is_urgent_request = models.BooleanField(default=False)
     is_task_for_cash_prize = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if self.order is None:
+            max_order = ProjectProgress.objects.all().aggregate(models.Max('order'))['order__max']
+            if max_order is None:
+                self.order = 1
+            else:
+                self.order = max_order + 1
+        super().save(*args, **kwargs)
 
     @property
     def started_at(self):

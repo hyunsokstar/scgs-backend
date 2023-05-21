@@ -17,6 +17,7 @@ class TaskSerializerForToday(serializers.ModelSerializer):
         fields = [
             "id",
             "task",
+            "order",
             "task_manager",
             "task_completed",
             "current_status",
