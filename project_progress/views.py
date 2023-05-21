@@ -35,12 +35,14 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         # time_option=afternoon_tasks,
         # ordering_option=switch_order_of_two_tasks
 
-        print("received data : ",
-              taskPk={taskPk},
-              time_option={time_option},
-              orgin_task_id={orgin_task_id},
-              ordering_option={ordering_option}
-              )
+        print(f"""
+        received data :
+        taskPk={taskPk},
+        time_option={time_option},
+        orgin_task_id={orgin_task_id},
+        ordering_option={ordering_option}
+        """)
+
 
         # 이제 taskPk, time_option, orgin_task_id, ordering_option 변수를 사용할 수 있습니다.
         # ... (여기에 로직 코드를 추가하십시오.)
@@ -58,7 +60,7 @@ class TaskStatusViewForToday(APIView):
 
         afternoon_start = morning_end
         afternoon_end = now.replace(
-            hour=18, minute=59, second=10)
+            hour=19, minute=0, second=10)
 
         night_start = now.replace(hour=19, minute=0, second=0)
         night_end = now.replace(hour=23, minute=59, second=59)
