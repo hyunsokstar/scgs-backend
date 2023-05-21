@@ -22,6 +22,32 @@ from django.http import JsonResponse
 # todo: statics 날짜 범위 조정
 
 
+class UpdateTaskTimeOptionAndOrder(APIView):
+    def put(self, request):
+        taskPk = request.data.get('taskPk')
+        time_option = request.data.get('time_option')
+        orgin_task_id = request.data.get('orgin_task_id')
+        ordering_option = request.data.get('ordering_option')
+
+        # Received data:
+        # taskPk=102,
+        # orgin_task_id=104,
+        # time_option=afternoon_tasks,
+        # ordering_option=switch_order_of_two_tasks
+
+        print("received data : ",
+              taskPk={taskPk},
+              time_option={time_option},
+              orgin_task_id={orgin_task_id},
+              ordering_option={ordering_option}
+              )
+
+        # 이제 taskPk, time_option, orgin_task_id, ordering_option 변수를 사용할 수 있습니다.
+        # ... (여기에 로직 코드를 추가하십시오.)
+
+        return Response(status=HTTP_200_OK)
+
+
 class TaskStatusViewForToday(APIView):
     def get(self, request):
         seoul_tz = pytz.timezone('Asia/Seoul')
@@ -370,52 +396,6 @@ class taskListForChecked(APIView):
         return Response(data, status=HTTP_200_OK)
 
 
-# class UpdateViewForTaskDueDateForChecked(APIView):
-#     def put(self, request):
-#         # duration_option 값을 가져옵니다.
-#         duration_option = request.data.get("duration_option")
-#         # checkedRowPks 값을 가져옵니다.
-#         checked_row_pks = request.data.get("checkedRowPks")
-
-#         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
-#         updated_count = 0
-
-#         if duration_option == "noon":
-#             for pk in checked_row_pks:
-#                 try:
-#                     task = ProjectProgress.objects.get(pk=pk)
-#                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-#                         timezone.now()).date(), time(hour=12)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
-#                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
-#                     task.started_at_utc = timezone.localtime(
-#                         timezone.now()).astimezone(timezone.utc)
-#                     task.save()
-#                     updated_count += 1
-#                 except ProjectProgress.DoesNotExist:
-#                     pass
-
-#         elif duration_option == "evening":
-#             for pk in checked_row_pks:
-#                 try:
-#                     task = ProjectProgress.objects.get(pk=pk)
-#                     task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-#                         timezone.now()).date(), time(hour=19)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
-#                     # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
-#                     task.started_at_utc = timezone.localtime(
-#                         timezone.now()).astimezone(timezone.utc)
-#                     task.save()
-#                     updated_count += 1
-#                 except ProjectProgress.DoesNotExist:
-#                     pass
-
-#         elif duration_option == "tomorrow":
-#         elif duration_option == "day-after-tomorrow":
-#         elif duration_option == "this-week":
-#         elif duration_option == "this-month":
-
-
-#         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
-#         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
 class UpdateViewForTaskDueDateForChecked(APIView):
     def put(self, request):
         # duration_option 값을 가져옵니다.
@@ -1850,15 +1830,20 @@ class ProjectProgressView(APIView):
 
     def post(self, request):
         print("request.data['task_manager] : ", request.data['task_manager'])
-        due_date_option = request.data.get('due_date')
+        due_date_option = request.data.get('due_date_option')
         print("due_date_option :::::::::::::::::::::::: ",
               due_date_option)    # this-evening
+
+        valid_options = ['morning_tasks', 'afternoon_tasks', 'night_tasks']
+        if due_date_option not in valid_options:
+            due_date_option = 'evening_tasks'
 
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
             task_manager = User.objects.get(pk=request.data['task_manager'])
 
-            project_progress = serializer.save(task_manager=task_manager)
+            project_progress = serializer.save(
+                task_manager=task_manager, due_date_option=due_date_option)
 
             return Response(CreateProjectProgressSerializer(project_progress).data)
 

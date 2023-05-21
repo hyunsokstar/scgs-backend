@@ -5,7 +5,7 @@ from datetime import datetime
 import pytz
 
 
-class ProjectProgress(models.Model):
+class ProjectProgress(models.Model):    
     class TaskClassificationChoices(models.TextChoices):
         CRUD = ("crud", "CRUD 작업")
         NEW_FUTURE = ("new-future", "새로운 기능 개발")
@@ -22,6 +22,11 @@ class ProjectProgress(models.Model):
         testing = ("testing", "테스트중")
         completed = ("completed", "완료")
 
+    class TimeOptionChoices(models.TextChoices):
+        MORNING_TASKS = 'morning_tasks', '아침 작업'
+        AFTERNOON_TASKS = 'afternoon_tasks', '오후 작업'
+        NIGHT_TASKS = 'night_tasks', '밤 작업'
+
     task_manager = models.ForeignKey(
         "users.User",
         blank=True,
@@ -32,6 +37,18 @@ class ProjectProgress(models.Model):
 
     task = models.CharField(max_length=80, default="")
     order = models.IntegerField(default=None, null=True, blank=True)
+
+    # 마감일
+    due_date = models.DateTimeField(
+        auto_now_add=False, null=True, blank=True)
+    
+    # morning_tasks afternoon_tasks 
+    # due_date_option = models.CharField(max_length=20, default="")
+    due_date_option = models.CharField(
+        max_length=20,
+        choices=TimeOptionChoices.choices,
+        default=TimeOptionChoices.MORNING_TASKS,
+    )
 
     task_description = models.TextField(max_length=300, default="")
 
@@ -66,9 +83,6 @@ class ProjectProgress(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
     completed_at = models.DateTimeField(blank=True, null=True)
-    # 마감일
-    due_date = models.DateTimeField(
-        auto_now_add=False, null=True, blank=True)
 
     cash_prize = models.IntegerField(default=0)
     is_urgent_request = models.BooleanField(default=False)

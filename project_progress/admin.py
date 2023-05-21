@@ -14,6 +14,7 @@ class ProjectProgressAdmin(admin.ModelAdmin):
         "importance",
         "task_completed",
         "password",
+        "due_date_option"
     )
 
 
