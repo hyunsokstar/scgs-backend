@@ -65,6 +65,8 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         """)
 
         if ordering_option == "switch_order_of_two_tasks":
+
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
             # Fetch taskPk object
             task_to_update = ProjectProgress.objects.get(pk=taskPk)
 
@@ -86,40 +88,44 @@ class UpdateTaskTimeOptionAndOrder(APIView):
 
             # Fetch orgin_task_id object
             origin_task = ProjectProgress.objects.get(pk=orgin_task_id)
-            task_to_update.order = origin_task.order -1
+            task_to_update.order = origin_task.order - 1
+
+            task_to_update.save()
 
             print("origin_task.order 22222222  ::::::::::  ", origin_task.order)
-            # .exclude(id=taskPk)
 
             filtered_records = ProjectProgress.objects.filter(
-                due_date_option=time_option).filter(order__lt=origin_task.order).order_by("-order")
+                due_date_option=time_option).exclude(id=taskPk).filter(order__lt=origin_task.order).order_by("-order")
 
             print("filtered_records 3333 :::::::::: ", filtered_records)
 
-
-            # origin_task.order
+            # # origin_task.order
             order_offset = 2
             for record in filtered_records:
                 record.order = origin_task.order - order_offset
                 record.save()
                 order_offset += 1
 
-            task_to_update.save()
-
             filtered_records = ProjectProgress.objects.filter(
-                due_date_option=time_option)            
+                due_date_option=time_option)
 
-            for i, record in enumerate(filtered_records, start=1):
-                record.order = i
-                record.save()
-                print("new order : " ,record.order)
+            # for i, record in enumerate(filtered_records, start=1):
+            #     record.order = i
+            #     record.save()
+            #     print("new order : ", record.order)            
+
+            # for i, record in enumerate(filtered_records, start=1):
+            #     record.order = i
+            #     record.save()
+            #     print("new order : " ,record.order)
 
         elif ordering_option == "move_to_last":
-            task_to_update = ProjectProgress.objects.get(pk=taskPk)            
+            task_to_update = ProjectProgress.objects.get(pk=taskPk)
             task_to_update.due_date_option = time_option
 
             # Fetch orgin_task_id object
-            origin_tasks = ProjectProgress.objects.filter(due_date_option=time_option)
+            origin_tasks = ProjectProgress.objects.filter(
+                due_date_option=time_option)
 
             # Find the largest order in origin_tasks
             max_order = origin_tasks.aggregate(Max('order'))['order__max']
@@ -132,8 +138,8 @@ class UpdateTaskTimeOptionAndOrder(APIView):
                     timezone.now()).date(), time(hour=18, minute=59)))
             elif time_option == 'night_tasks':
                 task_to_update.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-                    timezone.now()).date(), time(hour=23, minute=59)))  
-                              
+                    timezone.now()).date(), time(hour=23, minute=59)))
+
             if max_order is not None:
                 task_to_update.order = max_order + 1
                 print("time_option : ", time_option)
@@ -141,19 +147,19 @@ class UpdateTaskTimeOptionAndOrder(APIView):
             else:
                 task_to_update.order = 1
                 print("time_option : ", time_option)
-                task_to_update.due_date_option = time_option                
+                task_to_update.due_date_option = time_option
 
             task_to_update.save()
 
             filtered_records = ProjectProgress.objects.filter(
-                due_date_option=time_option)            
+                due_date_option=time_option)
 
-            for i, record in enumerate(filtered_records, start=1):
-                record.order = i
-                record.save()
-                print("new order : " ,record.order)
+            # for i, record in enumerate(filtered_records, start=1):
+            #     record.order = i
+            #     record.save()
+            #     print("new order : ", record.order)
 
-            return Response(status=HTTP_200_OK)
+        return Response(status=HTTP_200_OK)
 
 
 class TaskStatusViewForToday(APIView):
