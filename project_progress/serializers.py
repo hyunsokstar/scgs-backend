@@ -17,13 +17,15 @@ class TaskSerializerForToday(serializers.ModelSerializer):
         fields = [
             "id",
             "task",
+            "in_progress",
+            "is_testing",
             "order",
             "task_manager",
             "task_completed",
             "current_status",
             "is_urgent_request",
             "is_task_for_cash_prize",
-            "due_date"
+            "due_date",
         ]
 
 
@@ -273,6 +275,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 def get_current_time_in_seoul():
     seoul_tz = pytz.timezone('Asia/Seoul')
     return datetime.now(seoul_tz)
+
 
 def get_due_date_mapping_value(value):
     now_in_seoul = get_current_time_in_seoul()
