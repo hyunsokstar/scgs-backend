@@ -7,7 +7,7 @@ from project_progress.serializers import CreateCommentSerializerForTask, CreateE
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -112,7 +112,7 @@ class UpdateTaskTimeOptionAndOrder(APIView):
             # for i, record in enumerate(filtered_records, start=1):
             #     record.order = i
             #     record.save()
-            #     print("new order : ", record.order)            
+            #     print("new order : ", record.order)
 
             # for i, record in enumerate(filtered_records, start=1):
             #     record.order = i
@@ -162,6 +162,70 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         return Response(status=HTTP_200_OK)
 
 
+# class TaskStatusViewForToday(APIView):
+#     def get(self, request):
+#         seoul_tz = pytz.timezone('Asia/Seoul')
+#         now = datetime.now().astimezone(seoul_tz)
+
+#         morning_start = now.replace(hour=0, minute=0)
+#         morning_end = now.replace(hour=13, minute=0)
+
+#         afternoon_start = morning_end
+#         afternoon_end = now.replace(
+#             hour=19, minute=0, second=10)
+
+#         night_start = now.replace(hour=19, minute=0, second=0)
+#         night_end = now.replace(hour=23, minute=59, second=59)
+
+#         morning_tasks = ProjectProgress.objects.filter(
+#             Q(due_date__gte=morning_start) &
+#             Q(due_date__lt=morning_end)
+#         ).order_by("task_completed", "order")
+#         afternoon_tasks = ProjectProgress.objects.filter(
+#             Q(due_date__gte=afternoon_start) &
+#             Q(due_date__lt=afternoon_end)
+#         ).order_by("task_completed", "order")
+#         night_tasks = ProjectProgress.objects.filter(
+#             Q(due_date__gte=night_start) &
+#             Q(due_date__lt=night_end)
+#         ).order_by("task_completed", "order")
+
+#         # 오늘의 전체 업무 개수
+#         # class TaskStatusChoices(models.TextChoices):
+#         #     ready = ("ready", "준비")
+#         #     in_progress = ("in_progress", "작업중")
+#         #     testing = ("testing", "테스트중")
+#         #     completed = ("completed", "완료")
+#         # current_status = models.CharField(
+#         #     max_length=20,
+#         #     choices=TaskStatusChoices.choices,
+#         #     default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
+#         # )
+
+#         # todo1
+#         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
+#         # task_count_for_uncompleted_task_until_yesterday
+
+#         # todo2
+#         # due_date 가 오늘 날짜에 포함 되는것들에 대해 current_status 를 기준으로 ProjectProgress count 구해서 아래 항목 구한뒤 response_data 에 추가 하도록 하기
+#         # 오늘의 전체 task_count_for_ready
+#         # 오늘의 전체 task_count_for_in_progress
+#         # 오늘의 전체 task_count_for_testing
+#         # 오늘의 전체 task_count_for_completed
+
+#         response_data = {
+#             # task_count_for_uncompleted_task_until_yesterday: xx
+#             # "task_count_for_ready": xx,
+#             # "task_count_for_in_progress": xx,
+#             # "task_count_for_testing": xx,
+#             # "task_count_for_completed": xx,
+#             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
+#             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
+#             "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
+#         }
+
+#         return Response(response_data, status=HTTP_200_OK)
+
 class TaskStatusViewForToday(APIView):
     def get(self, request):
         seoul_tz = pytz.timezone('Asia/Seoul')
@@ -178,28 +242,56 @@ class TaskStatusViewForToday(APIView):
         night_end = now.replace(hour=23, minute=59, second=59)
 
         morning_tasks = ProjectProgress.objects.filter(
-            # Q(task_completed=False) &
             Q(due_date__gte=morning_start) &
             Q(due_date__lt=morning_end)
         ).order_by("task_completed", "order")
         afternoon_tasks = ProjectProgress.objects.filter(
-            # Q(task_completed=False) &
             Q(due_date__gte=afternoon_start) &
             Q(due_date__lt=afternoon_end)
         ).order_by("task_completed", "order")
         night_tasks = ProjectProgress.objects.filter(
-            # Q(task_completed=False) &
             Q(due_date__gte=night_start) &
             Q(due_date__lt=night_end)
         ).order_by("task_completed", "order")
 
+        # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
+        task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
+            (Q(due_date__isnull=True) | Q(due_date__lt=now.date())) & ~Q(current_status='completed')
+        ).count()
+
+        # due_date 가 오늘 날짜에 포함 되는것들에 대해 current_status 를 기준으로 ProjectProgress count 구해서 아래 항목 구한뒤 response_data 에 추가 하도록 하기
+
+        task_count_for_ready = ProjectProgress.objects.filter(
+            Q(due_date__date=now.date()) & Q(current_status='ready')
+        ).count()
+        task_count_for_in_progress = ProjectProgress.objects.filter(
+            Q(due_date__date=now.date()) & Q(current_status='in_progress')
+        ).count()
+        task_count_for_testing = ProjectProgress.objects.filter(
+            Q(due_date__date=now.date()) & Q(current_status='testing')
+        ).count()
+        task_count_for_completed = ProjectProgress.objects.filter(
+            Q(due_date__date=now.date()) & Q(current_status='completed')
+        ).count()
+
+        toal_task_count_for_today = task_count_for_ready + task_count_for_in_progress + task_count_for_testing + task_count_for_completed
+        progress_rate = int((task_count_for_completed / toal_task_count_for_today) * 100)
+
         response_data = {
+            "toal_task_count_for_today":  toal_task_count_for_today,
+            "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
+            "task_count_for_ready": task_count_for_ready,
+            "task_count_for_in_progress": task_count_for_in_progress,
+            "task_count_for_testing": task_count_for_testing,
+            "task_count_for_completed": task_count_for_completed,
+            "progress_rate": progress_rate, 
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
             "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
     # def get(self, request):
     #     seoul_tz = pytz.timezone('Asia/Seoul')
@@ -1537,11 +1629,17 @@ class UncompletedTaskListView(APIView):
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 current_status=task_status_option)
 
+
         if due_date_option_for_filtering == "undecided":
             noon = time(hour=12, minute=10, second=0)
             deadline = datetime.combine(datetime.today(), noon)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date=None)
+
+        if due_date_option_for_filtering == "until-yesterday":
+            today = date.today()
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lt=today)
 
         if due_date_option_for_filtering == "until-noon":
             noon = time(hour=12, minute=10, second=0)
