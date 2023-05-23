@@ -252,7 +252,8 @@ class TaskStatusViewForToday(APIView):
         night_tasks = ProjectProgress.objects.filter(
             Q(due_date__gte=night_start) &
             Q(due_date__lt=night_end)
-        ).order_by("task_completed", "order")
+        )
+        # ).order_by("task_completed", "order")
 
         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
         task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
