@@ -256,7 +256,8 @@ class TaskStatusViewForToday(APIView):
 
         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
         task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
-            (Q(due_date__isnull=True) | Q(due_date__lt=now.date())) & ~Q(current_status='completed')
+            (Q(due_date__isnull=True) | Q(due_date__lt=now.date())) & ~Q(
+                current_status='completed')
         ).count()
 
         # due_date 가 오늘 날짜에 포함 되는것들에 대해 current_status 를 기준으로 ProjectProgress count 구해서 아래 항목 구한뒤 response_data 에 추가 하도록 하기
@@ -275,7 +276,10 @@ class TaskStatusViewForToday(APIView):
         ).count()
 
         toal_task_count_for_today = task_count_for_ready + task_count_for_in_progress + task_count_for_testing + task_count_for_completed
-        progress_rate = int((task_count_for_completed / toal_task_count_for_today) * 100)
+        if toal_task_count_for_today != 0:
+            progress_rate = int((task_count_for_completed / toal_task_count_for_today) * 100)
+        else:
+            progress_rate = 0
 
         response_data = {
             "toal_task_count_for_today":  toal_task_count_for_today,
@@ -284,14 +288,13 @@ class TaskStatusViewForToday(APIView):
             "task_count_for_in_progress": task_count_for_in_progress,
             "task_count_for_testing": task_count_for_testing,
             "task_count_for_completed": task_count_for_completed,
-            "progress_rate": progress_rate, 
+            "progress_rate": progress_rate,
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
             "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
         }
 
         return Response(response_data, status=HTTP_200_OK)
-
 
     # def get(self, request):
     #     seoul_tz = pytz.timezone('Asia/Seoul')
@@ -1628,7 +1631,6 @@ class UncompletedTaskListView(APIView):
         if task_status_option != "":
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 current_status=task_status_option)
-
 
         if due_date_option_for_filtering == "undecided":
             noon = time(hour=12, minute=10, second=0)
