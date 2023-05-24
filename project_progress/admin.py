@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
+from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
 
 
 @admin.register(ProjectProgress)
@@ -54,5 +54,14 @@ class TaskCommentAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "task":
-            kwargs["queryset"] = ProjectProgress.objects.filter(task_completed=False)
+            kwargs["queryset"] = ProjectProgress.objects.filter(
+                task_completed=False)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(TaskLog)
+class TaskLogAdmin(admin.ModelAdmin):
+    list_display = ('id', 'writer', 'task', 'completed_at', "interval_between_team_task",
+                    "interval_between_my_task")  # Admin 목록에 표시할 필드 설정
+    list_filter = ('writer',)  # 필터 옵션 설정
+    search_fields = ('task',)

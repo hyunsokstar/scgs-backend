@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import datetime
 import pytz
+from datetime import timedelta
 
 
 class ProjectProgress(models.Model):    
@@ -351,3 +352,42 @@ class TaskComment(models.Model):
             return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
             return "준비"
+
+class TaskLog(models.Model):
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="task_logs",
+    )
+    task = models.CharField(max_length=80, default="")
+    completed_at = models.DateTimeField(default=timezone.now)
+    interval_between_team_task = models.DurationField(blank=True, null=True)
+    interval_between_my_task = models.DurationField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            # 이전 row와의 차이 시간 계산
+            previous_task_log = TaskLog.objects.order_by('-completed_at').first()
+
+            if previous_task_log:
+                time_difference = timezone.now() - previous_task_log.completed_at
+                self.interval_between_team_task = time_difference  # timedelta 객체를 그대로 저장
+
+            # 작성자가 같을 경우의 차이 시간 계산
+            previous_task_log_same_writer = TaskLog.objects.filter(writer=self.writer).order_by('-completed_at').first()
+
+            if previous_task_log_same_writer:
+                time_difference_same_writer = timezone.now() - previous_task_log_same_writer.completed_at
+                self.interval_between_my_task = time_difference_same_writer  # timedelta 객체를 그대로 저장
+
+        super().save(*args, **kwargs)
+
+
+    # @property
+    # def interval_between_team_task_timedelta(self):
+    #     if self.interval_between_team_task is not None:
+    #         return self.interval_between_team_task  # timedelta 객체 그대로 반환
+    #     return None
+
