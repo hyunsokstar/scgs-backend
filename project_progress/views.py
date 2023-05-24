@@ -3,12 +3,12 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest
+from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -19,35 +19,11 @@ from django.http import JsonResponse
 
 # 1122
 
-# update
-# todo: statics 날짜 범위 조정
-
-
-# class UpdateTaskTimeOptionAndOrder(APIView):
-#     def put(self, request):
-#         taskPk = request.data.get('taskPk')
-#         time_option = request.data.get('time_option')
-#         orgin_task_id = request.data.get('orgin_task_id')
-#         ordering_option = request.data.get('ordering_option')
-
-#         # Received data:
-#         # taskPk=102,
-#         # orgin_task_id=104,
-#         # time_option=afternoon_tasks,
-#         # ordering_option=switch_order_of_two_tasks
-
-#         print(f"""
-#         received data :
-#         taskPk={taskPk},
-#         time_option={time_option},
-#         orgin_task_id={orgin_task_id},
-#         ordering_option={ordering_option}
-#         """)
-
-#         # 이제 taskPk, time_option, orgin_task_id, ordering_option 변수를 사용할 수 있습니다.
-#         # ... (여기에 로직 코드를 추가하십시오.)
-
-#         return Response(status=HTTP_200_OK)
+class TaskLogView(APIView):
+    def get(self, request):
+        task_logs = TaskLog.objects.all()
+        serializer = TaskLogSerializer(task_logs, many=True)
+        return Response(serializer.data)
 
 class UpdateTaskTimeOptionAndOrder(APIView):
     def put(self, request):
@@ -154,77 +130,7 @@ class UpdateTaskTimeOptionAndOrder(APIView):
             filtered_records = ProjectProgress.objects.filter(
                 due_date_option=time_option)
 
-            # for i, record in enumerate(filtered_records, start=1):
-            #     record.order = i
-            #     record.save()
-            #     print("new order : ", record.order)
-
         return Response(status=HTTP_200_OK)
-
-
-# class TaskStatusViewForToday(APIView):
-#     def get(self, request):
-#         seoul_tz = pytz.timezone('Asia/Seoul')
-#         now = datetime.now().astimezone(seoul_tz)
-
-#         morning_start = now.replace(hour=0, minute=0)
-#         morning_end = now.replace(hour=13, minute=0)
-
-#         afternoon_start = morning_end
-#         afternoon_end = now.replace(
-#             hour=19, minute=0, second=10)
-
-#         night_start = now.replace(hour=19, minute=0, second=0)
-#         night_end = now.replace(hour=23, minute=59, second=59)
-
-#         morning_tasks = ProjectProgress.objects.filter(
-#             Q(due_date__gte=morning_start) &
-#             Q(due_date__lt=morning_end)
-#         ).order_by("task_completed", "order")
-#         afternoon_tasks = ProjectProgress.objects.filter(
-#             Q(due_date__gte=afternoon_start) &
-#             Q(due_date__lt=afternoon_end)
-#         ).order_by("task_completed", "order")
-#         night_tasks = ProjectProgress.objects.filter(
-#             Q(due_date__gte=night_start) &
-#             Q(due_date__lt=night_end)
-#         ).order_by("task_completed", "order")
-
-#         # 오늘의 전체 업무 개수
-#         # class TaskStatusChoices(models.TextChoices):
-#         #     ready = ("ready", "준비")
-#         #     in_progress = ("in_progress", "작업중")
-#         #     testing = ("testing", "테스트중")
-#         #     completed = ("completed", "완료")
-#         # current_status = models.CharField(
-#         #     max_length=20,
-#         #     choices=TaskStatusChoices.choices,
-#         #     default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
-#         # )
-
-#         # todo1
-#         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
-#         # task_count_for_uncompleted_task_until_yesterday
-
-#         # todo2
-#         # due_date 가 오늘 날짜에 포함 되는것들에 대해 current_status 를 기준으로 ProjectProgress count 구해서 아래 항목 구한뒤 response_data 에 추가 하도록 하기
-#         # 오늘의 전체 task_count_for_ready
-#         # 오늘의 전체 task_count_for_in_progress
-#         # 오늘의 전체 task_count_for_testing
-#         # 오늘의 전체 task_count_for_completed
-
-#         response_data = {
-#             # task_count_for_uncompleted_task_until_yesterday: xx
-#             # "task_count_for_ready": xx,
-#             # "task_count_for_in_progress": xx,
-#             # "task_count_for_testing": xx,
-#             # "task_count_for_completed": xx,
-#             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
-#             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
-#             "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
-#         }
-
-#         return Response(response_data, status=HTTP_200_OK)
 
 class TaskStatusViewForToday(APIView):
     def get(self, request):
@@ -296,34 +202,6 @@ class TaskStatusViewForToday(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
-
-    # def get(self, request):
-    #     seoul_tz = pytz.timezone('Asia/Seoul')
-    #     now = datetime.now().astimezone(seoul_tz)
-
-    #     morning_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    #     morning_end = now.replace(hour=12, minute=0, second=0, microsecond=0)
-
-    #     afternoon_start = morning_end
-    #     afternoon_end = now.replace(
-    #         hour=23, minute=59, second=59, microsecond=999999)
-
-    #     morning_tasks = ProjectProgress.objects.filter(
-    #         Q(task_completed=False, due_date__gte=morning_start) & Q(
-    #             due_date__lt=morning_end)
-    #     )
-    #     afternoon_tasks = ProjectProgress.objects.filter(
-    #         Q(task_completed=False, due_date__gte=afternoon_start) & Q(
-    #             due_date__lt=afternoon_end)
-    #     )
-
-    #     response_data = {
-    #         "morning_tasks": list(morning_tasks.values()),
-    #         "afternoon_tasks": list(afternoon_tasks.values())
-    #     }
-
-    #     return JsonResponse(response_data)
-
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     # Get the date a month ago from now
@@ -2080,6 +1958,10 @@ class UpdateTaskCompetedView(APIView):
         message = ""
         print("put 요청 확인")
         project_task = self.get_object(pk)
+            # todo1
+            # TaskLog 모델에서 writer = project_task.task_manager 인거 찾아서 삭제
+            # writer 는 현재 project_task.task_manager
+            # task 는 project_task.task
 
         if project_task.task_completed:
             message = "완료에서 비완료로 update"
@@ -2087,12 +1969,27 @@ class UpdateTaskCompetedView(APIView):
             project_task.current_status = "testing"
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
+            TaskLog.objects.filter(taskPk=project_task.id).delete()
+
         else:
             message = "비완료에서 완료로 update"
             project_task.task_completed = True
             project_task.current_status = "completed"
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
+
+            # todo2
+            # TaskLog 모델에 새로운행 추가 
+            # writer 는 현재 project_task.task_manager
+            # task 는 project_task.task
+            task_log = TaskLog.objects.create(
+                taskPk = project_task.id,
+                writer=project_task.task_manager,
+                task=project_task.task,
+                completed_at=timezone.now(),
+            )
+            task_log.save()
+
 
         project_task.save()
 
@@ -2190,44 +2087,6 @@ class UpdateScoreByTesterView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-
-
-# class Update(APIView):
-#     def get_object(self, pk):
-#         try:
-#             return ProjectProgress.objects.get(pk=pk)
-#         except ProjectProgress.DoesNotExist:
-#             raise NotFound
-
-#     def put(self, request, pk):
-#         message = ""
-#         print("put 요청 확인")
-#         project_task = self.get_object(pk)
-
-#         if project_task.check_result_by_tester:
-#             message = "완료에서 비완료로 update"
-#             project_task.check_result_by_tester = False
-#             # project_task.task_completed = False
-#             # project_task.current_status = "testing"
-#             # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
-
-#         else:
-#             message = "비완료에서 완료로 update"
-#             project_task.check_result_by_tester = True
-#             # project_task.task_completed = True
-#             # project_task.current_status = "completed"
-#             # new_completed_at = timezone.localtime()
-#             # project_task.completed_at = new_completed_at  # 현재 시간 저장
-
-#         project_task.save()
-
-#         result_data = {
-#             "success": True,
-#             "message": message,
-#         }
-
-#         return Response(result_data, status=HTTP_200_OK)
-
 
 class UpdateCheckForCashPrize(APIView):
     def get_object(self, pk):

@@ -354,6 +354,7 @@ class TaskComment(models.Model):
             return "준비"
 
 class TaskLog(models.Model):
+    taskPk = models.IntegerField(default=0)
     writer = models.ForeignKey(
         "users.User",
         blank=True,

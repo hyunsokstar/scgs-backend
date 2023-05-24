@@ -1,12 +1,18 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest
+from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
+
+
+class TaskLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskLog
+        fields = '__all__'
 
 
 class TaskSerializerForToday(serializers.ModelSerializer):
