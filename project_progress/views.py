@@ -19,11 +19,48 @@ from django.http import JsonResponse
 
 # 1122
 
+# class TaskLogView(APIView):
+#     def get(self, request):
+#         task_logs = TaskLog.objects.all()
+#         serializer = TaskLogSerializer(task_logs, many=True)
+
+#         # ProjectProgress 에서 
+
+#         return Response(serializer.data, status=HTTP_200_OK)
+
+# http://127.0.0.1:8000/api/v1/project_progress/task-log
 class TaskLogView(APIView):
     def get(self, request):
+        now = datetime.now().date()
+        today_start = datetime.combine(now, datetime.min.time())
+        today_end = datetime.combine(now, datetime.max.time())
+
+        total_today_task_count = ProjectProgress.objects.filter(
+            due_date__range=(today_start, today_end)
+        ).count()
+
+        total_today_completed_task_count = ProjectProgress.objects.filter(
+            due_date__range=(today_start, today_end),
+            task_completed=True
+        ).count()
+
+        total_today_uncompleted_task_count = ProjectProgress.objects.filter(
+            due_date__range=(today_start, today_end),
+            task_completed=False
+        ).count()
+
         task_logs = TaskLog.objects.all()
         serializer = TaskLogSerializer(task_logs, many=True)
-        return Response(serializer.data, status=HTTP_200_OK)
+        task_log_data = serializer.data
+
+        response_data = {
+            'total_today_task_count': total_today_task_count,
+            'total_today_completed_task_count': total_today_completed_task_count,
+            'total_today_uncompleted_task_count': total_today_uncompleted_task_count,
+            'TaskLog': task_log_data
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class UpdateTaskTimeOptionAndOrder(APIView):
@@ -180,6 +217,7 @@ class TaskStatusViewForToday(APIView):
         task_count_for_testing = ProjectProgress.objects.filter(
             Q(due_date__date=now.date()) & Q(current_status='testing')
         ).count()
+
         task_count_for_completed = ProjectProgress.objects.filter(
             Q(due_date__date=now.date()) & Q(current_status='completed')
         ).count()
