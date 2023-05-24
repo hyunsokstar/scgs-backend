@@ -2000,14 +2000,15 @@ class UpdateTaskCompetedView(APIView):
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 
+            seoul_tz = pytz.timezone('Asia/Seoul')
             # todo2
             task_log = TaskLog.objects.create(
                 original_task=project_task,
                 taskPk=project_task.id,
                 writer=project_task.task_manager,
                 task=project_task.task,
-                completed_at=timezone.now(),
-                completed_at_formatted=timezone.now().strftime("%m월 %d일 %H시 %M분")
+                completed_at=timezone.now().astimezone(pytz.timezone('Asia/Seoul')),
+                completed_at_formatted = timezone.now().astimezone(seoul_tz).strftime("%m월 %d일 %H시 %M분")
             )
             task_log.save()
 

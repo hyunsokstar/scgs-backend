@@ -6,6 +6,8 @@ import pytz
 from datetime import timedelta
 import math
 
+seoul_timezone = pytz.timezone('Asia/Seoul')
+
 class ProjectProgress(models.Model):    
     class TaskClassificationChoices(models.TextChoices):
         CRUD = ("crud", "CRUD 작업")
@@ -370,7 +372,9 @@ class TaskLog(models.Model):
         related_name="task_logs",
     )
     task = models.CharField(max_length=80, default="")
-    completed_at = models.DateTimeField(default=timezone.now)
+
+    # fix 1122
+    completed_at = models.DateTimeField(default=timezone.localtime)
     completed_at_formatted = models.CharField(max_length=30, default="")
     interval_between_team_task = models.DurationField(blank=True, null=True)
     interval_between_my_task = models.DurationField(blank=True, null=True)
