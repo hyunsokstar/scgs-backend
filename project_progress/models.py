@@ -354,6 +354,13 @@ class TaskComment(models.Model):
             return "준비"
 
 class TaskLog(models.Model):
+    original_task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="task_logs",
+        blank=True,
+        null=True,
+    )
     taskPk = models.IntegerField(default=0)
     writer = models.ForeignKey(
         "users.User",
@@ -364,6 +371,7 @@ class TaskLog(models.Model):
     )
     task = models.CharField(max_length=80, default="")
     completed_at = models.DateTimeField(default=timezone.now)
+    completed_at_formatted = models.CharField(max_length=30, default="")
     interval_between_team_task = models.DurationField(blank=True, null=True)
     interval_between_my_task = models.DurationField(blank=True, null=True)
 

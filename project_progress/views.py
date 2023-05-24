@@ -1964,9 +1964,6 @@ class UpdateTaskCompetedView(APIView):
         print("put 요청 확인")
         project_task = self.get_object(pk)
         # todo1
-        # TaskLog 모델에서 writer = project_task.task_manager 인거 찾아서 삭제
-        # writer 는 현재 project_task.task_manager
-        # task 는 project_task.task
 
         if project_task.task_completed:
             message = "완료에서 비완료로 update"
@@ -1974,7 +1971,27 @@ class UpdateTaskCompetedView(APIView):
             project_task.current_status = "testing"
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
-            TaskLog.objects.filter(taskPk=project_task.id).delete()
+            task_log_for_delete = TaskLog.objects.get(taskPk=project_task.id)  # 수정: get() 메서드를 사용하여 유일한 객체 가져오기
+
+            time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
+            time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
+            interval_between_my_task_for_deleted_row = task_log_for_delete.interval_between_my_task
+            # task_log_for_delete의 바로 다음 row 데이터 가져오기
+            next_task_log = TaskLog.objects.filter(id__gt=task_log_for_delete.id).first()
+            before_task_log = TaskLog.objects.filter(id__lt=task_log_for_delete.id).last()
+            print("next_task_log ::::::::::::::::::::::::::::", next_task_log, "before_task_log ::::::::::::::::::::::::::::", before_task_log)
+            # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
+            task_log_for_delete.delete()
+
+
+            if next_task_log:
+                print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row, "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row )
+                next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
+                next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
+                next_task_log.time_distance_for_my_task += time_distance_for_my_task_for_delete_row
+            
+                next_task_log.save()
+
 
         else:
             message = "비완료에서 완료로 update"
@@ -1984,14 +2001,13 @@ class UpdateTaskCompetedView(APIView):
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 
             # todo2
-            # TaskLog 모델에 새로운행 추가
-            # writer 는 현재 project_task.task_manager
-            # task 는 project_task.task
             task_log = TaskLog.objects.create(
+                original_task=project_task,
                 taskPk=project_task.id,
                 writer=project_task.task_manager,
                 task=project_task.task,
                 completed_at=timezone.now(),
+                completed_at_formatted=timezone.now().strftime("%m월 %d일 %H시 %M분")
             )
             task_log.save()
 
@@ -2003,6 +2019,8 @@ class UpdateTaskCompetedView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
+
 
 
 class update_task_for_is_task_for_cash_prize(APIView):
