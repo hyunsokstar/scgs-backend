@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import datetime
 import pytz
 from datetime import timedelta
-
+import math
 
 class ProjectProgress(models.Model):    
     class TaskClassificationChoices(models.TextChoices):
@@ -367,6 +367,12 @@ class TaskLog(models.Model):
     interval_between_team_task = models.DurationField(blank=True, null=True)
     interval_between_my_task = models.DurationField(blank=True, null=True)
 
+    time_distance_for_team_task  = models.IntegerField(default=0)
+    time_distance_for_my_task  = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.task
+
     def save(self, *args, **kwargs):
         if not self.id:
             # 이전 row와의 차이 시간 계산
@@ -375,6 +381,10 @@ class TaskLog(models.Model):
             if previous_task_log:
                 time_difference = timezone.now() - previous_task_log.completed_at
                 self.interval_between_team_task = time_difference  # timedelta 객체를 그대로 저장
+                self.time_distance_for_team_task = math.floor(time_difference.total_seconds() / 600)
+
+                if time_difference.total_seconds() % 600 >= 360:
+                    self.time_distance_for_team_task += 1
 
             # 작성자가 같을 경우의 차이 시간 계산
             previous_task_log_same_writer = TaskLog.objects.filter(writer=self.writer).order_by('-completed_at').first()
@@ -382,9 +392,12 @@ class TaskLog(models.Model):
             if previous_task_log_same_writer:
                 time_difference_same_writer = timezone.now() - previous_task_log_same_writer.completed_at
                 self.interval_between_my_task = time_difference_same_writer  # timedelta 객체를 그대로 저장
+                self.time_distance_for_my_task = math.floor(time_difference_same_writer.total_seconds() / 600)
+
+                if time_difference_same_writer.total_seconds() % 600 >= 360:
+                    self.time_distance_for_my_task += 1
 
         super().save(*args, **kwargs)
-
 
     # @property
     # def interval_between_team_task_timedelta(self):

@@ -23,7 +23,8 @@ class TaskLogView(APIView):
     def get(self, request):
         task_logs = TaskLog.objects.all()
         serializer = TaskLogSerializer(task_logs, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=HTTP_200_OK)
+
 
 class UpdateTaskTimeOptionAndOrder(APIView):
     def put(self, request):
@@ -132,6 +133,7 @@ class UpdateTaskTimeOptionAndOrder(APIView):
 
         return Response(status=HTTP_200_OK)
 
+
 class TaskStatusViewForToday(APIView):
     def get(self, request):
         seoul_tz = pytz.timezone('Asia/Seoul')
@@ -182,9 +184,11 @@ class TaskStatusViewForToday(APIView):
             Q(due_date__date=now.date()) & Q(current_status='completed')
         ).count()
 
-        toal_task_count_for_today = task_count_for_ready + task_count_for_in_progress + task_count_for_testing + task_count_for_completed
+        toal_task_count_for_today = task_count_for_ready + \
+            task_count_for_in_progress + task_count_for_testing + task_count_for_completed
         if toal_task_count_for_today != 0:
-            progress_rate = int((task_count_for_completed / toal_task_count_for_today) * 100)
+            progress_rate = int(
+                (task_count_for_completed / toal_task_count_for_today) * 100)
         else:
             progress_rate = 0
 
@@ -202,6 +206,7 @@ class TaskStatusViewForToday(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     # Get the date a month ago from now
@@ -1958,10 +1963,10 @@ class UpdateTaskCompetedView(APIView):
         message = ""
         print("put 요청 확인")
         project_task = self.get_object(pk)
-            # todo1
-            # TaskLog 모델에서 writer = project_task.task_manager 인거 찾아서 삭제
-            # writer 는 현재 project_task.task_manager
-            # task 는 project_task.task
+        # todo1
+        # TaskLog 모델에서 writer = project_task.task_manager 인거 찾아서 삭제
+        # writer 는 현재 project_task.task_manager
+        # task 는 project_task.task
 
         if project_task.task_completed:
             message = "완료에서 비완료로 update"
@@ -1979,17 +1984,16 @@ class UpdateTaskCompetedView(APIView):
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 
             # todo2
-            # TaskLog 모델에 새로운행 추가 
+            # TaskLog 모델에 새로운행 추가
             # writer 는 현재 project_task.task_manager
             # task 는 project_task.task
             task_log = TaskLog.objects.create(
-                taskPk = project_task.id,
+                taskPk=project_task.id,
                 writer=project_task.task_manager,
                 task=project_task.task,
                 completed_at=timezone.now(),
             )
             task_log.save()
-
 
         project_task.save()
 
@@ -2087,6 +2091,7 @@ class UpdateScoreByTesterView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateCheckForCashPrize(APIView):
     def get_object(self, pk):

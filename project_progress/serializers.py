@@ -10,6 +10,9 @@ import pytz
 
 
 class TaskLogSerializer(serializers.ModelSerializer):
+
+    writer = UserProfileImageSerializer()
+
     class Meta:
         model = TaskLog
         fields = '__all__'

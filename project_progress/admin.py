@@ -61,7 +61,11 @@ class TaskCommentAdmin(admin.ModelAdmin):
 
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'writer', 'task', 'completed_at', "interval_between_team_task",
-                    "interval_between_my_task")  # Admin 목록에 표시할 필드 설정
+    list_display = ('id', 'writer', 'task', 'completed_at', 
+                    "interval_between_team_task",
+                    "interval_between_my_task",
+                    "time_distance_for_team_task",
+                    "time_distance_for_my_task"
+                    )  # Admin 목록에 표시할 필드 설정
     list_filter = ('writer',)  # 필터 옵션 설정
     search_fields = ('task',)
