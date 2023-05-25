@@ -24,16 +24,16 @@ from django.http import JsonResponse
 #         task_logs = TaskLog.objects.all()
 #         serializer = TaskLogSerializer(task_logs, many=True)
 
-#         # ProjectProgress 에서 
+#         # ProjectProgress 에서
 
 #         return Response(serializer.data, status=HTTP_200_OK)
 
 # http://127.0.0.1:8000/api/v1/project_progress/task-log
 class TaskLogView(APIView):
     def get(self, request):
-        now = datetime.now().date()
-        today_start = datetime.combine(now, datetime.min.time())
-        today_end = datetime.combine(now, datetime.max.time())
+        now = datetime.now()
+        today_start = datetime.combine(now.date(), time(hour=9, minute=0, second=0))
+        today_end = datetime.combine(now.date(), datetime.max.time())
 
         total_today_task_count = ProjectProgress.objects.filter(
             due_date__range=(today_start, today_end)
@@ -49,7 +49,18 @@ class TaskLogView(APIView):
             task_completed=False
         ).count()
 
-        task_logs = TaskLog.objects.all()
+        time_difference = now - today_start
+        hours_elapsed = int(time_difference.total_seconds() // 3600)
+        minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
+
+        if hours_elapsed > 0:
+            average_number_per_hour = total_today_completed_task_count / hours_elapsed
+        else:
+            average_number_per_hour = 0
+
+        elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+
+        task_logs = TaskLog.objects.filter(completed_at__range=(today_start, today_end))
         serializer = TaskLogSerializer(task_logs, many=True)
         task_log_data = serializer.data
 
@@ -57,7 +68,9 @@ class TaskLogView(APIView):
             'total_today_task_count': total_today_task_count,
             'total_today_completed_task_count': total_today_completed_task_count,
             'total_today_uncompleted_task_count': total_today_uncompleted_task_count,
-            'TaskLog': task_log_data
+            'TaskLog': task_log_data,
+            'average_number_per_hour': average_number_per_hour,  # 시간당 처리 개수
+            'elapsed_time': elapsed_time_string  # 현재까지의 업무 시간 (시간 분)
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -2009,27 +2022,31 @@ class UpdateTaskCompetedView(APIView):
             project_task.current_status = "testing"
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
-            task_log_for_delete = TaskLog.objects.get(taskPk=project_task.id)  # 수정: get() 메서드를 사용하여 유일한 객체 가져오기
+            # 에러 발생 했었음 0525
+            task_log_for_delete = TaskLog.objects.get(
+                taskPk=project_task.id)  # 수정: get() 메서드를 사용하여 유일한 객체 가져오기
 
             time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
             time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
             interval_between_my_task_for_deleted_row = task_log_for_delete.interval_between_my_task
             # task_log_for_delete의 바로 다음 row 데이터 가져오기
-            next_task_log = TaskLog.objects.filter(id__gt=task_log_for_delete.id).first()
-            before_task_log = TaskLog.objects.filter(id__lt=task_log_for_delete.id).last()
-            print("next_task_log ::::::::::::::::::::::::::::", next_task_log, "before_task_log ::::::::::::::::::::::::::::", before_task_log)
+            next_task_log = TaskLog.objects.filter(
+                id__gt=task_log_for_delete.id).first()
+            before_task_log = TaskLog.objects.filter(
+                id__lt=task_log_for_delete.id).last()
+            print("next_task_log ::::::::::::::::::::::::::::", next_task_log,
+                  "before_task_log ::::::::::::::::::::::::::::", before_task_log)
             # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
             task_log_for_delete.delete()
 
-
             if next_task_log:
-                print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row, "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row )
+                print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row,
+                      "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
                 next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
                 next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
                 next_task_log.time_distance_for_my_task += time_distance_for_my_task_for_delete_row
-            
-                next_task_log.save()
 
+                next_task_log.save()
 
         else:
             message = "비완료에서 완료로 update"
@@ -2046,7 +2063,8 @@ class UpdateTaskCompetedView(APIView):
                 writer=project_task.task_manager,
                 task=project_task.task,
                 completed_at=timezone.now().astimezone(pytz.timezone('Asia/Seoul')),
-                completed_at_formatted = timezone.now().astimezone(seoul_tz).strftime("%m월 %d일 %H시 %M분")
+                completed_at_formatted=timezone.now().astimezone(
+                    seoul_tz).strftime("%m월 %d일 %H시 %M분")
             )
             task_log.save()
 
@@ -2058,8 +2076,6 @@ class UpdateTaskCompetedView(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-
-
 
 
 class update_task_for_is_task_for_cash_prize(APIView):
