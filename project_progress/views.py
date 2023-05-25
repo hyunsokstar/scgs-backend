@@ -81,7 +81,7 @@ class TaskLogView(APIView):
         minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
 
         if hours_elapsed > 0:
-            average_number_per_hour = total_today_completed_task_count / hours_elapsed
+            average_number_per_hour = round(total_today_completed_task_count / hours_elapsed, 1)
         else:
             average_number_per_hour = 0
 
@@ -2053,31 +2053,34 @@ class UpdateTaskCompetedView(APIView):
             project_task.current_status = "testing"
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
-            # 에러 발생 했었음 0525
-            task_log_for_delete = TaskLog.objects.get(
-                taskPk=project_task.id)  # 수정: get() 메서드를 사용하여 유일한 객체 가져오기
+            try:
+                task_log_for_delete = TaskLog.objects.get(taskPk=project_task.id)
+            except TaskLog.DoesNotExist:
+                task_log_for_delete = None
+                
+            if task_log_for_delete:
+                time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
+                time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
+                interval_between_my_task_for_deleted_row = task_log_for_delete.interval_between_my_task
+                # task_log_for_delete의 바로 다음 row 데이터 가져오기
+                next_task_log = TaskLog.objects.filter(
+                    id__gt=task_log_for_delete.id).first()
+                before_task_log = TaskLog.objects.filter(
+                    id__lt=task_log_for_delete.id).last()
+                print("next_task_log ::::::::::::::::::::::::::::", next_task_log,
+                    "before_task_log ::::::::::::::::::::::::::::", before_task_log)
+                # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
+                task_log_for_delete.delete()
 
-            time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
-            time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
-            interval_between_my_task_for_deleted_row = task_log_for_delete.interval_between_my_task
-            # task_log_for_delete의 바로 다음 row 데이터 가져오기
-            next_task_log = TaskLog.objects.filter(
-                id__gt=task_log_for_delete.id).first()
-            before_task_log = TaskLog.objects.filter(
-                id__lt=task_log_for_delete.id).last()
-            print("next_task_log ::::::::::::::::::::::::::::", next_task_log,
-                  "before_task_log ::::::::::::::::::::::::::::", before_task_log)
-            # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
-            task_log_for_delete.delete()
+                if next_task_log:
+                    print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row,
+                        "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
+                    if interval_between_my_task_for_deleted_row:
+                        next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
+                    next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
+                    next_task_log.time_distance_for_my_task += time_distance_for_my_task_for_delete_row
 
-            if next_task_log:
-                print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row,
-                      "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
-                next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
-                next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
-                next_task_log.time_distance_for_my_task += time_distance_for_my_task_for_delete_row
-
-                next_task_log.save()
+                    next_task_log.save()
 
         else:
             message = "비완료에서 완료로 update"
