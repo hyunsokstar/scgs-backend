@@ -398,7 +398,7 @@ class TaskLog(models.Model):
                 if time_difference.total_seconds() % 600 >= 360:
                     self.time_distance_for_team_task += 1
 
-            # 작성자가 같을 경우의 차이 시간 계산
+            # 작성자가 같은 이전의 업무에 대해 시간 차이 계산
             previous_task_log_same_writer = TaskLog.objects.filter(writer=self.writer).order_by('-completed_at').first()
 
             if previous_task_log_same_writer:

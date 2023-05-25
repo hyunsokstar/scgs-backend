@@ -99,6 +99,7 @@ class TaskLogView(APIView):
         # today_start2 = datetime.combine(now.date(), time(hour=1, minute=1, second=0))
         # today_end2 = datetime.combine(now.date(), time(hour=23, minute=59, second=0))
         # task_logs = TaskLog.objects.filter(completed_at__range=(today_start2, today_end2))
+
         writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
 
         for task_log in task_logs:
@@ -2093,8 +2094,6 @@ class UpdateTaskCompetedView(APIView):
 
             if task_log_for_delete:
                 time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
-                time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
-                interval_between_my_task_for_deleted_row = task_log_for_delete.interval_between_my_task
                 # task_log_for_delete의 바로 다음 row 데이터 가져오기
                 next_task_log = TaskLog.objects.filter(
                     id__gt=task_log_for_delete.id).first()
@@ -2102,17 +2101,10 @@ class UpdateTaskCompetedView(APIView):
                     id__lt=task_log_for_delete.id).last()
                 print("next_task_log ::::::::::::::::::::::::::::", next_task_log,
                       "before_task_log ::::::::::::::::::::::::::::", before_task_log)
-                # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
                 task_log_for_delete.delete()
 
                 if next_task_log:
-                    print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row,
-                          "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
-                    if interval_between_my_task_for_deleted_row:
-                        next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
                     next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
-                    next_task_log.time_distance_for_my_task += time_distance_for_my_task_for_delete_row
-
                     next_task_log.save()
 
         else:

@@ -12,6 +12,33 @@ import pytz
 class TaskLogSerializer(serializers.ModelSerializer):
 
     writer = UserProfileImageSerializer()
+    time_distance_from_before_task = serializers.SerializerMethodField()
+    time_distance_from_before_my_task = serializers.SerializerMethodField()
+
+    def get_time_distance_from_before_task(self, instance):
+        previous_task = TaskLog.objects.filter(
+            completed_at__lt=instance.completed_at
+        ).order_by('-completed_at').first()
+
+        if previous_task:
+            time_distance = instance.completed_at - previous_task.completed_at
+            time_distance_minutes = int(time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
+            return time_distance_minutes
+        
+        return 0        
+
+    def get_time_distance_from_before_my_task(self, instance):
+        previous_task = TaskLog.objects.filter(
+            writer=instance.writer,
+            completed_at__lt=instance.completed_at
+        ).order_by('-completed_at').first()
+
+        if previous_task:
+            time_distance = instance.completed_at - previous_task.completed_at
+            time_distance_minutes = int(time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
+            return time_distance_minutes
+        
+        return 0
 
     class Meta:
         model = TaskLog
