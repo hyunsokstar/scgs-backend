@@ -19,14 +19,41 @@ from django.http import JsonResponse
 
 # 1122
 
-# class TaskLogView(APIView):
-#     def get(self, request):
-#         task_logs = TaskLog.objects.all()
-#         serializer = TaskLogSerializer(task_logs, many=True)
+class TaskStaticsIView2(APIView):
+    def get(self, request):
+        task_managers = ProjectProgress.objects.values_list(
+            'task_manager', flat=True).distinct()
 
-#         # ProjectProgress 에서
+        response_data = {
+            "managers": [],
+            "task_count_for_month": []
+        }
 
-#         return Response(serializer.data, status=HTTP_200_OK)
+        for manager in task_managers:
+            completed_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=True).count()
+            count_for_testing_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=True).count()
+            uncompleted_count_for_task = ProjectProgress.objects.filter(
+                task_manager=manager, task_completed=False, is_testing=False).count()
+            total_count_for_uncompleted_task = uncompleted_count_for_task + count_for_testing_task
+            total_count_for_completed_task = uncompleted_count_for_task + \
+                count_for_testing_task + completed_count_for_task
+            task_manager = User.objects.get(pk=manager).username
+
+            manager_data = {
+                "task_manager": task_manager,
+                "completed_count_for_task": completed_count_for_task,
+                "count_for_testing_task": count_for_testing_task,
+                "uncompleted_count_for_task": uncompleted_count_for_task,
+                "total_count_for_uncompleted_task": total_count_for_uncompleted_task,
+                "total_count_for_completed_task": total_count_for_completed_task
+            }
+
+            response_data["managers"].append(manager_data)
+
+        return Response(response_data)
+
 
 # http://127.0.0.1:8000/api/v1/project_progress/task-log
 class TaskLogView(APIView):
@@ -404,7 +431,8 @@ class DailyCompletedTasks(APIView):
 
         return Response(data)
 
-
+# dataForTaskStaticsForIsCompleted
+# total_count_for_completed_task
 class TaskStaticsIView(APIView):
     def get(self, request):
         task_managers = ProjectProgress.objects.values_list(
@@ -423,7 +451,9 @@ class TaskStaticsIView(APIView):
             uncompleted_count_for_task = ProjectProgress.objects.filter(
                 task_manager=manager, task_completed=False, is_testing=False).count()
             total_count_for_uncompleted_task = uncompleted_count_for_task + count_for_testing_task
-            total_count_for_completed_task = uncompleted_count_for_task + \
+            total_count_for_completed_task = completed_count_for_task
+
+            total_count_for_task = uncompleted_count_for_task + \
                 count_for_testing_task + completed_count_for_task
             task_manager = User.objects.get(pk=manager).username
 
@@ -433,7 +463,8 @@ class TaskStaticsIView(APIView):
                 "count_for_testing_task": count_for_testing_task,
                 "uncompleted_count_for_task": uncompleted_count_for_task,
                 "total_count_for_uncompleted_task": total_count_for_uncompleted_task,
-                "total_count_for_completed_task": total_count_for_completed_task
+                "total_count_for_completed_task": total_count_for_completed_task,
+                "total_count_for_task": total_count_for_task
             }
             response_data["managers"].append(manager_data)
 
