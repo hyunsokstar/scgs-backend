@@ -15,6 +15,7 @@ import pandas as pd
 import pytz
 from django.db.models import Q, F, Max
 from django.http import JsonResponse
+from collections import defaultdict
 
 
 # 1122
@@ -59,7 +60,10 @@ class TaskStaticsIView2(APIView):
 class TaskLogView(APIView):
     def get(self, request):
         now = datetime.now()
-        today_start = datetime.combine(now.date(), time(hour=9, minute=0, second=0))
+        today_start = datetime.combine(
+            now.date(), time(hour=0, minute=0, second=0))
+        task_start = datetime.combine(
+            now.date(), time(hour=9, minute=0, second=0))
         today_end = datetime.combine(now.date(), datetime.max.time())
 
         total_today_task_count = ProjectProgress.objects.filter(
@@ -76,18 +80,43 @@ class TaskLogView(APIView):
             task_completed=False
         ).count()
 
-        time_difference = now - today_start
+        # time_difference = now - today_start
+        time_difference = now - task_start
         hours_elapsed = int(time_difference.total_seconds() // 3600)
         minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
 
         if hours_elapsed > 0:
-            average_number_per_hour = round(total_today_completed_task_count / hours_elapsed, 1)
+            average_number_per_hour = round(
+                total_today_completed_task_count / hours_elapsed, 1)
         else:
             average_number_per_hour = 0
 
         elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
-        task_logs = TaskLog.objects.filter(completed_at__range=(today_start, today_end))
+        # 이거는 괜찮
+        task_logs = TaskLog.objects.filter(
+            completed_at__range=(today_start, today_end))
+        # today_start2 = datetime.combine(now.date(), time(hour=1, minute=1, second=0))
+        # today_end2 = datetime.combine(now.date(), time(hour=23, minute=59, second=0))
+        # task_logs = TaskLog.objects.filter(completed_at__range=(today_start2, today_end2))
+        writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
+
+        for task_log in task_logs:
+            print("check !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("task_log.writer : ", task_log.writer)
+            writer = task_log.writer
+            writers[writer.username] += 1
+
+        writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
+
+        for writer, count in writers.items():
+            writer_data = {
+                # 작성자의 유저네임 사용 (예시: writer.username)
+                'writer': writer,
+                'count': count,  # 해당 작성자의 데이터 개수
+            }
+            writers_data.append(writer_data)
+
         serializer = TaskLogSerializer(task_logs, many=True)
         task_log_data = serializer.data
 
@@ -97,7 +126,8 @@ class TaskLogView(APIView):
             'total_today_uncompleted_task_count': total_today_uncompleted_task_count,
             'TaskLog': task_log_data,
             'average_number_per_hour': average_number_per_hour,  # 시간당 처리 개수
-            'elapsed_time': elapsed_time_string  # 현재까지의 업무 시간 (시간 분)
+            'elapsed_time': elapsed_time_string,  # 현재까지의 업무 시간 (시간 분)
+            'writers': writers_data,  # 작성자별 데이터 개수 리스트
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -433,6 +463,8 @@ class DailyCompletedTasks(APIView):
 
 # dataForTaskStaticsForIsCompleted
 # total_count_for_completed_task
+
+
 class TaskStaticsIView(APIView):
     def get(self, request):
         task_managers = ProjectProgress.objects.values_list(
@@ -2054,10 +2086,11 @@ class UpdateTaskCompetedView(APIView):
             project_task.completed_at = None  # completed_at을 blank 상태로 만듦
 
             try:
-                task_log_for_delete = TaskLog.objects.get(taskPk=project_task.id)
+                task_log_for_delete = TaskLog.objects.get(
+                    taskPk=project_task.id)
             except TaskLog.DoesNotExist:
                 task_log_for_delete = None
-                
+
             if task_log_for_delete:
                 time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
                 time_distance_for_my_task_for_delete_row = task_log_for_delete.time_distance_for_my_task
@@ -2068,13 +2101,13 @@ class UpdateTaskCompetedView(APIView):
                 before_task_log = TaskLog.objects.filter(
                     id__lt=task_log_for_delete.id).last()
                 print("next_task_log ::::::::::::::::::::::::::::", next_task_log,
-                    "before_task_log ::::::::::::::::::::::::::::", before_task_log)
+                      "before_task_log ::::::::::::::::::::::::::::", before_task_log)
                 # print("time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", time_distance_for_my_task_for_delete_row, "time_distance_for_my_task_for_delete_row ::::::::::::::::::::::::::::", before_task_log)
                 task_log_for_delete.delete()
 
                 if next_task_log:
                     print("실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! : , ", next_task_log, "interval : ", interval_between_my_task_for_deleted_row,
-                        "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
+                          "time_distance_for_team_task_for_delete_row :", time_distance_for_team_task_for_delete_row)
                     if interval_between_my_task_for_deleted_row:
                         next_task_log.interval_between_my_task += interval_between_my_task_for_deleted_row
                     next_task_log.time_distance_for_team_task += time_distance_for_team_task_for_delete_row
