@@ -1746,7 +1746,8 @@ class UncompletedTaskListView(APIView):
         writers_info = get_writers_info(complete_status=False)
 
         # 오늘까지인 task 총 개수
-        deadline = datetime.combine(datetime.today(), time(hour=21))
+        deadline = datetime.combine(
+            datetime.today(), time(hour=23, minute=59, second=59))
         total_task_count_for_today = ProjectProgress.objects.filter(
             due_date__lte=deadline).count()
         completed_task_count_for_today = ProjectProgress.objects.filter(
@@ -2049,7 +2050,7 @@ class ProjectProgressView(APIView):
 
         valid_options = ['morning_tasks', 'afternoon_tasks', 'night_tasks']
         if due_date_option not in valid_options:
-            due_date_option = 'evening_tasks'
+            due_date_option = 'afternoon_tasks'
 
         serializer = CreateProjectProgressSerializer(data=request.data)
         if serializer.is_valid():
