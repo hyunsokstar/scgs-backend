@@ -59,67 +59,138 @@ class TaskStaticsIView2(APIView):
 # http://127.0.0.1:8000/api/v1/project_progress/task-log
 class TaskLogView(APIView):
     def get(self, request):
-        now = datetime.now()
-        today_start = datetime.combine(
-            now.date(), time(hour=0, minute=0, second=0))
-        task_start = datetime.combine(
-            now.date(), time(hour=9, minute=0, second=0))
-        today_end = datetime.combine(now.date(), datetime.max.time())
 
-        total_today_task_count = ProjectProgress.objects.filter(
-            due_date__range=(today_start, today_end)
-        ).count()
+        # userOptionForList 값 가져오기, 기본값은 ""
+        userOptionForList = request.GET.get('userOptionForList', "")
+        # user = User.objects.get(username=userOptionForList)
+        try:
+            user = User.objects.get(username=userOptionForList)
+        except User.DoesNotExist:
+            userOptionForList=""
 
-        total_today_completed_task_count = ProjectProgress.objects.filter(
-            due_date__range=(today_start, today_end),
-            task_completed=True
-        ).count()
+        if userOptionForList != "":
+            print("이게 실행 되나??????????????????????????????")
+            now = datetime.now()
+            today_start = datetime.combine(
+                now.date(), time(hour=0, minute=0, second=0))
+            task_start = datetime.combine(
+                now.date(), time(hour=9, minute=0, second=0))
+            today_end = datetime.combine(now.date(), datetime.max.time())
 
-        total_today_uncompleted_task_count = ProjectProgress.objects.filter(
-            due_date__range=(today_start, today_end),
-            task_completed=False
-        ).count()
+            total_today_task_count = ProjectProgress.objects.filter(
+                task_manager=user,
+                due_date__range=(today_start, today_end)
+            ).count()
 
-        # time_difference = now - today_start
-        time_difference = now - task_start
-        hours_elapsed = int(time_difference.total_seconds() // 3600)
-        minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
+            total_today_completed_task_count = ProjectProgress.objects.filter(
+                task_manager=user,
+                due_date__range=(today_start, today_end),
+                task_completed=True
+            ).count()
 
-        if hours_elapsed > 0:
-            average_number_per_hour = round(
-                total_today_completed_task_count / hours_elapsed, 1)
+            total_today_uncompleted_task_count = ProjectProgress.objects.filter(
+                task_manager=user,
+                due_date__range=(today_start, today_end),
+                task_completed=False
+            ).count()
+
+            # time_difference = now - today_start
+            time_difference = now - task_start
+            hours_elapsed = int(time_difference.total_seconds() // 3600)
+            minutes_elapsed = int(
+                (time_difference.total_seconds() % 3600) // 60)
+
+            if hours_elapsed > 0:
+                average_number_per_hour = round(
+                    total_today_completed_task_count / hours_elapsed, 1)
+            else:
+                average_number_per_hour = 0
+
+            elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+
+            task_logs = TaskLog.objects.filter(
+                writer=user,
+                completed_at__range=(today_start, today_end))
+
+            writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
+
+            for task_log in task_logs:
+                print("check !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("task_log.writer : ", task_log.writer)
+                writer = task_log.writer
+                writers[writer.username] += 1
+
+            writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
+
+            for writer, count in writers.items():
+                writer_data = {
+                    # 작성자의 유저네임 사용 (예시: writer.username)
+                    'writer': writer,
+                    'count': count,  # 해당 작성자의 데이터 개수
+                }
+                writers_data.append(writer_data)
+
+            serializer = TaskLogSerializer(task_logs, many=True)
+            task_log_data = serializer.data
         else:
-            average_number_per_hour = 0
+            now = datetime.now()
+            today_start = datetime.combine(
+                now.date(), time(hour=0, minute=0, second=0))
+            task_start = datetime.combine(
+                now.date(), time(hour=9, minute=0, second=0))
+            today_end = datetime.combine(now.date(), datetime.max.time())
 
-        elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+            total_today_task_count = ProjectProgress.objects.filter(
+                due_date__range=(today_start, today_end)
+            ).count()
 
-        # 이거는 괜찮
-        task_logs = TaskLog.objects.filter(
-            completed_at__range=(today_start, today_end))
-        # today_start2 = datetime.combine(now.date(), time(hour=1, minute=1, second=0))
-        # today_end2 = datetime.combine(now.date(), time(hour=23, minute=59, second=0))
-        # task_logs = TaskLog.objects.filter(completed_at__range=(today_start2, today_end2))
+            total_today_completed_task_count = ProjectProgress.objects.filter(
+                due_date__range=(today_start, today_end),
+                task_completed=True
+            ).count()
 
-        writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
+            total_today_uncompleted_task_count = ProjectProgress.objects.filter(
+                due_date__range=(today_start, today_end),
+                task_completed=False
+            ).count()
 
-        for task_log in task_logs:
-            print("check !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print("task_log.writer : ", task_log.writer)
-            writer = task_log.writer
-            writers[writer.username] += 1
+            # time_difference = now - today_start
+            time_difference = now - task_start
+            hours_elapsed = int(time_difference.total_seconds() // 3600)
+            minutes_elapsed = int(
+                (time_difference.total_seconds() % 3600) // 60)
 
-        writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
+            if hours_elapsed > 0:
+                average_number_per_hour = round(
+                    total_today_completed_task_count / hours_elapsed, 1)
+            else:
+                average_number_per_hour = 0
 
-        for writer, count in writers.items():
-            writer_data = {
-                # 작성자의 유저네임 사용 (예시: writer.username)
-                'writer': writer,
-                'count': count,  # 해당 작성자의 데이터 개수
-            }
-            writers_data.append(writer_data)
+            elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
-        serializer = TaskLogSerializer(task_logs, many=True)
-        task_log_data = serializer.data
+            task_logs = TaskLog.objects.filter(
+                completed_at__range=(today_start, today_end))
+
+            writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
+
+            for task_log in task_logs:
+                print("check !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("task_log.writer : ", task_log.writer)
+                writer = task_log.writer
+                writers[writer.username] += 1
+
+            writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
+
+            for writer, count in writers.items():
+                writer_data = {
+                    # 작성자의 유저네임 사용 (예시: writer.username)
+                    'writer': writer,
+                    'count': count,  # 해당 작성자의 데이터 개수
+                }
+                writers_data.append(writer_data)
+
+            serializer = TaskLogSerializer(task_logs, many=True)
+            task_log_data = serializer.data
 
         response_data = {
             'total_today_task_count': total_today_task_count,

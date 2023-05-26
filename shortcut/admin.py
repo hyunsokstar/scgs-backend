@@ -9,10 +9,8 @@ class TagsInline(admin.TabularInline):
 
 @admin.register(ShortCut)
 class ShortCutAdmin(admin.ModelAdmin):
-    list_display = ('shortcut', 'description', 'classification', 'writer')
+    list_display = ('description', 'classification', 'writer')
     list_filter = ('classification', 'writer')
-    search_fields = ('shortcut', 'description')
-
 
 @admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):

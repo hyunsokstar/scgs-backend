@@ -53,7 +53,6 @@ class SerializerForInsertToShortcut(serializers.ModelSerializer):
     class Meta:
         model = ShortCut
         fields = (
-            'shortcut',
             'description',
             'classification',
         )
