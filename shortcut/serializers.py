@@ -34,7 +34,7 @@ class ShortCutSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'writer',
-            'shortcut',
+            # 'shortcut',
             'description',
             'classification',
             'tags',
