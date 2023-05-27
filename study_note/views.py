@@ -89,11 +89,11 @@ class SearchContentListView(APIView):
 
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
-        selected_buttons_data = request.data  # [1, 2, 3, 5]
-        print("selected_buttons_data : ", selected_buttons_data)
+        pageNumbersToEditData = request.data  # [1, 2, 3, 5]
+        print("pageNumbersToEditData : ", pageNumbersToEditData)
 
         deleted_count = StudyNoteContent.objects.filter(
-            pk__in=selected_buttons_data).delete()[0]
+            pk__in=pageNumbersToEditData).delete()[0]
 
         return Response({
             'message': f'{deleted_count} StudyNoteContent instances deleted.'
@@ -219,13 +219,13 @@ class StudyNoteContentsView(APIView):
 
 class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        selected_buttons_data = request.data.get('selectedButtonsData', [])
-        print("selected_buttons_data : ", selected_buttons_data)
-        # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
+        pageNumbersToEditData = request.data.get('pageNumbersToEditData', [])
+        print("pageNumbersToEditData : ", pageNumbersToEditData)
+        # pageNumbersToEditData 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=selected_buttons_data)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEditData)
         for study_note_content in study_note_contents:
             study_note_content.page += 1
             study_note_content.save()
@@ -235,13 +235,13 @@ class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
 
 class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        selected_buttons_data = request.data.get('selectedButtonsData', [])
-        print("selected_buttons_data : ", selected_buttons_data)
+        pageNumbersToEditData = request.data.get('pageNumbersToEditData', [])
+        print("pageNumbersToEditData : ", pageNumbersToEditData)
         # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=selected_buttons_data)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEditData)
         for study_note_content in study_note_contents:
             study_note_content.page -= 1
             study_note_content.save()
