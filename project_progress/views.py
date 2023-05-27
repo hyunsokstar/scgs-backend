@@ -67,7 +67,7 @@ class TaskLogView(APIView):
             except User.DoesNotExist:
                 userOptionForList = ""
 
-            print("이게 실행 되나??????????????????????????????")
+            print("이게 실행 되나?????????????????????????????? ; ", userOptionForList)
             # Replace 'YOUR_TIMEZONE' with your desired timezone
             now = datetime.now(pytz.timezone('Asia/Seoul'))
             today_start = datetime.combine(
@@ -131,6 +131,47 @@ class TaskLogView(APIView):
 
             serializer = TaskLogSerializer(task_logs, many=True)
             task_log_data = serializer.data
+
+            # todo1: 오늘이 포함된 주의 요일별 task count 구하기
+            weekday_mapping = {
+                1: 'Sunday',
+                2: 'Monday',
+                3: 'Tuesday',
+                4: 'Wednesday',
+                5: 'Thursday',
+                6: 'Friday',
+                7: 'Saturday'
+            }
+
+            today = timezone.localtime(timezone.now()).date()
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+            task_count_for_weekdays = ProjectProgress.objects.filter(
+                completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+                task_completed=True
+            ).annotate(
+                weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+            ).values('weekday').annotate(count=Count('id'))
+
+            task_count_for_weekdays = {
+                weekday_mapping[entry['weekday']]: entry['count']
+                for entry in task_count_for_weekdays
+            }
+
+            all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+            task_count_for_weekdays = {
+                weekday: task_count_for_weekdays.get(weekday, 0)
+                for weekday in all_weekdays
+            }
+
+            # todo2: 오늘 날짜의 정보 (날짜와 요일) 구하기
+            today_info = {
+                'date': now.strftime("%Y년 %m월 %d일"),
+                'dayOfWeek': now.strftime('%A')
+            }
+
         else:
             # Replace 'YOUR_TIMEZONE' with your desired timezone
             now = datetime.now(pytz.timezone('Asia/Seoul'))
@@ -231,6 +272,7 @@ class TaskLogView(APIView):
                 'date': now.strftime("%Y년 %m월 %d일"),
                 'dayOfWeek': now.strftime('%A')
             }
+
 
         response_data = {
             'total_today_task_count': total_today_task_count,
