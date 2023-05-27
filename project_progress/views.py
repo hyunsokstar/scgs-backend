@@ -16,10 +16,10 @@ import pytz
 from django.db.models import Q, F, Max
 from django.http import JsonResponse
 from collections import defaultdict
+from django.db.models.functions import ExtractWeekDay
 
 
 # 1122
-
 class TaskStaticsIView2(APIView):
     def get(self, request):
         task_managers = ProjectProgress.objects.values_list(
@@ -59,22 +59,20 @@ class TaskStaticsIView2(APIView):
 # http://127.0.0.1:8000/api/v1/project_progress/task-log
 class TaskLogView(APIView):
     def get(self, request):
-
-        # userOptionForList 값 가져오기, 기본값은 ""
         userOptionForList = request.GET.get('userOptionForList', "")
-        # user = User.objects.get(username=userOptionForList)
-        try:
-            user = User.objects.get(username=userOptionForList)
-        except User.DoesNotExist:
-            userOptionForList=""
 
         if userOptionForList != "":
+            try:
+                user = User.objects.get(username=userOptionForList)
+            except User.DoesNotExist:
+                userOptionForList = ""
+
             print("이게 실행 되나??????????????????????????????")
-            now = datetime.now()
+            now = datetime.now(pytz.timezone('Asia/Seoul'))  # Replace 'YOUR_TIMEZONE' with your desired timezone
             today_start = datetime.combine(
                 now.date(), time(hour=0, minute=0, second=0))
             task_start = datetime.combine(
-                now.date(), time(hour=9, minute=0, second=0))
+                now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
             today_end = datetime.combine(now.date(), datetime.max.time())
 
             total_today_task_count = ProjectProgress.objects.filter(
@@ -133,11 +131,11 @@ class TaskLogView(APIView):
             serializer = TaskLogSerializer(task_logs, many=True)
             task_log_data = serializer.data
         else:
-            now = datetime.now()
+            now = datetime.now(pytz.timezone('Asia/Seoul'))  # Replace 'YOUR_TIMEZONE' with your desired timezone
             today_start = datetime.combine(
                 now.date(), time(hour=0, minute=0, second=0))
             task_start = datetime.combine(
-                now.date(), time(hour=9, minute=0, second=0))
+                now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
             today_end = datetime.combine(now.date(), datetime.max.time())
 
             total_today_task_count = ProjectProgress.objects.filter(
@@ -192,14 +190,32 @@ class TaskLogView(APIView):
             serializer = TaskLogSerializer(task_logs, many=True)
             task_log_data = serializer.data
 
+        # todo1 오늘이 포함된 주의 요일별 task count 구한뒤 response_data 에 추가 
+        # taskCountForWeekdays = {
+        #     "Monday": 10
+        #     "Tuesday": 20
+        #     "Wednesday": 30
+        #     "Thursday": 50
+        #     "Friday": 70
+        #     "Saturday": 80
+        #     "Sunday": 60
+        # }
+        # ex
+        # total_today_task_count = ProjectProgress.objects.filter(
+        #     due_date__range=(이번주 월요일)
+        # ).count()
+        # 
+        # todo2
+        # 오늘 날짜의 today_info = {date: x월 x일 x분 x시, 요일 : "화요일(오늘 요일)"}     
+
         response_data = {
             'total_today_task_count': total_today_task_count,
             'total_today_completed_task_count': total_today_completed_task_count,
             'total_today_uncompleted_task_count': total_today_uncompleted_task_count,
             'TaskLog': task_log_data,
-            'average_number_per_hour': average_number_per_hour,  # 시간당 처리 개수
-            'elapsed_time': elapsed_time_string,  # 현재까지의 업무 시간 (시간 분)
-            'writers': writers_data,  # 작성자별 데이터 개수 리스트
+            'average_number_per_hour': average_number_per_hour,
+            'elapsed_time': elapsed_time_string,
+            'writers': writers_data,
         }
 
         return Response(response_data, status=HTTP_200_OK)
