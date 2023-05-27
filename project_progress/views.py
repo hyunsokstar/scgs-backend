@@ -90,7 +90,7 @@ class TaskLogView(APIView):
             total_today_uncompleted_task_count = ProjectProgress.objects.filter(
                 task_manager=user,
                 due_date__range=(today_start, today_end),
-                task_completed=False
+                task_completed=True
             ).count()
 
             # time_difference = now - today_start
@@ -203,10 +203,16 @@ class TaskLogView(APIView):
                 7: 'Saturday'
             }
             
-            task_count_for_weekdays = ProjectProgress.objects.annotate(
-                weekday=ExtractWeekDay('due_date', tzinfo=pytz.timezone('Asia/Seoul'))) \
-                .values('weekday').annotate(count=Count('id'))
+            today = timezone.localtime(timezone.now()).date()
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
 
+            task_count_for_weekdays = ProjectProgress.objects.filter(
+                completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+                task_completed=True
+            ).annotate(
+                weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+            ).values('weekday').annotate(count=Count('id'))
 
             task_count_for_weekdays = {
                 weekday_mapping[entry['weekday']]: entry['count']
@@ -214,11 +220,6 @@ class TaskLogView(APIView):
             }
 
             all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
-            # 나머지 요일들의 카운트를 0으로 설정
-            # for weekday in all_weekdays:
-            #     if weekday not in task_count_for_weekdays:
-            #         task_count_for_weekdays[weekday] = 0
 
             task_count_for_weekdays = {
                 weekday: task_count_for_weekdays.get(weekday, 0)
