@@ -22,6 +22,69 @@ from rest_framework import status
 from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
+# 
+class UpdateNoteContentsPageForSelectedView(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNote.objects.get(pk=pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, study_note_pk):
+        direction = request.data.get('direction')
+        pageNumbersToEdit = request.data.get('pageNumbersToEdit')
+        pageNumbersToMove = request.data.get('pageNumbersToMove')
+
+        # 데이터 출력
+        print("----- API 데이터 -----\n")
+        print(f"Direction: {direction}")
+        print(f"Study Note PK: {study_note_pk}")
+        print(f"Page Numbers to Edit: {pageNumbersToEdit}")
+        print(f"Page Numbers to Move: {pageNumbersToMove}")
+        print("\n----------------------")
+
+        study_note = self.get_object(study_note_pk)
+        study_note_contents = study_note.note_contents.all()
+        # todo1
+        # direction: forward 이라면
+        #        
+        # pageNumbersToEdit: [1, 2]
+        # pageNumbersToMove: [3, 4]
+        # 에 대해 
+
+        # 이때 study_note_contents 가 1인것은 3으로 2인것은 4로 바꾸기
+
+        # direction: backward 이라면
+        #        
+        # pageNumbersToEdit: [1, 2]
+        # pageNumbersToMove: [3, 4]
+        # 에 대해 
+
+        # 이때 study_note_contents 가 3인것은 1으로 4인것은 2로 바꾸기
+        study_note = self.get_object(study_note_pk)
+        study_note_contents = study_note.note_contents.all()
+
+        if direction == 'forward':
+            # todo1: study_note_contents의 page 번호가 pageNumbersToEdit에 포함되어 있는 경우
+            # 해당 page 번호를 pageNumbersToMove와 동일한 인덱스의 값으로 업데이트
+            for content in study_note_contents:
+                if content.page in pageNumbersToEdit:
+                    new_page = pageNumbersToMove[pageNumbersToEdit.index(content.page)]
+                    content.page = new_page
+                    content.save()
+
+        elif direction == 'backward':
+            # todo2: study_note_contents의 page 번호가 pageNumbersToMove에 포함되어 있는 경우
+            # 해당 page 번호를 pageNumbersToEdit와 동일한 인덱스의 값으로 업데이트
+            for content in study_note_contents:
+                if content.page in pageNumbersToMove:
+                    new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                    content.page = new_page
+                    content.save()
+
+
+        # HTTP 200 OK 응답 반환
+        return Response(status=status.HTTP_200_OK)
 
 class StudyNoteContentReOrderAPIView(APIView):
     def put(self, request, pk):
@@ -89,11 +152,11 @@ class SearchContentListView(APIView):
 
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
-        pageNumbersToEditData = request.data  # [1, 2, 3, 5]
-        print("pageNumbersToEditData : ", pageNumbersToEditData)
+        pageNumbersToEdit = request.data  # [1, 2, 3, 5]
+        print("pageNumbersToEdit : ", pageNumbersToEdit)
 
         deleted_count = StudyNoteContent.objects.filter(
-            pk__in=pageNumbersToEditData).delete()[0]
+            pk__in=pageNumbersToEdit).delete()[0]
 
         return Response({
             'message': f'{deleted_count} StudyNoteContent instances deleted.'
@@ -219,13 +282,13 @@ class StudyNoteContentsView(APIView):
 
 class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        pageNumbersToEditData = request.data.get('pageNumbersToEditData', [])
-        print("pageNumbersToEditData : ", pageNumbersToEditData)
-        # pageNumbersToEditData 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
+        pageNumbersToEdit = request.data.get('pageNumbersToEdit', [])
+        print("pageNumbersToEdit : ", pageNumbersToEdit)
+        # pageNumbersToEdit 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=pageNumbersToEditData)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEdit)
         for study_note_content in study_note_contents:
             study_note_content.page += 1
             study_note_content.save()
@@ -235,13 +298,13 @@ class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
 
 class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        pageNumbersToEditData = request.data.get('pageNumbersToEditData', [])
-        print("pageNumbersToEditData : ", pageNumbersToEditData)
+        pageNumbersToEdit = request.data.get('pageNumbersToEdit', [])
+        print("pageNumbersToEdit : ", pageNumbersToEdit)
         # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=pageNumbersToEditData)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEdit)
         for study_note_content in study_note_contents:
             study_note_content.page -= 1
             study_note_content.save()
@@ -286,14 +349,6 @@ class StudyNoteDetailView(APIView):
             return StudyNote.objects.get(pk=pk)
         except StudyNote.DoesNotExist:
             raise NotFound
-
-    # def get(self, request, pk):
-    #     study_note = self.get_object(pk)
-    #     current_page = request.GET.get('currentPage', 1)
-    #     print("current_page : ", current_page)
-    #     note_contents = study_note.note_contents.filter(page=current_page)
-    #     serializer = StudyNoteContentSerializer(note_contents, many=True)
-    #     return Response(serializer.data)
 
     def get(self, request, pk):
         study_note = self.get_object(pk)

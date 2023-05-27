@@ -11,6 +11,10 @@ urlpatterns = [
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()), # 특정 노트의 contents 에 대한 crud
     path('<int:study_note_pk>/contents/delete-page', views.DeleteNoteContentsForSelectedPage.as_view()), # 특정 노트의 페이지에 대해 delete
     path('<int:pk>', views.StudyNoteDetailView.as_view(), name='api_docu_detail'),
+
+    # 0528 페이지 업데이트 (왼쪽 클릭으로 여러개 선택 => 오른족 클릭으로 여러개 선택 => 이동)
+    path('<int:study_note_pk>/contents/UpdateNoteContentsPageForSelected', views.UpdateNoteContentsPageForSelectedView.as_view()),
+
     path('<int:study_note_pk>/contents/minus-one-page-for-selected-page', views.MinusOnePageForSelectedPageForStudyNoteContents.as_view()),
     path('<int:study_note_pk>/contents/plus-one-page-for-selected-page', views.PlusOnePageForSelectedPageForStudyNoteContents.as_view()),
     path('create-dummy', views.AddDummyDataForStudyNote.as_view(), name='AddDummyDataForStudyNote'),
