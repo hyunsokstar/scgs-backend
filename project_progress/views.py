@@ -68,7 +68,8 @@ class TaskLogView(APIView):
                 userOptionForList = ""
 
             print("이게 실행 되나??????????????????????????????")
-            now = datetime.now(pytz.timezone('Asia/Seoul'))  # Replace 'YOUR_TIMEZONE' with your desired timezone
+            # Replace 'YOUR_TIMEZONE' with your desired timezone
+            now = datetime.now(pytz.timezone('Asia/Seoul'))
             today_start = datetime.combine(
                 now.date(), time(hour=0, minute=0, second=0))
             task_start = datetime.combine(
@@ -131,7 +132,8 @@ class TaskLogView(APIView):
             serializer = TaskLogSerializer(task_logs, many=True)
             task_log_data = serializer.data
         else:
-            now = datetime.now(pytz.timezone('Asia/Seoul'))  # Replace 'YOUR_TIMEZONE' with your desired timezone
+            # Replace 'YOUR_TIMEZONE' with your desired timezone
+            now = datetime.now(pytz.timezone('Asia/Seoul'))
             today_start = datetime.combine(
                 now.date(), time(hour=0, minute=0, second=0))
             task_start = datetime.combine(
@@ -190,23 +192,44 @@ class TaskLogView(APIView):
             serializer = TaskLogSerializer(task_logs, many=True)
             task_log_data = serializer.data
 
-        # todo1 오늘이 포함된 주의 요일별 task count 구한뒤 response_data 에 추가 
-        # taskCountForWeekdays = {
-        #     "Monday": 10
-        #     "Tuesday": 20
-        #     "Wednesday": 30
-        #     "Thursday": 50
-        #     "Friday": 70
-        #     "Saturday": 80
-        #     "Sunday": 60
-        # }
-        # ex
-        # total_today_task_count = ProjectProgress.objects.filter(
-        #     due_date__range=(이번주 월요일)
-        # ).count()
-        # 
-        # todo2
-        # 오늘 날짜의 today_info = {date: x월 x일 x분 x시, 요일 : "화요일(오늘 요일)"}     
+            # todo1: 오늘이 포함된 주의 요일별 task count 구하기
+            weekday_mapping = {
+                1: 'Sunday',
+                2: 'Monday',
+                3: 'Tuesday',
+                4: 'Wednesday',
+                5: 'Thursday',
+                6: 'Friday',
+                7: 'Saturday'
+            }
+            
+            task_count_for_weekdays = ProjectProgress.objects.annotate(
+                weekday=ExtractWeekDay('due_date', tzinfo=pytz.timezone('Asia/Seoul'))) \
+                .values('weekday').annotate(count=Count('id'))
+
+
+            task_count_for_weekdays = {
+                weekday_mapping[entry['weekday']]: entry['count']
+                for entry in task_count_for_weekdays
+            }
+
+            all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+            # 나머지 요일들의 카운트를 0으로 설정
+            # for weekday in all_weekdays:
+            #     if weekday not in task_count_for_weekdays:
+            #         task_count_for_weekdays[weekday] = 0
+
+            task_count_for_weekdays = {
+                weekday: task_count_for_weekdays.get(weekday, 0)
+                for weekday in all_weekdays
+            }
+
+            # todo2: 오늘 날짜의 정보 (날짜와 요일) 구하기
+            today_info = {
+                'date': now.strftime("%Y년 %m월 %d일"),
+                'dayOfWeek': now.strftime('%A')
+            }
 
         response_data = {
             'total_today_task_count': total_today_task_count,
@@ -216,6 +239,8 @@ class TaskLogView(APIView):
             'average_number_per_hour': average_number_per_hour,
             'elapsed_time': elapsed_time_string,
             'writers': writers_data,
+            'task_count_for_weekdays': task_count_for_weekdays,
+            'today_info': today_info
         }
 
         return Response(response_data, status=HTTP_200_OK)
