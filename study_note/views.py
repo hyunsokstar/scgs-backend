@@ -82,9 +82,18 @@ class UpdateNoteContentsPageForSelectedView(APIView):
                     content.page = new_page
                     content.save()
 
+        if direction == "forward":
+            message = f"{pageNumbersToEdit}를 pageNumbersToMove로 이동 성공"
+        elif direction == "backward":
+            message = f"pageNumbersToMove를 {pageNumbersToEdit}로 이동 성공"
+
+        response_data = {
+            "message": message,
+            "direction": direction,
+        }
 
         # HTTP 200 OK 응답 반환
-        return Response(status=status.HTTP_200_OK)
+        return Response(data=response_data, status=status.HTTP_200_OK)
 
 class StudyNoteContentReOrderAPIView(APIView):
     def put(self, request, pk):
