@@ -369,9 +369,14 @@ class StudyNoteDetailView(APIView):
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
 
-        page_numbers = StudyNoteContent.objects.values(
+        total_note_contents = study_note.note_contents.all().order_by('order')
+        print("total_note_contents :::::::::::::::::::: ", total_note_contents)
+
+        page_numbers = total_note_contents.values(
             'page').annotate(count=Count('id')).order_by('page')
+        print("page_numbers :::::::::::::::::", page_numbers)
         exist_page_numbers = [page['page'] for page in page_numbers]
+        print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
         response_data = {
             "exist_page_numbers": exist_page_numbers,
