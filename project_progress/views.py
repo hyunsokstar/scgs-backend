@@ -1903,10 +1903,22 @@ class UncompletedTaskListView(APIView):
         # 오늘까지인 task 총 개수
         deadline = datetime.combine(
             datetime.today(), time(hour=23, minute=59, second=59))
+        # fix
+        # total_task_count_for_today = ProjectProgress.objects.filter(
+        #     due_date__lte=deadline).count()
+        # 서울 시간대 설정
+        timezone = pytz.timezone('Asia/Seoul')
+
+        # 서울 시간으로 오늘의 시작과 끝 시간 계산
+        today_start = timezone.localize(datetime.combine(date.today(), time.min))
+        today_end = timezone.localize(datetime.combine(date.today(), time.max))
+
         total_task_count_for_today = ProjectProgress.objects.filter(
-            due_date__lte=deadline).count()
+            due_date__range=(today_start, today_end)).count()        
+
+
         completed_task_count_for_today = ProjectProgress.objects.filter(
-            task_completed=True, due_date__lte=deadline).count()
+            task_completed=True, due_date__range=(today_start, today_end)).count()
 
         achievement_rate_for_today = 0  # 기본값으로 0 설정
 
