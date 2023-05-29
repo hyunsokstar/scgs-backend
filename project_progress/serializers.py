@@ -142,6 +142,8 @@ class ExtraTasksSerializer(ModelSerializer):
             "pk",
             "task_manager",
             "task",
+            "task_url1",
+            "task_url2",            
             "task_status",
             "importance",
             "started_at",

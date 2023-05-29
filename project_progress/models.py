@@ -225,6 +225,10 @@ class ExtraTask(models.Model):
     )
 
     task = models.TextField(default="", blank=True, null=True)
+    # fix 0530
+    task_url1 = models.URLField(null=True, blank=True)
+    task_url2 = models.URLField(null=True, blank=True)
+
     task_status = models.CharField(
         max_length=20,
         choices=TaskStatusChoices.choices,
