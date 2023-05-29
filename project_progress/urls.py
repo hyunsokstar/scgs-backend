@@ -21,6 +21,8 @@ urlpatterns = [
 
     path('delete-for-checked', views.DeleteTasksForChecked.as_view(),
          name='project_progress'),
+
+    # 0529
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
     path('task-statics', views.TaskStaticsIView.as_view()),

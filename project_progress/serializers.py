@@ -190,6 +190,8 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "pk",
             "task",
             "task_description",
+            "task_url1",
+            "task_url2",
             "writer",
             "task_manager",
             "importance",
@@ -203,7 +205,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "extra_tasks",
             "tests_for_tasks",
             "cash_prize",
-            "is_urgent_request"
+            "is_urgent_request",
         )
 
     def get_started_at_formatted(self, obj):
