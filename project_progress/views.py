@@ -145,13 +145,16 @@ class TaskLogView(APIView):
 
             today = timezone.localtime(timezone.now()).date()
             start_of_week = today - timedelta(days=today.weekday())
-            end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
+            end_of_week = start_of_week + \
+                timedelta(days=6, hours=23, minutes=59, seconds=59)
 
             task_count_for_weekdays = ProjectProgress.objects.filter(
-                completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+                completed_at__range=(start_of_week, start_of_week +
+                                     timedelta(days=7, hours=23, minutes=59, seconds=59)),
                 task_completed=True
             ).annotate(
-                weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+                weekday=ExtractWeekDay(
+                    'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
             ).values('weekday').annotate(count=Count('id'))
 
             task_count_for_weekdays = {
@@ -159,7 +162,8 @@ class TaskLogView(APIView):
                 for entry in task_count_for_weekdays
             }
 
-            all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                            'Thursday', 'Friday', 'Saturday', 'Sunday']
 
             task_count_for_weekdays = {
                 weekday: task_count_for_weekdays.get(weekday, 0)
@@ -243,16 +247,19 @@ class TaskLogView(APIView):
                 6: 'Friday',
                 7: 'Saturday'
             }
-            
+
             today = timezone.localtime(timezone.now()).date()
             start_of_week = today - timedelta(days=today.weekday())
-            end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
+            end_of_week = start_of_week + \
+                timedelta(days=6, hours=23, minutes=59, seconds=59)
 
             task_count_for_weekdays = ProjectProgress.objects.filter(
-                completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+                completed_at__range=(start_of_week, start_of_week +
+                                     timedelta(days=7, hours=23, minutes=59, seconds=59)),
                 task_completed=True
             ).annotate(
-                weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+                weekday=ExtractWeekDay(
+                    'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
             ).values('weekday').annotate(count=Count('id'))
 
             task_count_for_weekdays = {
@@ -260,7 +267,8 @@ class TaskLogView(APIView):
                 for entry in task_count_for_weekdays
             }
 
-            all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                            'Thursday', 'Friday', 'Saturday', 'Sunday']
 
             task_count_for_weekdays = {
                 weekday: task_count_for_weekdays.get(weekday, 0)
@@ -428,7 +436,7 @@ class TaskStatusViewForToday(APIView):
 
         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
         task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
-            (Q(due_date__isnull=True) | Q(due_date__lt=now.date())) & ~Q(
+            (Q(due_date__lt=night_end)) & ~Q(
                 current_status='completed')
         ).count()
 
@@ -465,16 +473,19 @@ class TaskStatusViewForToday(APIView):
             6: 'Friday',
             7: 'Saturday'
         }
-            
+
         today = timezone.localtime(timezone.now()).date()
         start_of_week = today - timedelta(days=today.weekday())
-        end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
+        end_of_week = start_of_week + \
+            timedelta(days=6, hours=23, minutes=59, seconds=59)
 
         task_count_for_weekdays = ProjectProgress.objects.filter(
-            completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+            completed_at__range=(start_of_week, start_of_week +
+                                 timedelta(days=7, hours=23, minutes=59, seconds=59)),
             task_completed=True
         ).annotate(
-            weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+            weekday=ExtractWeekDay(
+                'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
         ).values('weekday').annotate(count=Count('id'))
 
         task_count_for_weekdays = {
@@ -482,7 +493,8 @@ class TaskStatusViewForToday(APIView):
             for entry in task_count_for_weekdays
         }
 
-        all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                        'Thursday', 'Friday', 'Saturday', 'Sunday']
 
         task_count_for_weekdays = {
             weekday: task_count_for_weekdays.get(weekday, 0)
@@ -1951,12 +1963,12 @@ class UncompletedTaskListView(APIView):
         timezone = pytz.timezone('Asia/Seoul')
 
         # 서울 시간으로 오늘의 시작과 끝 시간 계산
-        today_start = timezone.localize(datetime.combine(date.today(), time.min))
+        today_start = timezone.localize(
+            datetime.combine(date.today(), time.min))
         today_end = timezone.localize(datetime.combine(date.today(), time.max))
 
         total_task_count_for_today = ProjectProgress.objects.filter(
-            due_date__range=(today_start, today_end)).count()        
-
+            due_date__range=(today_start, today_end)).count()
 
         completed_task_count_for_today = ProjectProgress.objects.filter(
             task_completed=True, due_date__range=(today_start, today_end)).count()
