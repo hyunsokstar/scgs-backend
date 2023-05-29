@@ -39,8 +39,8 @@ class ProjectProgress(models.Model):
     )
 
     task = models.CharField(max_length=80, default="")
-    task_url1 = models.URLField(null=True, blank=True)
-    task_url2 = models.URLField(null=True, blank=True)
+    task_url1 = models.TextField(null=True, blank=True)
+    task_url2 = models.TextField(null=True, blank=True)
 
     order = models.IntegerField(default=None, null=True, blank=True)
 
@@ -226,8 +226,8 @@ class ExtraTask(models.Model):
 
     task = models.TextField(default="", blank=True, null=True)
     # fix 0530
-    task_url1 = models.URLField(null=True, blank=True)
-    task_url2 = models.URLField(null=True, blank=True)
+    task_url1 = models.TextField(null=True, blank=True)
+    task_url2 = models.TextField(null=True, blank=True)
 
     task_status = models.CharField(
         max_length=20,

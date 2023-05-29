@@ -8,7 +8,7 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -1383,6 +1383,11 @@ class ExtraTasks(APIView):
         except ProjectProgress.DoesNotExist:
             raise NotFound
 
+    def get(self, request):
+        extra_tasks = ExtraTask.objects.all()
+        serializer = ExtraTasksSerializer(extra_tasks, many=True)
+        return Response(serializer.data, status=HTTP_200_OK)
+
     def post(self, request):
         print("request.data : ", request.data)
         print("request.data['task_manager] : ", request.data['task_manager'])
@@ -1441,6 +1446,19 @@ class ExtraTasks(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+    
+class ExtraTaskDetail(APIView):
+    def get_object(self, pk):
+        try:
+            print("pk check at get_object : ", pk)
+            return ExtraTask.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        extra_task = self.get_object(pk)
+        serializer = ExtraTasksDetailSerializer(extra_task)
+        return Response(serializer.data, status=HTTP_200_OK)
 
 # 0414
 

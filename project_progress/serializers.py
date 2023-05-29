@@ -8,6 +8,28 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
+class ExtraTasksDetailSerializer(ModelSerializer):
+    task_manager = UserProfileImageSerializer()
+    started_at_formatted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExtraTask
+        fields = (
+            "pk",
+            "task_manager",
+            "task",
+            "task_url1",
+            "task_url2",            
+            "task_status",
+            "importance",
+            "started_at",
+            "completed_at",
+            "started_at_formatted"
+        )
+
+    def get_started_at_formatted(self, obj):
+        return obj.started_at_formatted()
+
 
 class TaskLogSerializer(serializers.ModelSerializer):
 
@@ -112,10 +134,7 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
         )
 
 # 0407 여기에 추가 해야 함
-
-
 class TestSerializerForOneTask(ModelSerializer):
-
     testers_for_test = TestersForTestSerializer(many=True)
     test_result_images = TestResultImageForTaskSerializer(many=True)
 
