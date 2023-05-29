@@ -273,7 +273,7 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
-
+        # TaskStatusViewForToday
         response_data = {
             'total_today_task_count': total_today_task_count,
             'total_today_completed_task_count': total_today_completed_task_count,
@@ -456,6 +456,45 @@ class TaskStatusViewForToday(APIView):
         else:
             progress_rate = 0
 
+        weekday_mapping = {
+            1: 'Sunday',
+            2: 'Monday',
+            3: 'Tuesday',
+            4: 'Wednesday',
+            5: 'Thursday',
+            6: 'Friday',
+            7: 'Saturday'
+        }
+            
+        today = timezone.localtime(timezone.now()).date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+        task_count_for_weekdays = ProjectProgress.objects.filter(
+            completed_at__range = (start_of_week, start_of_week + timedelta(days=7, hours=23, minutes=59, seconds=59)),
+            task_completed=True
+        ).annotate(
+            weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+        ).values('weekday').annotate(count=Count('id'))
+
+        task_count_for_weekdays = {
+            weekday_mapping[entry['weekday']]: entry['count']
+            for entry in task_count_for_weekdays
+        }
+
+        all_weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+        task_count_for_weekdays = {
+            weekday: task_count_for_weekdays.get(weekday, 0)
+            for weekday in all_weekdays
+        }
+
+        # todo2: 오늘 날짜의 정보 (날짜와 요일) 구하기
+        today_info = {
+            'date': now.strftime("%Y년 %m월 %d일"),
+            'dayOfWeek': now.strftime('%A')
+        }
+
         response_data = {
             "toal_task_count_for_today":  toal_task_count_for_today,
             "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
@@ -466,7 +505,9 @@ class TaskStatusViewForToday(APIView):
             "progress_rate": progress_rate,
             "morning_tasks": TaskSerializerForToday(morning_tasks, many=True).data,
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
-            "night_tasks": TaskSerializerForToday(night_tasks, many=True).data
+            "night_tasks": TaskSerializerForToday(night_tasks, many=True).data,
+            'task_count_for_weekdays': task_count_for_weekdays,
+            'today_info': today_info
         }
 
         return Response(response_data, status=HTTP_200_OK)
