@@ -436,7 +436,7 @@ class TaskStatusViewForToday(APIView):
 
         # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
         task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
-            (Q(due_date__lt=night_end)) & ~Q(
+            (Q(due_date__lt=morning_start)) & ~Q(
                 current_status='completed')
         ).count()
 
@@ -1845,10 +1845,12 @@ class UncompletedTaskListView(APIView):
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date=None)
 
+        # fix
         if due_date_option_for_filtering == "until-yesterday":
-            today = date.today()
+            morning = time(hour=0, minute=0, second=0)
+            deadline = datetime.combine(datetime.today(), morning)            
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                due_date__lt=today)
+                due_date__lt=deadline)
 
         if due_date_option_for_filtering == "until-noon":
             noon = time(hour=12, minute=10, second=0)
