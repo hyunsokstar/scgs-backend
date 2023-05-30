@@ -8,7 +8,7 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -18,8 +18,34 @@ from django.http import JsonResponse
 from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
 
-
 # 1122
+
+class CreateTaskUrlForTaskPk(APIView):
+    def post(self, request, taskPk):
+        # 1. task는 taskPk로 찾은 ProjectProgress
+        try:
+            print("taskPk : ", taskPk)
+            task = ProjectProgress.objects.get(id=taskPk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound("Task not found")
+
+        # 2. task_url = "http://"
+        task_url = "http://example.com"
+
+        # 3. serializer로 저장
+        serializer = TaskUrlForTaskSerializer(data={
+            "task": taskPk,
+            "task_url": task_url,
+        })
+
+        # 4. serializer 무효할 시 parseerror 응답
+        serializer.is_valid(raise_exception=True)
+
+        # 5. 유효시 생성한 TaskUrlForTask 정보도 응답 http 200 응답
+        task_url_for_task = serializer.save()
+        serialized_data = TaskUrlForTaskSerializer(task_url_for_task).data
+        return Response(serialized_data, status=HTTP_200_OK)
+
 class TaskStaticsIView2(APIView):
     def get(self, request):
         task_managers = ProjectProgress.objects.values_list(
