@@ -3,6 +3,9 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
+        # 0529
+    path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+    path("<int:taskPk>/create-task-urk-for-task-pk", views.CreateTaskUrlForTaskPk.as_view()),
     path('task-log', views.TaskLogView.as_view()),
     path('task-status-view-for-today', views.TaskStatusViewForToday.as_view()),
     path('DailyCompletedTasks', views.DailyCompletedTasks.as_view()),
@@ -21,9 +24,6 @@ urlpatterns = [
 
     path('delete-for-checked', views.DeleteTasksForChecked.as_view(),
          name='project_progress'),
-
-    # 0529
-    path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
     path('task-statics', views.TaskStaticsIView.as_view()),
     path('<int:userPk>/daily-task-count',
