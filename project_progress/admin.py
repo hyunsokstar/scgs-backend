@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
+from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
 
 
 @admin.register(ProjectProgress)
@@ -61,7 +61,7 @@ class TaskCommentAdmin(admin.ModelAdmin):
 
 @admin.register(TaskLog)
 class TaskLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'writer', 'task', 'completed_at', 
+    list_display = ('id', 'writer', 'task', 'completed_at',
                     "interval_between_team_task",
                     "interval_between_my_task",
                     "time_distance_for_team_task",
@@ -69,3 +69,9 @@ class TaskLogAdmin(admin.ModelAdmin):
                     )  # Admin 목록에 표시할 필드 설정
     list_filter = ('writer',)  # 필터 옵션 설정
     search_fields = ('task',)
+
+
+@admin.register(TaskUrlForTask)
+class TaskUrlForTaskAdmin(admin.ModelAdmin):
+    list_display = ('id', 'task', 'task_url', 'task_description')
+    search_fields = ('task_url', )

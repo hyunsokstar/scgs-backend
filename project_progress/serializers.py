@@ -1,12 +1,19 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog
+from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
+
+
+class TaskUrlForTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TaskUrlForTask
+        fields = ('id', 'task', 'task_url', 'task_description')
+
 
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
@@ -19,7 +26,7 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "task_manager",
             "task",
             "task_url1",
-            "task_url2",            
+            "task_url2",
             "task_status",
             "importance",
             "started_at",
@@ -44,10 +51,11 @@ class TaskLogSerializer(serializers.ModelSerializer):
 
         if previous_task:
             time_distance = instance.completed_at - previous_task.completed_at
-            time_distance_minutes = int(time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
+            time_distance_minutes = int(
+                time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
             return time_distance_minutes
-        
-        return 0        
+
+        return 0
 
     def get_time_distance_from_before_my_task(self, instance):
         previous_task = TaskLog.objects.filter(
@@ -57,9 +65,10 @@ class TaskLogSerializer(serializers.ModelSerializer):
 
         if previous_task:
             time_distance = instance.completed_at - previous_task.completed_at
-            time_distance_minutes = int(time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
+            time_distance_minutes = int(
+                time_distance.total_seconds() / 60)  # 시간 간격을 분 단위로 계산
             return time_distance_minutes
-        
+
         return 0
 
     class Meta:
@@ -134,6 +143,8 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
         )
 
 # 0407 여기에 추가 해야 함
+
+
 class TestSerializerForOneTask(ModelSerializer):
     testers_for_test = TestersForTestSerializer(many=True)
     test_result_images = TestResultImageForTaskSerializer(many=True)
@@ -162,7 +173,7 @@ class ExtraTasksSerializer(ModelSerializer):
             "task_manager",
             "task",
             "task_url1",
-            "task_url2",            
+            "task_url2",
             "task_status",
             "importance",
             "started_at",
@@ -204,12 +215,14 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     tests_for_tasks = TestSerializerForOneTask(many=True)
     task_comments = TaskCommentSerializer(many=True)
     task_manager = UserProfileImageSerializer()
+    task_urls = TaskUrlForTaskSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
         fields = (
             "pk",
             "task",
+            "task_urls",            
             "task_description",
             "task_url1",
             "task_url2",
@@ -234,10 +247,6 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
 
     def get_elapsed_time_from_started_at(self, obj):
         return obj.elapsed_time_from_started_at()
-
-    # def get_task_manager(self, project):
-    #     request = self.context["request"]
-    #     return project.task_manager == request.user
 
 
 class ChallegersForCachPrizeSerializer(serializers.ModelSerializer):

@@ -1446,7 +1446,8 @@ class ExtraTasks(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
-    
+
+
 class ExtraTaskDetail(APIView):
     def get_object(self, pk):
         try:
@@ -1457,12 +1458,37 @@ class ExtraTaskDetail(APIView):
 
     def get(self, request, pk):
         extra_task = self.get_object(pk)
+        print("request.data : ", request.data)  # request.data 출력
+
         serializer = ExtraTasksDetailSerializer(extra_task)
         return Response(serializer.data, status=HTTP_200_OK)
 
+    def put(self, request, pk):
+        print("request.data : ", request.data)
+        extra_task = self.get_object(pk)
+
+        # 업데이트할 필드명과 값을 직접 설정
+        task_manager_id = request.data.get('task_manager')
+        task_manager = User.objects.get(pk=task_manager_id)
+        extra_task.task_manager = task_manager
+
+        extra_task.task = request.data.get('task')
+        extra_task.task_status = request.data.get('task_status')
+        extra_task.task_url1 = request.data.get('task_url1')
+        extra_task.task_url2 = request.data.get('task_url2')
+
+        try:
+            extra_task.save()
+            message = "extra task update 성공"
+            print("update result : ", extra_task)
+
+            return Response({"message": message}, status=HTTP_200_OK)
+        except Exception as e:
+            print("Error during extra task update:", str(e))
+            return Response({"message": "extra task update 실패"}, status=HTTP_400_BAD_REQUEST)
+
+
 # 0414
-
-
 class TaskStatusListView(APIView):
     #   dateRange(string, default="thisMonth"),
     #   taskManagerForFiltering(number, default=""),
@@ -1482,14 +1508,6 @@ class TaskStatusListView(APIView):
         task_manager = request.query_params.get(
             'taskManagerForFiltering', '')
         importance = request.query_params.get('importance', 1)
-        # is_requested_for_help = request.query_params.get('isRequestedForHelp', False)
-        # is_bounty_task = request.query_params.get('isBountyTask', False)
-
-        # print("date_range, task_manager, importance : ",
-        #       date_range, task_manager, importance)
-
-        # if (task_manager != ""):
-        #     task_manager = User.objects.get(pk=task_manager)
 
         if (date_range == "thisMonth"):
             self.date_from = timezone.now() - timedelta(days=30)
@@ -1866,7 +1884,7 @@ class UncompletedTaskListView(APIView):
         # fix
         if due_date_option_for_filtering == "until-yesterday":
             morning = time(hour=0, minute=0, second=0)
-            deadline = datetime.combine(datetime.today(), morning)            
+            deadline = datetime.combine(datetime.today(), morning)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lt=deadline)
 

@@ -418,9 +418,13 @@ class TaskLog(models.Model):
 
         super().save(*args, **kwargs)
 
-    # @property
-    # def interval_between_team_task_timedelta(self):
-    #     if self.interval_between_team_task is not None:
-    #         return self.interval_between_team_task  # timedelta 객체 그대로 반환
-    #     return None
-
+class TaskUrlForTask(models.Model):
+    task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="task_urls",
+        blank=True,
+        null=True,
+    )
+    task_url = models.URLField(null=True, blank=True)
+    task_description = models.CharField(max_length=30, default="")
