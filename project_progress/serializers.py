@@ -1,6 +1,6 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
+from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
@@ -14,10 +14,16 @@ class TaskUrlForTaskSerializer(ModelSerializer):
         model = TaskUrlForTask
         fields = ('id', 'task', 'task_url', 'task_description')
 
+class TaskUrlForExtraTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TaskUrlForExtraTask
+        fields = ('id', 'task', 'task_url', 'task_description')
+
 
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
+    task_urls = TaskUrlForTaskSerializer(many=True)
 
     class Meta:
         model = ExtraTask
@@ -25,6 +31,7 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "pk",
             "task_manager",
             "task",
+            "task_urls",
             "task_url1",
             "task_url2",
             "task_status",
