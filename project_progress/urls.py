@@ -3,8 +3,11 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
-        # 0529
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+
+    path("task-url-for-task/<int:pk>/update", views.UpdateViewForTaskUrlForTask.as_view()),
+    path("task-url-for-task/<int:pk>/delete", views.deleteViewForTaskUrlForTask.as_view()),
+
     path("<int:taskPk>/create-task-urk-for-task-pk", views.CreateTaskUrlForTaskPk.as_view()),
     path('task-log', views.TaskLogView.as_view()),
     path('task-status-view-for-today', views.TaskStatusViewForToday.as_view()),
@@ -59,6 +62,10 @@ urlpatterns = [
 
     path("<int:pk>/score-by-tester/update",
          views.UpdateScoreByTesterView.as_view()),
+
+    path("<int:pk>/score-by-tester/update",
+         views.UpdateScoreByTesterView.as_view()),
+
     path("<int:pk>/in_progress/update", views.UpdateTaskInProgressView.as_view()),
     path("<int:pk>/is_testing/update", views.UpdateTaskIsTestingView.as_view()),
     path("<int:pk>/importance/update",

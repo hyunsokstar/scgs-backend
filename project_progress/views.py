@@ -3,11 +3,11 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog
+from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
 from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -19,6 +19,26 @@ from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
 
 # 1122
+
+class deleteViewForTaskUrlForTask(APIView):
+    def delete(self, request, pk):
+        try:
+            task_url_for_task = TaskUrlForTask.objects.get(pk=pk)
+            task_url_for_task.delete()
+            return Response(status=HTTP_200_OK)
+        except TaskUrlForTask.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+
+class UpdateViewForTaskUrlForTask(APIView):
+    def put(self, request, pk):
+        try:
+            task_url_for_task = TaskUrlForTask.objects.get(pk=pk)
+            task_url_for_task.task_url = request.data.get('taskUrlForUpdate')
+            task_url_for_task.save()
+            return Response(status=HTTP_200_OK)
+        except TaskUrlForTask.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+
 
 class CreateTaskUrlForTaskPk(APIView):
     def post(self, request, taskPk):
@@ -45,6 +65,7 @@ class CreateTaskUrlForTaskPk(APIView):
         task_url_for_task = serializer.save()
         serialized_data = TaskUrlForTaskSerializer(task_url_for_task).data
         return Response(serialized_data, status=HTTP_200_OK)
+
 
 class TaskStaticsIView2(APIView):
     def get(self, request):
@@ -2271,7 +2292,6 @@ class ProjectProgressDetailView(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-# 1122
 due_date_mapping = {
     'this-morning': timezone.now().replace(hour=0, minute=0, ),
     'this-evening': timezone.now().replace(hour=19, minute=0),
