@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
+from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
 
 
 @admin.register(ProjectProgress)
@@ -75,3 +75,10 @@ class TaskLogAdmin(admin.ModelAdmin):
 class TaskUrlForTaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'task', 'task_url', 'task_description')
     search_fields = ('task_url', )
+
+# Task url for extra tasks
+@admin.register(TaskUrlForExtraTask)
+class TaskUrlForExtraTaskAdmin(admin.ModelAdmin):
+    list_display = ("id", "task", "task_url", "task_description")
+    list_filter = ("task",)
+    search_fields = ("task__name",)

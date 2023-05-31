@@ -200,72 +200,6 @@ class ProjectProgress(models.Model):
 
         return time_left_to_due_date_str
 
-
-class ExtraTask(models.Model):
-    class TaskStatusChoices(models.TextChoices):
-        ready = ("ready", "준비")
-        in_progress = ("in_progress", "작업중")
-        testing = ("testing", "테스트중")
-        completed = ("completed", "완료")
-
-    original_task = models.ForeignKey(
-        "project_progress.ProjectProgress",
-        on_delete=models.CASCADE,
-        related_name="extra_tasks",
-        blank=True,
-        null=True,
-    )
-
-    task_manager = models.ForeignKey(
-        "users.User",
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="task_manager_for_supplementary_task",
-    )
-
-    task = models.TextField(default="", blank=True, null=True)
-    # fix 0530
-    task_url1 = models.TextField(null=True, blank=True)
-    task_url2 = models.TextField(null=True, blank=True)
-
-    task_status = models.CharField(
-        max_length=20,
-        choices=TaskStatusChoices.choices,
-        default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
-    )
-
-    importance = models.IntegerField(default=1, blank=True, null=True)
-    password = models.CharField(max_length=20, default="1234")
-
-    started_at = models.DateTimeField(null=True, blank=True, default=None)
-    completed_at = models.DateTimeField(blank=True, null=True)
-
-    due_date = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-
-    def __str__(self) -> str:
-        return self.task
-
-    def completed_at_formatted(self):
-        local_completed_at = timezone.localtime(self.completed_at)
-        completed_at_str = ""
-        if (self.completed_at == None):
-            completed_at_str = "미정"
-        else:
-            completed_at_str = local_completed_at.strftime(
-                '%y년 %m월 %d일 %H시 %M분')
-            print("completed_at_str : ", completed_at_str)
-
-        return completed_at_str
-
-    def started_at_formatted(self):
-        if (self.started_at != None):
-            local_started_at = timezone.localtime(self.started_at)
-            return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
-        else:
-            return "준비"
-
-
 class TestForTask(models.Model):
     class TestMethodChoices(models.TextChoices):
         browser = ("browser", "브라우져")
@@ -428,3 +362,78 @@ class TaskUrlForTask(models.Model):
     )
     task_url = models.URLField(null=True, blank=True)
     task_description = models.CharField(max_length=30, default="")
+
+class ExtraTask(models.Model):
+    class TaskStatusChoices(models.TextChoices):
+        ready = ("ready", "준비")
+        in_progress = ("in_progress", "작업중")
+        testing = ("testing", "테스트중")
+        completed = ("completed", "완료")
+
+    original_task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="extra_tasks",
+        blank=True,
+        null=True,
+    )
+
+    task_manager = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="task_manager_for_supplementary_task",
+    )
+
+    task = models.TextField(default="", blank=True, null=True)
+    # fix 0530
+    task_url1 = models.TextField(null=True, blank=True)
+    task_url2 = models.TextField(null=True, blank=True)
+
+    task_status = models.CharField(
+        max_length=20,
+        choices=TaskStatusChoices.choices,
+        default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
+    )
+
+    importance = models.IntegerField(default=1, blank=True, null=True)
+    password = models.CharField(max_length=20, default="1234")
+
+    started_at = models.DateTimeField(null=True, blank=True, default=None)
+    completed_at = models.DateTimeField(blank=True, null=True)
+
+    due_date = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.task
+
+    def completed_at_formatted(self):
+        local_completed_at = timezone.localtime(self.completed_at)
+        completed_at_str = ""
+        if (self.completed_at == None):
+            completed_at_str = "미정"
+        else:
+            completed_at_str = local_completed_at.strftime(
+                '%y년 %m월 %d일 %H시 %M분')
+            print("completed_at_str : ", completed_at_str)
+
+        return completed_at_str
+
+    def started_at_formatted(self):
+        if (self.started_at != None):
+            local_started_at = timezone.localtime(self.started_at)
+            return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"
+
+class TaskUrlForExtraTask(models.Model):
+    task = models.ForeignKey(
+        "project_progress.ExtraTask",
+        on_delete=models.CASCADE,
+        related_name="task_urls",
+        blank=True,
+        null=True,
+    )
+    task_url = models.URLField(null=True, blank=True)
+    task_description = models.CharField(max_length=30, default="")    
