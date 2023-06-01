@@ -19,6 +19,41 @@ from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
 
 # 1122
+class UpdateViewForExtraCommentText(APIView):
+    def get_object(self, pk):
+        try:
+            return ExtraTaskComment.objects.get(pk=pk)
+        except ExtraTaskComment.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        print("request.data.get(comment) : ", request.data.get("comment"))
+        comment_obj = self.get_object(commentPk)
+        comment_obj.comment = request.data.get("comment")
+        comment_obj.is_edit_mode = False
+        comment_obj.save()
+
+        result_data = {
+            "success": True,
+            "message": "comment text update success",
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+class DeleteViewForCommentForExtraTask(APIView):
+    def get_object(self, pk):
+        try:
+            return ExtraTaskComment.objects.get(pk=pk)
+        except ExtraTaskComment.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, commentPk):
+        comment_obj = self.get_object(commentPk)
+        comment_obj.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
 class CreateViewForCommentForExtraTask(APIView):
 
     print("comment 추가 요청 확인 !!!!!!!!!!!")
