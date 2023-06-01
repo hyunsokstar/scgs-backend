@@ -8,7 +8,7 @@ from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, No
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
 from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask, ExtraTaskComment
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+from project_progress.serializers import CreateCommentSerializerForExtraTask, CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -19,7 +19,37 @@ from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
 
 # 1122
+class CreateViewForCommentForExtraTask(APIView):
 
+    print("comment 추가 요청 확인 !!!!!!!!!!!")
+
+    def get_object(self, taskPk):
+        try:
+            return ProjectProgress.objects.get(pk=taskPk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, taskPk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        serializer = CreateCommentSerializerForExtraTask(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                # original_task = self.get_object(taskPk)
+                test_for_task = serializer.save(writer=request.user)
+                serializer = CreateExtraTaskSerializer(test_for_task)
+
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+        else:
+            raise ParseError("Invalid data provided.")
 
 class UpdateEditModeForCommentForExtraTask(APIView):
     def get_object(self, pk):

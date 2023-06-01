@@ -1,6 +1,6 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ChallengersForCashPrize, ExtraTask, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
+from .models import ChallengersForCashPrize, ExtraTask, ExtraTaskComment, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
@@ -8,6 +8,14 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
+class CreateCommentSerializerForExtraTask(ModelSerializer):
+
+    class Meta:
+        model = ExtraTaskComment
+        fields = (
+            "task",
+            "comment",
+        )
 
 class TaskUrlForExtraTaskSerializer(ModelSerializer):
     class Meta:

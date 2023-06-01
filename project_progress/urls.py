@@ -106,5 +106,5 @@ urlpatterns = [
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
     path('extra-task/<int:commentPk>/update-edit-mode', views.UpdateEditModeForCommentForExtraTask.as_view(), name='extra_tasks'),
-
+    path("extra-task/<int:taskPk>/comment", views.CreateViewForCommentForExtraTask.as_view())
 ]
