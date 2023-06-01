@@ -27,10 +27,35 @@ class TaskUrlForExtraTaskSerializer(ModelSerializer):
         fields = ('id', 'task', 'task_url', 'task_description')
 
 
+class ExtraTaskCommentSerializer(serializers.ModelSerializer):
+    created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer()
+
+    class Meta:
+        model = TaskComment
+        fields = (
+            'id',
+            'task',
+            'writer',
+            'comment',
+            'is_edit_mode',
+            'like_count',
+            'created_at',
+            "created_at_formatted"
+        )
+        read_only_fields = ('id', 'created_at',)
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()
+
+# fix 0601 20
+
+
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
     task_urls = TaskUrlForTaskSerializer(many=True)
+    task_comments = ExtraTaskCommentSerializer(many=True)
 
     class Meta:
         model = ExtraTask
@@ -38,6 +63,7 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "pk",
             "task_manager",
             "task",
+            "task_comments",  
             "task_urls",
             "task_url1",
             "task_url2",

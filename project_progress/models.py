@@ -436,4 +436,33 @@ class TaskUrlForExtraTask(models.Model):
         null=True,
     )
     task_url = models.URLField(null=True, blank=True)
-    task_description = models.CharField(max_length=30, default="")    
+    task_description = models.CharField(max_length=30, default="")
+    
+class ExtraTaskComment(models.Model):
+    task = models.ForeignKey(
+        "project_progress.ExtraTask",
+        on_delete=models.CASCADE,
+        related_name="task_comments",
+        blank=True,
+        null=True,
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="extra_task_comments",
+    )
+
+    comment = models.CharField(max_length=100)
+    like_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_edit_mode = models.BooleanField(default=False)
+
+    def created_at_formatted(self):
+        if (self.created_at != None):
+            local_created_at = timezone.localtime(self.created_at)
+            return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"

@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
+from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask, ExtraTaskComment
 
 
 @admin.register(ProjectProgress)
@@ -77,8 +77,27 @@ class TaskUrlForTaskAdmin(admin.ModelAdmin):
     search_fields = ('task_url', )
 
 # Task url for extra tasks
+
+
 @admin.register(TaskUrlForExtraTask)
 class TaskUrlForExtraTaskAdmin(admin.ModelAdmin):
     list_display = ("id", "task", "task_url", "task_description")
     list_filter = ("task",)
     search_fields = ("task__name",)
+
+
+@admin.register(ExtraTaskComment)
+class ExtraTaskCommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'task', 'writer', 'comment', 'like_count', 'created_at_formatted', 'is_edit_mode')
+    list_filter = ('task', 'writer', 'is_edit_mode')
+    search_fields = ('comment', 'writer__username')
+    readonly_fields = ('created_at',)
+
+    def created_at_formatted(self, obj):
+        if obj.created_at is not None:
+            local_created_at = obj.created_at.astimezone()
+            return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"
+
+    created_at_formatted.short_description = 'Created At'
