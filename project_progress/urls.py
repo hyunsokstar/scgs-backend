@@ -5,6 +5,12 @@ urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
+    path("comment/<int:commentPk>/edit-mode/update",
+         views.UpdateViewForCommentEdit.as_view()),
+    path("comment/<int:commentPk>/comment/update",
+         views.UpdateViewForCommentText.as_view()),
+    path("comment/<int:commentPk>", views.CommentForTaskView.as_view()),
+
     path("task-url-for-task/<int:pk>/update", views.UpdateViewForTaskUrlForTask.as_view()),
     path("task-url-for-extra-task/<int:pk>/update", views.UpdateViewForTaskUrlForExtraTask.as_view()),
     path("task-url-for-task/<int:pk>/delete", views.deleteViewForTaskUrlForTask.as_view()),
@@ -37,8 +43,6 @@ urlpatterns = [
          views.TaskStaticsIViewForPersnalUser.as_view()),
 
     path('writer-info', views.TaskMangerInfo.as_view()),
-    path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
-    path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
     path('task-status', views.TaskStatusListView.as_view(), name="task_status_view"),
 
     path("tasks-with-cash-prize", views.TasksWithCashPrize.as_view(),
@@ -89,11 +93,6 @@ urlpatterns = [
     path("<int:pk>/started_at/update",
          views.UpdateProjectTaskStartedAt.as_view()),
     path("<int:taskPk>/comment", views.ProjectProgressCommentView.as_view()),
-    path("comment/<int:commentPk>/edit-mode/update",
-         views.UpdateViewForCommentEdit.as_view()),
-    path("comment/<int:commentPk>/comment/update",
-         views.UpdateViewForCommentText.as_view()),
-    path("comment/<int:commentPk>", views.CommentForTaskView.as_view()),
 
     path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view()),
     path("TestForTasks/<int:testPk>/delete",
@@ -103,5 +102,9 @@ urlpatterns = [
     path("<int:taskPk>/challengers-for-cash-prize/update",
          views.UpatedChallengersForCashPrize.as_view()),
     path("TestForTasks/<int:testPk>/update",
-         views.UpatedTestPassedForTasksView.as_view())
+         views.UpatedTestPassedForTasksView.as_view()),
+    path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
+    path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
+    path('extra-task/<int:commentPk>/update-edit-mode', views.UpdateEditModeForCommentForExtraTask.as_view(), name='extra_tasks'),
+
 ]

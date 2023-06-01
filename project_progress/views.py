@@ -7,7 +7,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
+from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask, ExtraTaskComment
 from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -21,6 +21,37 @@ from django.db.models.functions import ExtractWeekDay
 # 1122
 
 
+class UpdateEditModeForCommentForExtraTask(APIView):
+    def get_object(self, pk):
+        try:
+            return ExtraTaskComment.objects.get(pk=pk)
+        except ExtraTaskComment.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        message = ""
+        comment = self.get_object(commentPk)
+
+        if comment.is_edit_mode:
+            comment.is_edit_mode = False
+            message = "edit mode to read mode"
+            # project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+
+        else:
+            comment.is_edit_mode = True
+            message = "from read mode to edit mode"
+
+        comment.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class deleteViewForTaskUrlForExtraTask(APIView):
     def delete(self, request, pk):
         try:
@@ -29,7 +60,8 @@ class deleteViewForTaskUrlForExtraTask(APIView):
             return Response(status=HTTP_200_OK)
         except TaskUrlForExtraTask.DoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND)
-        
+
+
 class deleteViewForTaskUrlForTask(APIView):
     def delete(self, request, pk):
         try:
@@ -87,7 +119,8 @@ class CreateTaskUrlForTaskPk(APIView):
         task_url_for_task = serializer.save()
         serialized_data = TaskUrlForTaskSerializer(task_url_for_task).data
         return Response(serialized_data, status=HTTP_200_OK)
-    
+
+
 class CreateTaskUrlForExtraTask(APIView):
     def post(self, request, extraTaskPk):
         # 1. task는 taskPk로 찾은 ProjectProgress
