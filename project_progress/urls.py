@@ -6,9 +6,13 @@ urlpatterns = [
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
     path("task-url-for-task/<int:pk>/update", views.UpdateViewForTaskUrlForTask.as_view()),
+    path("task-url-for-extra-task/<int:pk>/update", views.UpdateViewForTaskUrlForExtraTask.as_view()),
     path("task-url-for-task/<int:pk>/delete", views.deleteViewForTaskUrlForTask.as_view()),
+    path("task-url-for-extra-task/<int:pk>/delete", views.deleteViewForTaskUrlForExtraTask.as_view()),
 
     path("<int:taskPk>/create-task-urk-for-task-pk", views.CreateTaskUrlForTaskPk.as_view()),
+    path("<int:extraTaskPk>/create-task-url-for-extra-task", views.CreateTaskUrlForExtraTask.as_view()),
+
     path('task-log', views.TaskLogView.as_view()),
     path('task-status-view-for-today', views.TaskStatusViewForToday.as_view()),
     path('DailyCompletedTasks', views.DailyCompletedTasks.as_view()),

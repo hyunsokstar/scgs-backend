@@ -9,10 +9,17 @@ from datetime import timedelta, datetime
 import pytz
 
 
+class TaskUrlForExtraTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TaskUrlForExtraTask
+        fields = ('id', 'task', 'task_url', 'task_description')
+
+
 class TaskUrlForTaskSerializer(ModelSerializer):
     class Meta:
         model = TaskUrlForTask
         fields = ('id', 'task', 'task_url', 'task_description')
+
 
 class TaskUrlForExtraTaskSerializer(ModelSerializer):
     class Meta:
@@ -229,7 +236,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "task",
-            "task_urls",            
+            "task_urls",
             "task_description",
             "task_url1",
             "task_url2",

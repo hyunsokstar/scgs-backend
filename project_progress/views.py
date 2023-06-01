@@ -7,8 +7,8 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask
-from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
+from project_progress.serializers import CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -20,6 +20,16 @@ from django.db.models.functions import ExtractWeekDay
 
 # 1122
 
+
+class deleteViewForTaskUrlForExtraTask(APIView):
+    def delete(self, request, pk):
+        try:
+            task_url_for_task = TaskUrlForExtraTask.objects.get(pk=pk)
+            task_url_for_task.delete()
+            return Response(status=HTTP_200_OK)
+        except TaskUrlForExtraTask.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+        
 class deleteViewForTaskUrlForTask(APIView):
     def delete(self, request, pk):
         try:
@@ -28,6 +38,18 @@ class deleteViewForTaskUrlForTask(APIView):
             return Response(status=HTTP_200_OK)
         except TaskUrlForTask.DoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND)
+
+
+class UpdateViewForTaskUrlForExtraTask(APIView):
+    def put(self, request, pk):
+        try:
+            task_url_for_task = TaskUrlForExtraTask.objects.get(pk=pk)
+            task_url_for_task.task_url = request.data.get('taskUrlForUpdate')
+            task_url_for_task.save()
+            return Response(status=HTTP_200_OK)
+        except TaskUrlForExtraTask.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+
 
 class UpdateViewForTaskUrlForTask(APIView):
     def put(self, request, pk):
@@ -55,6 +77,32 @@ class CreateTaskUrlForTaskPk(APIView):
         # 3. serializer로 저장
         serializer = TaskUrlForTaskSerializer(data={
             "task": taskPk,
+            "task_url": task_url,
+        })
+
+        # 4. serializer 무효할 시 parseerror 응답
+        serializer.is_valid(raise_exception=True)
+
+        # 5. 유효시 생성한 TaskUrlForTask 정보도 응답 http 200 응답
+        task_url_for_task = serializer.save()
+        serialized_data = TaskUrlForTaskSerializer(task_url_for_task).data
+        return Response(serialized_data, status=HTTP_200_OK)
+    
+class CreateTaskUrlForExtraTask(APIView):
+    def post(self, request, extraTaskPk):
+        # 1. task는 taskPk로 찾은 ProjectProgress
+        try:
+            print("taskPk : ", extraTaskPk)
+            task = ExtraTask.objects.get(id=extraTaskPk)
+        except ExtraTask.DoesNotExist:
+            raise NotFound("Task not found")
+
+        # 2. task_url = "http://"
+        task_url = "http://example.com"
+
+        # 3. serializer로 저장
+        serializer = TaskUrlForExtraTaskSerializer(data={
+            "task": extraTaskPk,
             "task_url": task_url,
         })
 
