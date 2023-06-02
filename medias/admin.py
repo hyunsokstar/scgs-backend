@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Photo, PhotoForProfile, ReferImageForTask, TestResultImageForTask, Video
+from .models import (
+    Photo,
+    PhotoForProfile,
+    ReferImageForTask,
+    TestResultImageForTask,
+    Video,
+    TestResultImageForExtraTask,
+)
 
 # Register your models here.
 
@@ -36,3 +43,10 @@ class ReferImageForTaskAdmin(admin.ModelAdmin):
 @admin.register(TestResultImageForTask)
 class TestResultImageForTaskAdmin(admin.ModelAdmin):
     list_display = ("image_url", "test")
+
+@admin.register(TestResultImageForExtraTask)
+class TestResultImageForExtraTaskAdmin(admin.ModelAdmin):
+    list_display = ('id', 'test', 'image_url')
+    list_filter = ('test',)
+    search_fields = ('test__name',)
+    fields = ('test', 'image_url')

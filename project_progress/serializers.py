@@ -1,12 +1,16 @@
-from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
-from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
+from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer,TestResultImageForExtraTaskSerializer
+
+from users.serializers import (
+    TinyUserSerializer,
+    UserNameSerializer,
+    UserProfileImageSerializer,
+)
 from .models import (
     ChallengersForCashPrize, ExtraTask, ExtraTaskComment,
     ProjectProgress, TaskComment, TestForTask,
     TestersForTest, TaskLog, TaskUrlForTask,
     TaskUrlForExtraTask, TestForExtraTask,
     TestersForTestForExtraTask
-
 )
 
 from rest_framework import serializers
@@ -65,7 +69,6 @@ class ExtraTaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
-# 0602 fix
 class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
     tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
 
@@ -78,8 +81,10 @@ class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
             "tester"
         )
 
+# fix 0602
 class TestForExtraTaskSerializer(ModelSerializer):
     testers_for_test_for_extra_task = TestersForTestForExtraTaskSerializer(many=True)
+    test_result_images = TestResultImageForExtraTaskSerializer(many=True)
 
     class Meta:
         model = TestForExtraTask
@@ -89,7 +94,7 @@ class TestForExtraTaskSerializer(ModelSerializer):
             "test_description",
             "test_passed",
             "test_method",
-            "test_result_image",
+            "test_result_images",
             "testers_for_test_for_extra_task"
         )
 
@@ -228,9 +233,7 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
             "importance",
         )
 
-# 0407 여기에 추가 해야 함
-
-
+# 0602 refer
 class TestSerializerForOneTask(ModelSerializer):
     testers_for_test = TestersForTestSerializer(many=True)
     test_result_images = TestResultImageForTaskSerializer(many=True)

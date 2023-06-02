@@ -1797,12 +1797,6 @@ class ExtraTaskDetail(APIView):
 
 # 0414
 class TaskStatusListView(APIView):
-    #   dateRange(string, default="thisMonth"),
-    #   taskManagerForFiltering(number, default=""),
-    #   importance(number, default=1),
-    #   isRequestedForHelp(boolean, default=False),
-    #   isBountyTask(boolean, default=False),
-    #   dateRange = request.data.get("dateRange")
     one_month_ago = timezone.now() - timedelta(days=30)
     date_from = ""
     all_tasks = ProjectProgress.objects.all()
