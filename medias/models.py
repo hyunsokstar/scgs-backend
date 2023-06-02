@@ -3,7 +3,6 @@ from common.models import CommonModel
 
 # Create your models here.
 class TestResultImageForTask(CommonModel):
-    image_url = models.URLField()
     test = models.ForeignKey(
         "project_progress.TestForTask",
         on_delete=models.CASCADE,
@@ -12,6 +11,18 @@ class TestResultImageForTask(CommonModel):
         blank=True,
         related_name="test_result_images"
     )
+    image_url = models.URLField()
+
+class TestResultImageForExtraTask(CommonModel):
+    test = models.ForeignKey(
+        "project_progress.TestForExtraTask",
+        on_delete=models.CASCADE,
+        max_length=200,
+        null=True,
+        blank=True,
+        related_name="test_result_images"
+    )
+    image_url = models.URLField()    
 
 class ReferImageForTask(CommonModel):
     image_url = models.URLField()

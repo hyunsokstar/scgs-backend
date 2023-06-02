@@ -1,7 +1,17 @@
 import requests
 from django.conf import settings
-from project_progress.models import ProjectProgress, TestForTask
-from medias.serializers import ReferImageForTaskSerializer, TestResultImageSerializer
+# from project_progress.models import ProjectProgress, TestForTask, TestForExtraTask
+from project_progress.models import (
+    ProjectProgress,
+    TestForTask,
+    TestForExtraTask
+)
+# from medias.serializers import ReferImageForTaskSerializer, TestResultImageSerializer, TestResultImageForExtraTaskSerializer
+from medias.serializers import (
+    ReferImageForTaskSerializer,
+    TestResultImageSerializer,
+    TestResultImageForExtraTaskSerializer,
+)
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -9,9 +19,29 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
-
-
 from .models import Photo, ReferImageForTask
+
+
+class TestResultImageForExtraTask(APIView):
+    def get_object(self, pk):
+        try:
+            return TestForExtraTask.objects.get(pk=pk)
+        except TestForExtraTask.DoesNotExist:
+            raise NotFound
+
+    def post(self, request):
+        print("request.data[testPk] : ", request.data["testPk"])
+        serializer = TestResultImageForExtraTaskSerializer(data=request.data)
+
+        if serializer.is_valid():
+            test = self.get_object(request.data["testPk"])
+            test_result = serializer.save(test=test)
+            print("test_result : ", test_result)
+            serializer = TestResultImageForExtraTaskSerializer(test_result)
+            print("serializer : ", serializer.data)
+            return Response(serializer.data)
+        else:
+            raise ParseError(serializer.errors)
 
 
 class createTestImageResult(APIView):
@@ -34,7 +64,6 @@ class createTestImageResult(APIView):
             return Response(serializer.data)
         else:
             raise ParseError(serializer.errors)
-            # return Response(serializer.errors)
 
 
 class DeleteViewForRefImageForTask(APIView):
