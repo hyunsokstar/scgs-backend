@@ -1,6 +1,9 @@
 # Register your models here.
 from django.contrib import admin
-from .models import ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask, ExtraTaskComment
+from .models import (ProjectProgress, ExtraTask, TaskComment,
+                     TestForTask, TestersForTest, TaskLog,
+                     TaskUrlForTask, TaskUrlForExtraTask,
+                     ExtraTaskComment, TestForExtraTask)
 
 
 @admin.register(ProjectProgress)
@@ -88,7 +91,8 @@ class TaskUrlForExtraTaskAdmin(admin.ModelAdmin):
 
 @admin.register(ExtraTaskComment)
 class ExtraTaskCommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'task', 'writer', 'comment', 'like_count', 'created_at_formatted', 'is_edit_mode')
+    list_display = ('id', 'task', 'writer', 'comment',
+                    'like_count', 'created_at_formatted', 'is_edit_mode')
     list_filter = ('task', 'writer', 'is_edit_mode')
     search_fields = ('comment', 'writer__username')
     readonly_fields = ('created_at',)
@@ -101,3 +105,19 @@ class ExtraTaskCommentAdmin(admin.ModelAdmin):
             return "준비"
 
     created_at_formatted.short_description = 'Created At'
+
+
+@admin.register(TestForExtraTask)
+class TestForExtraTaskAdmin(admin.ModelAdmin):
+    list_display = ("test_description", "original_task", "test_passed")
+    list_filter = ("test_passed", "test_method")
+    search_fields = ("test_description", "original_task__name")
+
+    fieldsets = (
+        ("General", {
+            "fields": ("test_description", "original_task", "test_passed")
+        }),
+        ("Details", {
+            "fields": ("test_method", "test_result_image")
+        }),
+    )

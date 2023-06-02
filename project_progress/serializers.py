@@ -1,12 +1,19 @@
 from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer
 from users.serializers import TinyUserSerializer, UserNameSerializer, UserProfileImageSerializer
-from .models import ChallengersForCashPrize, ExtraTask, ExtraTaskComment, ProjectProgress, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask
+from .models import (
+    ChallengersForCashPrize, ExtraTask, ExtraTaskComment,
+    ProjectProgress, TaskComment, TestForTask,
+    TestersForTest, TaskLog, TaskUrlForTask,
+    TaskUrlForExtraTask, TestForExtraTask
+)
+
 from rest_framework import serializers
 from requests import Response
 from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
+
 
 class CreateCommentSerializerForExtraTask(ModelSerializer):
 
@@ -16,6 +23,7 @@ class CreateCommentSerializerForExtraTask(ModelSerializer):
             "task",
             "comment",
         )
+
 
 class TaskUrlForExtraTaskSerializer(ModelSerializer):
     class Meta:
@@ -56,14 +64,27 @@ class ExtraTaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
-# fix 0601 20
 
+class TestForExtraTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TestForExtraTask
+        fields = (
+            "id",
+            "original_task",
+            "test_description",
+            "test_passed",
+            "test_method",
+            "test_result_image",
+        )
+
+# fix 0602 Let's add a test list for the extra task to the extra task detail page.
 
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
     task_urls = TaskUrlForTaskSerializer(many=True)
     task_comments = ExtraTaskCommentSerializer(many=True)
+    tests_for_extra_task = TestForExtraTaskSerializer(many=True)
 
     class Meta:
         model = ExtraTask
@@ -71,7 +92,8 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "pk",
             "task_manager",
             "task",
-            "task_comments",  
+            "task_comments",
+            "tests_for_extra_task",
             "task_urls",
             "task_url1",
             "task_url2",

@@ -466,3 +466,30 @@ class ExtraTaskComment(models.Model):
             return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
             return "준비"
+        
+class TestForExtraTask(models.Model):
+    class TestMethodChoices(models.TextChoices):
+        browser = ("browser", "브라우져")
+        postman = ("postman", "postman")
+        test_code = ("test_code", "test_code")
+
+    original_task = models.ForeignKey(                  # 어떤 태스크의 테스트
+        "project_progress.ExtraTask",
+        on_delete=models.CASCADE,
+        related_name="tests_for_extra_task",
+        blank=True,
+        null=True,
+    )
+    test_description = models.CharField(max_length=50, default="")
+    test_passed = models.BooleanField(default=False)
+
+    test_method = models.CharField(
+        max_length=20,
+        choices=TestMethodChoices.choices,
+        default=TestMethodChoices.browser  # 기본값을 "ready"로 설정
+    )
+
+    test_result_image = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        return self.test_description

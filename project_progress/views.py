@@ -7,7 +7,6 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from .models import ChallengersForCashPrize, ProjectProgress, ExtraTask, TaskComment, TestForTask, TestersForTest, TaskLog, TaskUrlForTask, TaskUrlForExtraTask, ExtraTaskComment
 from project_progress.serializers import CreateCommentSerializerForExtraTask, CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -17,8 +16,51 @@ from django.db.models import Q, F, Max
 from django.http import JsonResponse
 from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
+from .models import (
+    ChallengersForCashPrize,
+    ProjectProgress,
+    ExtraTask,
+    TaskComment,
+    TestForTask,
+    TestersForTest,
+    TaskLog,
+    TaskUrlForTask,
+    TaskUrlForExtraTask,
+    ExtraTaskComment,
+    TestForExtraTask
+)
 
 # 1122
+
+class UpdateViewForTestPassedForExtraTask(APIView):
+    def get_object(self, pk):
+        try:
+            return TestForExtraTask.objects.get(pk=pk)
+        except TestForTask.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, testPk):
+        message = ""
+        print("put 요청 확인 : pk ", testPk)
+        test_for_task = self.get_object(testPk)
+
+        if test_for_task.test_passed:
+            message = "test passed to 취소 !"
+            test_for_task.test_passed = False
+        else:
+            message = "test_passed to success!"
+            test_for_task.test_passed = True
+
+        test_for_task.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class UpdateViewForExtraCommentText(APIView):
     def get_object(self, pk):
         try:
@@ -41,6 +83,7 @@ class UpdateViewForExtraCommentText(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+
 class DeleteViewForCommentForExtraTask(APIView):
     def get_object(self, pk):
         try:
@@ -53,6 +96,7 @@ class DeleteViewForCommentForExtraTask(APIView):
         comment_obj.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class CreateViewForCommentForExtraTask(APIView):
 
@@ -85,6 +129,7 @@ class CreateViewForCommentForExtraTask(APIView):
                     "error is occured for serailizer for create extra task")
         else:
             raise ParseError("Invalid data provided.")
+
 
 class UpdateEditModeForCommentForExtraTask(APIView):
     def get_object(self, pk):
