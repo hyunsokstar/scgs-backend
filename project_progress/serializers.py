@@ -198,6 +198,17 @@ class TestersForTestSerializer(serializers.ModelSerializer):
             "tester"
         )
 
+class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
+    tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
+
+    class Meta:
+        model = TestersForTestForExtraTask
+        fields = (
+            "pk",
+            "test",
+            "tester"
+        )
+
 
 class CreateTestSerializerForOneTask(ModelSerializer):
 
@@ -250,6 +261,30 @@ class TestSerializerForOneTask(ModelSerializer):
             "test_result_images"
         )
 
+class CreateTestSerializerForExtraTask(ModelSerializer):
+    class Meta:
+        model = TestForExtraTask
+        fields = (
+            "test_description",
+            "test_method",
+            "test_passed"
+        )
+
+class TestSerializerForExtraTask(ModelSerializer):
+    testers_for_test = TestersForTestForExtraTaskSerializer(many=True)
+    test_result_images = TestResultImageForExtraTaskSerializer(many=True)
+
+    class Meta:
+        model = TestForExtraTask
+        fields = (
+            "pk",
+            "test_description",
+            "test_passed",
+            "test_method",
+            "test_result_image",
+            "testers_for_test",
+            "test_result_images"
+        )
 
 class ExtraTasksSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()

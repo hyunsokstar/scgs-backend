@@ -9,6 +9,14 @@ class TestResultImageForTaskSerializer(ModelSerializer):
             "image_url"
         )
 
+class TestResultImageForExtraTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TestResultImageForExtraTask
+        fields = (
+            "pk",
+            "image_url"
+        )
+
 class ProfilePhotoSerializer(ModelSerializer):
     class Meta:
         model = PhotoForProfile
@@ -45,10 +53,3 @@ class TestResultImageSerializer(ModelSerializer):
             "image_url",
         )
 
-class TestResultImageForExtraTaskSerializer(ModelSerializer):
-    class Meta:
-        model = TestResultImageForExtraTask
-        fields = (
-            "pk",
-            "image_url",
-        )

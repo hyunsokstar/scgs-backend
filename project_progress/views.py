@@ -25,6 +25,8 @@ from project_progress.serializers import (
     TestersForTestSerializer,
     UncompletedTaskSerializerForCashPrize,
     TaskLogSerializer,
+    TestSerializerForExtraTask,
+    CreateTestSerializerForExtraTask
 )
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -1643,7 +1645,7 @@ class TestForTasks(APIView):
             try:
                 original_task = self.get_object(taskPk)
                 test_for_task = serializer.save(original_task=original_task)
-                serializer = CreateExtraTaskSerializer(test_for_task)
+                serializer = TestSerializerForOneTask(test_for_task)
 
                 return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
 
@@ -1651,6 +1653,36 @@ class TestForTasks(APIView):
                 print("e : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
+                    
+class CreateViewForTestForExtraTask(APIView):
+
+    print("test 추가 요청 22 !!!!!!!!!!")
+    def get_object(self, taskPk):
+        print("taskPk :::::::::::::: ", taskPk)
+        try:
+            return ExtraTask.objects.get(pk=taskPk)
+        except ExtraTask.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, taskPk):
+        print("post 요청 받음 !!!!!!!!!!!!!!")
+        serializer = CreateTestSerializerForExtraTask(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                original_task = self.get_object(taskPk)
+                test_for_task = serializer.save(original_task=original_task)
+                serializer = CreateTestSerializerForExtraTask(test_for_task)
+
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+
+            except Exception as e:
+                print("eeeeeeeeeeeeee : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+        else: 
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
 class UpdateExtraTaskImportance(APIView):
