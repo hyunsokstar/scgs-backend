@@ -1,9 +1,12 @@
 # Register your models here.
 from django.contrib import admin
-from .models import (ProjectProgress, ExtraTask, TaskComment,
-                     TestForTask, TestersForTest, TaskLog,
-                     TaskUrlForTask, TaskUrlForExtraTask,
-                     ExtraTaskComment, TestForExtraTask)
+from .models import (
+    ProjectProgress, ExtraTask, TaskComment,
+    TestForTask, TestersForTest, TaskLog,
+    TaskUrlForTask, TaskUrlForExtraTask,
+    ExtraTaskComment, TestForExtraTask,
+    TestersForTestForExtraTask
+)
 
 
 @admin.register(ProjectProgress)
@@ -121,3 +124,11 @@ class TestForExtraTaskAdmin(admin.ModelAdmin):
             "fields": ("test_method", "test_result_image")
         }),
     )
+
+
+@admin.register(TestersForTestForExtraTask)
+class TestersForTestForExtraTaskAdmin(admin.ModelAdmin):
+    list_display = ('test', 'tester', 'created_at')
+    list_filter = ('test', 'tester')
+    search_fields = ('test__name', 'tester__username')
+    fields = ('test', 'tester')

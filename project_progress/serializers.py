@@ -4,7 +4,9 @@ from .models import (
     ChallengersForCashPrize, ExtraTask, ExtraTaskComment,
     ProjectProgress, TaskComment, TestForTask,
     TestersForTest, TaskLog, TaskUrlForTask,
-    TaskUrlForExtraTask, TestForExtraTask
+    TaskUrlForExtraTask, TestForExtraTask,
+    TestersForTestForExtraTask
+
 )
 
 from rest_framework import serializers
@@ -13,7 +15,6 @@ from django.utils import timezone
 from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
-
 
 class CreateCommentSerializerForExtraTask(ModelSerializer):
 
@@ -64,8 +65,22 @@ class ExtraTaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
+# 0602 fix
+class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
+    tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
+
+    class Meta:
+        model = TestersForTestForExtraTask
+
+        fields = (
+            "pk",
+            "test",
+            "tester"
+        )
 
 class TestForExtraTaskSerializer(ModelSerializer):
+    testers_for_test_for_extra_task = TestersForTestForExtraTaskSerializer(many=True)
+
     class Meta:
         model = TestForExtraTask
         fields = (
@@ -75,6 +90,7 @@ class TestForExtraTaskSerializer(ModelSerializer):
             "test_passed",
             "test_method",
             "test_result_image",
+            "testers_for_test_for_extra_task"
         )
 
 # fix 0602 Let's add a test list for the extra task to the extra task detail page.

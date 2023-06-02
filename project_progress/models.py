@@ -493,3 +493,21 @@ class TestForExtraTask(models.Model):
 
     def __str__(self):
         return self.test_description
+    
+class TestersForTestForExtraTask(models.Model):
+    test = models.ForeignKey(                  # 어떤 태스크의 테스트
+        "project_progress.TestForExtraTask",
+        on_delete=models.CASCADE,
+        related_name="testers_for_test_for_extra_task",
+        blank=True,
+        null=True,
+    )
+
+    tester = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
