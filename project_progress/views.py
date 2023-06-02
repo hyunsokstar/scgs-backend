@@ -53,6 +53,19 @@ from django.shortcuts import get_object_or_404
 
 # 1122
 
+class DeleteViewForTestForExtraTask(APIView):
+    def get_object(self, taskPk):
+        try:
+            return TestForExtraTask.objects.get(pk=taskPk)
+        except TestForExtraTask.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, testPk):
+        print("삭제 요청 확인")
+        test_for_task = self.get_object(testPk)
+        test_for_task.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
+
 class UpateViewForTesterForExtraTask(APIView):
 
     def put(self, request, testPk):

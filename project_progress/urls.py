@@ -126,5 +126,9 @@ urlpatterns = [
          views.UpdateViewForExtraCommentText.as_view()),
     path("TestForExtraTask/<int:testPk>/update-testers",
          views.UpateViewForTesterForExtraTask.as_view()),
+    path("TestForExtraTask/<int:testPk>/delete",
+         views.DeleteViewForTestForExtraTask.as_view()),
+
+
 ]
 # project_progress/extra-task/comment/${commentPk}/delete
