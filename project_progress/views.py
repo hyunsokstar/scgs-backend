@@ -7,7 +7,25 @@ from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
-from project_progress.serializers import CreateCommentSerializerForExtraTask, CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+# from project_progress.serializers import CreateCommentSerializerForExtraTask, CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
+from project_progress.serializers import (
+    CreateCommentSerializerForExtraTask,
+    CreateCommentSerializerForTask,
+    CreateExtraTaskSerializer,
+    CreateProjectProgressSerializer,
+    CreateTestSerializerForOneTask,
+    ExtraTasksDetailSerializer,
+    ExtraTasksSerializer,
+    ProjectProgressDetailSerializer,
+    ProjectProgressListSerializer,
+    TaskSerializerForToday,
+    TaskUrlForExtraTaskSerializer,
+    TaskUrlForTaskSerializer,
+    TestSerializerForOneTask,
+    TestersForTestSerializer,
+    UncompletedTaskSerializerForCashPrize,
+    TaskLogSerializer,
+)
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
@@ -27,10 +45,48 @@ from .models import (
     TaskUrlForTask,
     TaskUrlForExtraTask,
     ExtraTaskComment,
-    TestForExtraTask
+    TestForExtraTask,
+    TestersForTestForExtraTask
 )
+from django.shortcuts import get_object_or_404
+
 
 # 1122
+
+class UpateViewForTesterForExtraTask(APIView):
+
+    def put(self, request, testPk):
+        message = ""
+        print("put 요청 확인 : pk ", testPk)
+
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        is_tester_aready_exists = TestersForTestForExtraTask.objects.filter(
+            test=testPk, tester=request.user).exists()
+
+        if is_tester_aready_exists == False:
+            try:
+                test = get_object_or_404(TestForExtraTask, pk=testPk)
+                new_tester_for_test = TestersForTestForExtraTask(
+                    test=test, tester=request.user)
+                new_tester_for_test.save()
+                message = "test check success"
+            except TestForExtraTask.DoesNotExist:
+                return JsonResponse({"error": "Test does not exist"}, status=404)
+
+        else:
+            TestersForTestForExtraTask.objects.filter(
+                test=testPk).delete()
+            message = "test check cancle !"
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
 
 class UpdateViewForTestPassedForExtraTask(APIView):
     def get_object(self, pk):
