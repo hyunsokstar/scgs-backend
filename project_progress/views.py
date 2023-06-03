@@ -427,6 +427,8 @@ class TaskLogView(APIView):
                 writer = task_log.writer
                 writers[writer.username] += 1
 
+            print("task_logs ::::::::::::::::::::: ", task_logs)
+
             writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
 
             for writer, count in writers.items():
@@ -524,6 +526,7 @@ class TaskLogView(APIView):
             task_logs = TaskLog.objects.filter(
                 completed_at__range=(today_start, today_end))
 
+
             writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
 
             for task_log in task_logs:
@@ -531,6 +534,8 @@ class TaskLogView(APIView):
                 print("task_log.writer : ", task_log.writer)
                 writer = task_log.writer
                 writers[writer.username] += 1
+
+            print("writers ::::::::::::::::::::: ", writers)
 
             writers_data = []  # 작성자별 데이터를 저장할 리스트 초기화
 
@@ -815,6 +820,36 @@ class TaskStatusViewForToday(APIView):
             'dayOfWeek': now.strftime('%A')
         }
 
+        today_tasks = ProjectProgress.objects.filter(
+            Q(due_date__gte=morning_start) &
+            Q(due_date__lt=night_end)
+        )
+
+        # Step 1: Initialize a default dictionary to store task counts for each task manager
+        task_managers = defaultdict(lambda: {'completed_count': 0, 'uncompleted_count': 0})
+
+        # step2 오늘의 업무에 대해 task_manager 와 count 정보를 dict 형식으로 초기화
+        for task in today_tasks:
+            task_manager = task.task_manager
+            if task.current_status == 'completed':
+                task_managers[task_manager.username]['completed_count'] += 1
+            else:
+                task_managers[task_manager.username]['uncompleted_count'] += 1
+
+        # stpe3 task_managers 에 저장된 정보를 다시 list로 만들기
+        task_managers_data = []
+
+        for task_manager, counts in task_managers.items():
+            task_manager_data = {
+                'task_manager': task_manager,
+                'completed_count': counts['completed_count'],
+                'uncompleted_count': counts['uncompleted_count']
+            }
+            task_managers_data.append(task_manager_data)
+
+        # Step 4: Sort the task_managers_data list based on the completed_count in descending order
+        task_managers_data = sorted(task_managers_data, key=lambda x: x['completed_count'], reverse=True)
+
         response_data = {
             "toal_task_count_for_today":  toal_task_count_for_today,
             "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
@@ -827,7 +862,8 @@ class TaskStatusViewForToday(APIView):
             "afternoon_tasks": TaskSerializerForToday(afternoon_tasks, many=True).data,
             "night_tasks": TaskSerializerForToday(night_tasks, many=True).data,
             'task_count_for_weekdays': task_count_for_weekdays,
-            'today_info': today_info
+            'today_info': today_info,
+            'task_managers_data': task_managers_data
         }
 
         return Response(response_data, status=HTTP_200_OK)
