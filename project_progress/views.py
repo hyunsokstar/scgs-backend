@@ -52,7 +52,6 @@ from .models import (
 )
 from django.shortcuts import get_object_or_404
 
-
 # 1122
 
 class DeleteViewForTestForExtraTask(APIView):
@@ -1120,7 +1119,7 @@ class taskListForChecked(APIView):
 
         return Response(data, status=HTTP_200_OK)
 
-
+# fix 0603 마감날짜 update 월화수목금토일 단 오늘 이전이면 업데이트 할수 없음
 class UpdateViewForTaskDueDateForChecked(APIView):
     def put(self, request):
         # duration_option 값을 가져옵니다.
@@ -1245,7 +1244,6 @@ class DeleteTasksForChecked(APIView):
         return Response({
             'message': f'{deleted_count} StudyNoteContent instances deleted.'
         })
-
 
 class UpatedChallengersForCashPrize(APIView):
 
@@ -1432,7 +1430,8 @@ def get_writers_info(complete_status):
         }
         task_managers_info.append(writer_info)
 
-    return task_managers_info
+    sorted_task_managers_info = sorted(task_managers_info, key=lambda x: x['task_count'], reverse=True)
+    return sorted_task_managers_info
 
 
 class TaskMangerInfo(APIView):
@@ -2292,9 +2291,9 @@ class UncompletedTaskListView(APIView):
             if groupByOption == "member":
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
                     'task_manager')
-            if groupByOption == "time":
+            if groupByOption == "importance":
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
-                    'due_date')
+                    'importance')
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
