@@ -842,8 +842,8 @@ class TaskStatusViewForToday(APIView):
         for task_manager, counts in task_managers.items():
             task_manager_data = {
                 'task_manager': task_manager,
-                'completed_count': counts['completed_count'],
-                'uncompleted_count': counts['uncompleted_count']
+                'uncompleted_count': counts['uncompleted_count'],
+                'completed_count': counts['completed_count']
             }
             task_managers_data.append(task_manager_data)
 
