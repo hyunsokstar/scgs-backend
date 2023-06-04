@@ -17,5 +17,7 @@ urlpatterns = [
     path("ref-image-for-task/upload",
          CreateViewForRefImageToTaskDetail.as_view()),
     path("TestResultImageForExtraTask",
-         TestResultImageForExtraTask.as_view())
+         TestResultImageForExtraTask.as_view()),
+    path("test-result-image/create",
+         createTestImageResult.as_view()),
 ]
