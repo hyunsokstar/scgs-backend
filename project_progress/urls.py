@@ -75,7 +75,7 @@ urlpatterns = [
          views.UpdateCheckForCashPrize.as_view()),
 
 
-    path("<int:pk>/score-by-tester/update",
+    path("<int:pk>/score-update-by-tester",
          views.UpdateScoreByTesterView.as_view()),
 
     path("<int:pk>/score-by-tester/update",

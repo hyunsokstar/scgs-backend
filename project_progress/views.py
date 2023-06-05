@@ -2473,14 +2473,7 @@ class CompletedTaskListView(APIView):
             self.completed_project_task_list_for_current_page, many=True)
         data = serializer.data
 
-        # count_for_ready = self.all_completed_project_task_list.filter(
-        #     in_progress=False).count()
-        # count_for_in_progress = self.all_completed_project_task_list.filter(
-        #     in_progress=True, is_testing=False, task_completed=False).count()
-        # count_for_in_testing = self.all_completed_project_task_list.filter(
-        #     in_progress=True, is_testing=True, task_completed=False).count()
-
-        # 작성자 목록
+        # fix 0605
         writers_info = get_writers_info(complete_status=True)
         print("writers_info : ", writers_info)
 
@@ -2495,9 +2488,6 @@ class CompletedTaskListView(APIView):
             "ProjectProgressList": data,
             "totalPageCount": self.totalCountForTask,
             "writers_info": writers_info,
-            # "count_for_ready": count_for_ready,
-            # "count_for_in_progress": count_for_in_progress,
-            # "count_for_in_testing": count_for_in_testing,
             "task_number_for_one_page": self.task_number_for_one_page
         }
         return Response(response_data, status=HTTP_200_OK)
@@ -2836,10 +2826,30 @@ class UpdateScoreByTesterView(APIView):
         message = ""
         print("put 요청 확인")
         project_task = self.get_object(pk)
-        score_by_tester = request.data.get('score_by_tester')
-
+        score_by_tester = request.data.get('score_by_tester', 0)
+        cashInfoForUpdate = request.data.get('cashInfoForUpdate', 0)
+        username = request.data.get('username')
+        print("username :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", username)
+        print("score_by_tester :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", score_by_tester)
         project_task.score_by_tester = score_by_tester
-        message = f"{score_by_tester} 점으로 task score update"
+
+
+        # 유저 모델 조회
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"success": False, "message": "User not found"}, status=HTTP_404_NOT_FOUND)
+
+        # cash에 score_by_tester 업데이트
+        user.cash = user.cash + cashInfoForUpdate
+        user.save()
+
+        if (cashInfoForUpdate > 0):
+            cash_message = cashInfoForUpdate , "원 추가"
+        else:
+            cash_message = cashInfoForUpdate , "원"
+
+        message = f"{score_by_tester} 점으로 task score update {username} 의 cash update : {cash_message}"
 
         project_task.save()
 
