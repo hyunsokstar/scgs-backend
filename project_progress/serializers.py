@@ -99,7 +99,6 @@ class TestForExtraTaskSerializer(ModelSerializer):
         )
 
 # fix 0602 Let's add a test list for the extra task to the extra task detail page.
-
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
@@ -406,8 +405,7 @@ class UncompletedTaskSerializerForCashPrize(serializers.ModelSerializer):
             "check_for_cash_prize"
         )
 
-
-class ProjectProgressListSerializer(serializers.ModelSerializer):
+class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
     due_date_formatted = serializers.SerializerMethodField()
@@ -415,23 +413,31 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = TinyUserSerializer(read_only=True)
-    # challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
+    task_urls = TaskUrlForTaskSerializer(many=True)
+    task_comments = ExtraTaskCommentSerializer(many=True)
+    tests_for_tasks = TestSerializerForOneTask(many=True)
+    extra_tasks = ExtraTasksSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
         fields = (
             "pk",
-            "task_classification",
-            "task",
             "writer",
+            "task",
+            "task_description",
+            "task_urls",
+            "task_comments",
+            "tests_for_tasks",
+            "extra_tasks",
             "task_manager",
             "importance",
-            "in_progress",
             "is_testing",
+            "in_progress",
             "task_completed",
             "current_status",
-            "started_at",
             "due_date",
+            "task_classification",
+            "started_at",
             "started_at_formatted",
             "completed_at_formatted",
             "due_date_formatted",
@@ -442,7 +448,67 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "score_by_tester",
             "is_task_for_cash_prize",
             "is_task_for_urgent",
-            "cash_prize"
+            "cash_prize",
+        )    
+
+    def get_started_at_formatted(self, obj):
+        return obj.started_at_formatted()
+
+    def completed_at_formatted(self, obj):
+        return obj.completed_at_formatted()
+
+    def get_due_date_formatted(self, obj):
+        return obj.due_date_formatted()
+
+    def get_elapsed_time_from_started_at(self, obj):
+        return obj.elapsed_time_from_started_at()
+
+    def get_time_consumed_from_start_to_complete(self, obj):
+        return obj.time_consumed_from_start_to_complete()
+
+    def get_time_left_to_due_date(self, obj):
+        return obj.time_left_to_due_date()
+
+# fix 0607
+class ProjectProgressListSerializer(serializers.ModelSerializer):
+    started_at_formatted = serializers.SerializerMethodField()
+    completed_at_formatted = serializers.SerializerMethodField()
+    due_date_formatted = serializers.SerializerMethodField()
+    elapsed_time_from_started_at = serializers.SerializerMethodField()
+    time_consumed_from_start_to_complete = serializers.SerializerMethodField()
+    time_left_to_due_date = serializers.SerializerMethodField()
+    task_manager = TinyUserSerializer(read_only=True)
+    # task_urls = TaskUrlForTaskSerializer(many=True)
+    # challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
+
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "pk",
+            "writer",
+            "task",
+            "task_description",
+            "task_manager",
+            "importance",
+            "is_testing",
+            "in_progress",
+            "task_completed",
+            "current_status",
+            "due_date",
+            "task_classification",
+            "started_at",
+            "started_at_formatted",
+            "completed_at_formatted",
+            "due_date_formatted",
+            "elapsed_time_from_started_at",
+            "time_consumed_from_start_to_complete",
+            "time_left_to_due_date",
+            "check_result_by_tester",
+            "score_by_tester",
+            "is_task_for_cash_prize",
+            "is_task_for_urgent",
+            "cash_prize",
+            # "task_urls"
         )
 
     def get_started_at_formatted(self, obj):

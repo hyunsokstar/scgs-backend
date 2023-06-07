@@ -116,6 +116,7 @@ urlpatterns = [
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     # extra task detail
     path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
+    path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status', views.UpdateViewForExtraTaskProgressStatus.as_view()),
     path('extra-task/<int:commentPk>/update-edit-mode',
          views.UpdateEditModeForCommentForExtraTask.as_view(), name='extra_tasks'),
     path("extra-task/<int:taskPk>/comment",

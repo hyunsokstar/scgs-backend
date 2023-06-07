@@ -18,6 +18,7 @@ from project_progress.serializers import (
     ExtraTasksSerializer,
     ProjectProgressDetailSerializer,
     ProjectProgressListSerializer,
+    SerializerForUncompletedTaskDetailListForChecked,
     TaskSerializerForToday,
     TaskUrlForExtraTaskSerializer,
     TaskUrlForTaskSerializer,
@@ -239,6 +240,7 @@ class deleteViewForTaskUrlForExtraTask(APIView):
             task_url_for_task.delete()
             return Response(status=HTTP_200_OK)
         except TaskUrlForExtraTask.DoesNotExist:
+            print("taskUrl을 찾지 못했습니다")
             return Response(status=HTTP_404_NOT_FOUND)
 
 
@@ -1132,21 +1134,20 @@ class UpdateForTaskImportanceForChecked(APIView):
 
 class taskListForChecked(APIView):
     def get(self, request):
-        checked_row_pks = request.query_params.getlist('checkedRowPks[]')
+        checked_row_pks = [int(pk) for pk in request.query_params.get('checkedRowPks', '').split(',')]
         print("체크된 pks for task list1 : ", checked_row_pks)
-        print("체크된 pks for task list : ", checked_row_pks)
         pk_list = [int(pk) for pk in checked_row_pks if pk]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)
 
         total_count = all_project_tasks.count()
-        serializer = ProjectProgressListSerializer(
+        serializer = SerializerForUncompletedTaskDetailListForChecked(
             all_project_tasks, many=True)
 
-        serializer = ProjectProgressListSerializer(
-            all_project_tasks,
-            many=True,
-            context={"request": request}
-        )
+        # serializer = ProjectProgressListSerializer(
+        #     all_project_tasks,
+        #     many=True,
+        #     context={"request": request}
+        # )
 
         data = {
             "total_count": total_count,
@@ -1822,6 +1823,30 @@ class ExtraTasks(APIView):
         return Response(result_data, status=HTTP_200_OK)
 
 
+class UpdateViewForExtraTaskProgressStatus(APIView):
+    def get_object(self, pk):
+        try:
+            print("pk check at get_object : ", pk)
+            return ExtraTask.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        print("request.data : ", request.data)
+        extra_task = self.get_object(pk)
+        extra_task.task_status = request.data.get('task_status')
+
+        try:
+            extra_task.save()
+            message = "extra task update 성공"
+            print("update result : ", extra_task)
+
+            return Response({"message": message}, status=HTTP_200_OK)
+        except Exception as e:
+            print("Error during extra task update:", str(e))
+            return Response({"message": "extra task update 실패"}, status=HTTP_400_BAD_REQUEST)
+
+
 class ExtraTaskDetail(APIView):
     def get_object(self, pk):
         try:
@@ -1838,11 +1863,14 @@ class ExtraTaskDetail(APIView):
         return Response(serializer.data, status=HTTP_200_OK)
 
     def put(self, request, pk):
+        print("!@#$!@#$!@#$!@#$!@#$!@#$!@#$!@$#!@")
         print("request.data : ", request.data)
         extra_task = self.get_object(pk)
 
         # 업데이트할 필드명과 값을 직접 설정
         task_manager_id = request.data.get('task_manager')
+        print("task_manager_id :::::::::::::::::", task_manager_id)
+
         task_manager = User.objects.get(pk=task_manager_id)
         extra_task.task_manager = task_manager
 
