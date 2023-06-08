@@ -1208,6 +1208,20 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                 except ProjectProgress.DoesNotExist:
                     pass
 
+        elif duration_option == "night":
+            for pk in checked_row_pks:
+                try:
+                    task = ProjectProgress.objects.get(pk=pk)
+                    task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                        timezone.now()).date(), time(hour=23, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                    # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+                    task.started_at_utc = timezone.localtime(
+                        timezone.now()).astimezone(timezone.utc)
+                    task.save()
+                    updated_count += 1
+                except ProjectProgress.DoesNotExist:
+                    pass                
+
         elif duration_option == "tomorrow":
             for pk in checked_row_pks:
                 try:
