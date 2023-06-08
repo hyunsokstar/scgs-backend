@@ -26,7 +26,6 @@ from project_progress.serializers import (
     TestersForTestSerializer,
     UncompletedTaskSerializerForCashPrize,
     TaskLogSerializer,
-    TestSerializerForExtraTask,
     CreateTestSerializerForExtraTask
 )
 from django.db.models import Count
@@ -2307,6 +2306,13 @@ class UncompletedTaskListView(APIView):
         if due_date_option_for_filtering == "until-evening":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
             evening = time(hour=19, minute=10, second=0)
+            deadline = datetime.combine(datetime.today(), evening)
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lte=deadline)
+            
+        if due_date_option_for_filtering == "until-night":
+            print("due_date_option_for_filtering !!!!!!!!!!!! ")
+            evening = time(hour=23, minute=59, second=59)
             deadline = datetime.combine(datetime.today(), evening)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)

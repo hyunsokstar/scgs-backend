@@ -59,13 +59,15 @@ class UpdateNoteContentsPageForSelectedView(APIView):
         # pageNumbersToEdit: [1, 2]
         # pageNumbersToMove: [3, 4]
         # 에 대해 
-
         # 이때 study_note_contents 가 3인것은 1으로 4인것은 2로 바꾸기
+
+        # step1 일단 노트 내용 다 가져 오기
         study_note = self.get_object(study_note_pk)
         study_note_contents = study_note.note_contents.all()
 
         if direction == 'forward':
             # todo1: study_note_contents의 page 번호가 pageNumbersToEdit에 포함되어 있는 경우
+            # 설명 pageNumbersToEdit.index(content.page) <=> content.page 에 해당하는 값이 있을 경우 index 를 구해라 
             # 해당 page 번호를 pageNumbersToMove와 동일한 인덱스의 값으로 업데이트
             for content in study_note_contents:
                 if content.page in pageNumbersToEdit:
@@ -82,10 +84,41 @@ class UpdateNoteContentsPageForSelectedView(APIView):
                     content.page = new_page
                     content.save()
 
+        # elif direction == 'switch':     
+            # todo3     
+            # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
+            # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
+
+        elif direction == 'switch':
+            # todo3     
+            # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
+            # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
+            
+            # 인덱스가 같은 요소들을 교체하기 위해 zip 함수를 사용하여 pageNumbersToEdit와 pageNumbersToMove를 묶습니다.
+            for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
+                # page 번호가 edit_page인 study_note_contents를 찾습니다.
+                edit_contents = study_note_contents.filter(page=edit_page)
+                # page 번호가 move_page인 study_note_contents를 찾습니다.
+                move_contents = study_note_contents.filter(page=move_page)
+                
+                # edit_contents와 move_contents의 개수가 같고, 모두 존재할 경우에만 교체를 수행합니다.
+                if edit_contents.count() == move_contents.count() == 1:
+
+                    # save 하기 위한 객체를 각각 초기화
+                    edit_content = edit_contents.first()
+                    move_content = move_contents.first()
+                    
+                    # page 번호를 교체합니다.
+                    edit_content.page, move_content.page = move_page, edit_page
+                    edit_content.save()
+                    move_content.save()
+
         if direction == "forward":
             message = f"{pageNumbersToEdit}를 pageNumbersToMove로 이동 성공"
         elif direction == "backward":
             message = f"pageNumbersToMove를 {pageNumbersToEdit}로 이동 성공"
+        elif direction == "switch":
+            message = f"{pageNumbersToEdit} <=> {pageNumbersToMove} 교체 성공"
 
         response_data = {
             "message": message,
