@@ -6,6 +6,8 @@ from .serializers import AddMultiUserSerializer, PrivateUserSerializer, Serializ
 from users.models import User, UserPosition, UserTaskComment
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
+from django.db.models import Q
+
 
 # 임포트 관련
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -366,6 +368,15 @@ class UpdateViewForEditModeForStudyNoteContent(APIView):
 class UserNameListView (APIView):
     def get(self, request):
         users = User.objects.all()
+        print("users : ", users)
+        serializer = UsersForCreateSerializer(
+            users, context={"request": request}, many=True)
+        print("usernames only !! ", serializer.data)
+        return Response(serializer.data)
+    
+class UserNameListViewWithOutMe (APIView):
+    def get(self, request):
+        users = User.objects.filter(~Q(username = request.user.username))
         print("users : ", users)
         serializer = UsersForCreateSerializer(
             users, context={"request": request}, many=True)

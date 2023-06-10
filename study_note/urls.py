@@ -2,7 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),    
+    path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
+    path('get-study-note-list-for-copy-mode', views.StudyNoteAPIViewForCopyMode.as_view(), name='StudyNoteAPIView'),
+    path('get-study-note-for-checked-rows/', views.StudyNoteAPIViewForCheckedRows.as_view(), name='StudyNoteAPIView'),
+
+    path('for-me/', views.StudyNoteAPIViewForMe.as_view()),
     path('<int:pk>/contents/update/re-order-for-contents', views.StudyNoteContentReOrderAPIView.as_view(), name='study-note-contents-re-order'),
     path('contents/delete-for-checked', views.DeleteNoteContentsForChecked.as_view(), name='StudyNoteAPIView'), 
     path('contents/<int:content_pk>', views.StudyNoteContentView.as_view()),
@@ -20,4 +24,8 @@ urlpatterns = [
     path('create-dummy', views.AddDummyDataForStudyNote.as_view(), name='AddDummyDataForStudyNote'),
     path('create-dummy-content', views.StudyNoteContentDummyAPI.as_view(), name='AddDummyDataForStudyNote'),
     path('content/search', views.SearchContentListView.as_view()),
+
+    # post
+    path('copy-selected-notes-to-my-note', views.CopyCopySelectedNotesToMyNoteView.as_view()),
+
 ]

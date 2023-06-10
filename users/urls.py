@@ -9,6 +9,7 @@ urlpatterns = [
     path("members-task-status", views.MembersTaskStatus.as_view()),
     path("me", views.Me.as_view()),
     path("only-user-name", views.UserNameListView.as_view()),
+    path("only-user-name-without-me", views.UserNameListViewWithOutMe.as_view()),
     path("multi-users", views.AddMultiUsersView.as_view()),
     path("multi-users/delete", views.DeleteMultiUsersView.as_view()),
     path("<int:pk>", views.UserProfile.as_view()),
