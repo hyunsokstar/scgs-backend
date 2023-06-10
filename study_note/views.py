@@ -464,7 +464,7 @@ class DeleteNoteContentsForSelectedPage(APIView):
 
 class StudyNoteAPIView(APIView):
     total_page_count = 0  # 노트의 총 개수
-    note_count_per_page = 4  # 1 페이지에 몇개씩
+    note_count_per_page = 6  # 1 페이지에 몇개씩
 
     def get(self, request):
         selected_note_writer = request.query_params.get("selectedNoteWriter")
@@ -512,7 +512,7 @@ class StudyNoteAPIView(APIView):
     
 class StudyNoteAPIViewForCopyMode(APIView):
     total_page_count = 0  # 노트의 총 개수
-    note_count_per_page = 4  # 1 페이지에 몇개씩
+    note_count_per_page = 6  # 1 페이지에 몇개씩
 
     def get(self, request):
         selected_note_writer = request.query_params.get("selectedNoteWriter")
@@ -560,7 +560,7 @@ class StudyNoteAPIViewForCopyMode(APIView):
     
 class StudyNoteAPIViewForMe(APIView):
     total_page_count = 0  # 노트의 총 개수
-    note_count_per_page = 4  # 1 페이지에 몇개씩
+    note_count_per_page = 6  # 1 페이지에 몇개씩
 
     def get(self, request):
         print("all_study_note_list for me check !!!!!!!!!!!!!")
