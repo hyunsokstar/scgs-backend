@@ -22,7 +22,9 @@ from rest_framework import status
 from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
-# 
+#
+
+
 class UpdateNoteContentsPageForSelectedView(APIView):
     def get_object(self, pk):
         try:
@@ -47,18 +49,18 @@ class UpdateNoteContentsPageForSelectedView(APIView):
         study_note_contents = study_note.note_contents.all()
         # todo1
         # direction: forward 이라면
-        #        
+        #
         # pageNumbersToEdit: [1, 2]
         # pageNumbersToMove: [3, 4]
-        # 에 대해 
+        # 에 대해
 
         # 이때 study_note_contents 가 1인것은 3으로 2인것은 4로 바꾸기
 
         # direction: backward 이라면
-        #        
+        #
         # pageNumbersToEdit: [1, 2]
         # pageNumbersToMove: [3, 4]
-        # 에 대해 
+        # 에 대해
         # 이때 study_note_contents 가 3인것은 1으로 4인것은 2로 바꾸기
 
         # step1 일단 노트 내용 다 가져 오기
@@ -67,11 +69,12 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
         if direction == 'forward':
             # todo1: study_note_contents의 page 번호가 pageNumbersToEdit에 포함되어 있는 경우
-            # 설명 pageNumbersToEdit.index(content.page) <=> content.page 에 해당하는 값이 있을 경우 index 를 구해라 
+            # 설명 pageNumbersToEdit.index(content.page) <=> content.page 에 해당하는 값이 있을 경우 index 를 구해라
             # 해당 page 번호를 pageNumbersToMove와 동일한 인덱스의 값으로 업데이트
             for content in study_note_contents:
                 if content.page in pageNumbersToEdit:
-                    new_page = pageNumbersToMove[pageNumbersToEdit.index(content.page)]
+                    new_page = pageNumbersToMove[pageNumbersToEdit.index(
+                        content.page)]
                     content.page = new_page
                     content.save()
 
@@ -80,34 +83,35 @@ class UpdateNoteContentsPageForSelectedView(APIView):
             # 해당 page 번호를 pageNumbersToEdit와 동일한 인덱스의 값으로 업데이트
             for content in study_note_contents:
                 if content.page in pageNumbersToMove:
-                    new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                    new_page = pageNumbersToEdit[pageNumbersToMove.index(
+                        content.page)]
                     content.page = new_page
                     content.save()
 
-        # elif direction == 'switch':     
-            # todo3     
+        # elif direction == 'switch':
+            # todo3
             # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
             # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
 
         elif direction == 'switch':
-            # todo3     
+            # todo3
             # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
             # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
-            
+
             # 인덱스가 같은 요소들을 교체하기 위해 zip 함수를 사용하여 pageNumbersToEdit와 pageNumbersToMove를 묶습니다.
             for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
                 # page 번호가 edit_page인 study_note_contents를 찾습니다.
                 edit_contents = study_note_contents.filter(page=edit_page)
                 # page 번호가 move_page인 study_note_contents를 찾습니다.
                 move_contents = study_note_contents.filter(page=move_page)
-                
+
                 # edit_contents와 move_contents의 개수가 같고, 모두 존재할 경우에만 교체를 수행합니다.
                 if edit_contents.count() == move_contents.count() == 1:
 
                     # save 하기 위한 객체를 각각 초기화
                     edit_content = edit_contents.first()
                     move_content = move_contents.first()
-                    
+
                     # page 번호를 교체합니다.
                     edit_content.page, move_content.page = move_page, edit_page
                     edit_content.save()
@@ -128,6 +132,7 @@ class UpdateNoteContentsPageForSelectedView(APIView):
         # HTTP 200 OK 응답 반환
         return Response(data=response_data, status=status.HTTP_200_OK)
 
+
 class StudyNoteContentReOrderAPIView(APIView):
     def put(self, request, pk):
         try:
@@ -144,18 +149,18 @@ class StudyNoteContentReOrderAPIView(APIView):
                 pk_for_update = item['content_pk']
                 order_for_update = item['order']
 
-                print("pk_for_update, order_for_update : ", pk_for_update, order_for_update)
+                print("pk_for_update, order_for_update : ",
+                      pk_for_update, order_for_update)
 
-                study_note_content =  study_note_contents.get(
+                study_note_content = study_note_contents.get(
                     pk=pk_for_update)
                 study_note_content.order = order_for_update
                 study_note_content.save()
 
-
             study_note_contents = StudyNoteContent.objects.filter(
                 study_note__pk=pk, page=1)
 
-            print("study_note_contents : ", study_note_contents)                
+            print("study_note_contents : ", study_note_contents)
 
             # serializer = StudyNoteContentSerializer(study_note_content, many=True)
             # return Response(serializer.data, status=status.HTTP_200_OK)
@@ -285,14 +290,18 @@ class StudyNoteContentView(APIView):
 
     def put(self, request, content_pk, format=None):
         study_note_content = StudyNoteContent.objects.get(pk=content_pk)
-        
-        study_note_content.title = request.data.get('title', study_note_content.title)
-        study_note_content.file_name = request.data.get('file_name', study_note_content.file_name)
-        study_note_content.content = request.data.get('content', study_note_content.content)
-        
+
+        study_note_content.title = request.data.get(
+            'title', study_note_content.title)
+        study_note_content.file_name = request.data.get(
+            'file_name', study_note_content.file_name)
+        study_note_content.content = request.data.get(
+            'content', study_note_content.content)
+
         study_note_content.save()
-        
+
         return Response(status=status.HTTP_200_OK)
+
 
 class StudyNoteContentsView(APIView):
     def post(self, request, study_note_pk):
@@ -369,10 +378,38 @@ class DeleteNoteContentsForSelectedPage(APIView):
 
 
 class StudyNoteAPIView(APIView):
+
+    total_page_count = 0  # 노트의 총 개수
+    note_count_per_page = 3  # 1 페이지에 몇개씩
+
     def get(self, request):
-        study_notes = StudyNote.objects.all()
+
+        # step1 page 번호 가져 오기
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # step2 page 에 해당하는 데이터 가져 오기
+        start = (page - 1) * self.note_count_per_page
+        end = start + self.note_count_per_page
+
+        # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
+
+        all_study_note_list = StudyNote.objects.all()
+        self.total_page_count = len(all_study_note_list)
+        study_notes = all_study_note_list[start:end]
+
         serializer = StudyNoteSerializer(study_notes, many=True)
-        return Response(serializer.data)
+
+        response_data = {
+            "noteList": serializer.data,
+            "totalPageCount": self.total_page_count,
+            "note_count_per_page": self.note_count_per_page
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
 
     def post(self, request):
         serializer = StudyNoteSerializer(data=request.data)
