@@ -22,58 +22,79 @@ from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
 # 1122 add your view
-
 # class CopyCopySelectedNotesToMyNoteView(APIView):
-#     def self(self, request):
-#         # todo1
-#         # selectedRowPksFromOriginalTable 를 받아서 변수(selectedRowPksFromOriginalTable)에 저장
-#         #todo2
-#         # 적당한 html 코드 응답
-#         pass
+#     def post(self, request):
+#         selectedRowPksFromOriginalTable = request.data.get('selectedRowPksFromOriginalTable') 
+#         print("selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable) # [17,18] <=> StudyNote의 pk
+
+#         # todo:
+#         # selectedRowPksFromOriginalTable 에 해당하는 skilnote 모델 데이터와 동일한 데이터를 추가 하되
+#         # 관련한 StudyNoteContent 도 데이터를 새로 생성
+#         # 단 각각의 writer = request.user
+        
+#         response_data = {
+#             'message': 'Selected notes copied to my note successfully.'
+#         }
+
+#         return Response(response_data, status=HTTP_200_OK)
+
+from django.db import transaction
 
 class CopyCopySelectedNotesToMyNoteView(APIView):
     def post(self, request):
         selectedRowPksFromOriginalTable = request.data.get('selectedRowPksFromOriginalTable')
-        print("selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable)
+        print("selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable)  # [17,18] <=> StudyNote의 pk
 
-        # todo2: 적당한 HTML 코드 응답
-        response_data = {
-            'message': 'Selected notes copied to my note successfully.'
-        }
-        return Response(response_data, status=HTTP_200_OK)
+        with transaction.atomic():
+            try:
+                user = request.user
 
+                # selectedRowPksFromOriginalTable에 해당하는 StudyNote 모델 데이터 복사 및 StudyNoteContent 생성
+                for original_pk in selectedRowPksFromOriginalTable:
+                    original_study_note = StudyNote.objects.get(pk=original_pk)
 
-# class StudyNoteAPIViewForCheckedRows(APIView):
-#     total_page_count = 0  # 노트의 총 개수
+                    # StudyNote 복사
+                    new_study_note = StudyNote.objects.create(
+                        title=original_study_note.title,
+                        description=original_study_note.description,
+                        writer=user
+                    )
 
-#     def get(self, request):
-#         # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
-#         # todo 2
-#         # 1. selectedRowPks 가져 오기 
-#         # 2. selectedRowPks 에 해당하는 리스트 가져오도록 all_study_note_list 필터에 반영 하기
-#         all_study_note_list = StudyNote.objects.filter(writer__username=request.user.username)
-#         self.total_page_count = len(all_study_note_list)
-#         study_notes = all_study_note_list
+                    # StudyNoteContent 생성
+                    original_note_contents = original_study_note.note_contents.all()
+                    for original_note_content in original_note_contents:
+                        StudyNoteContent.objects.create(
+                            study_note=new_study_note,
+                            title=original_note_content.title,
+                            file_name=original_note_content.file_name,
+                            content=original_note_content.content,
+                            writer=user,
+                            order=original_note_content.order,
+                            created_at=original_note_content.created_at,
+                            page=original_note_content.page
+                        )
 
-#         serializer = StudyNoteSerializer(study_notes, many=True)
+                response_data = {
+                    'message': 'Selected notes copied to my note successfully.'
+                }
 
-#         response_data = {
-#             "noteList": serializer.data,
-#             "totalPageCount": self.total_page_count,
-#         }
+                return Response(response_data, status=HTTP_200_OK)
 
-#         return Response(response_data, status=HTTP_200_OK)
+            except StudyNote.DoesNotExist:
+                response_data = {
+                    'message': 'One or more selected notes do not exist.'
+                }
+
+                return Response(response_data, status=HTTP_400_BAD_REQUEST)
+
    
 class StudyNoteAPIViewForCheckedRows(APIView):
     total_page_count = 0  # 노트의 총 개수
 
     def get(self, request):
-        # todo 2: selectedRowPks 가져오기
         selected_row_pks = request.GET.get("selectedRowPksFromOriginalTable", "").split(",")
+        print("selected_row_pks :::::::::::::::::::", selected_row_pks) 
 
-        print("selected_row_pks :::::::::::::::::::", selected_row_pks)
-
-        # selectedRowPks에 해당하는 리스트 가져오도록 all_study_note_list 필터에 반영하기
         all_study_note_list = StudyNote.objects.filter(
             pk__in=selected_row_pks,
         )
