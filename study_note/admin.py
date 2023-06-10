@@ -3,7 +3,7 @@ from .models import StudyNote, StudyNoteContent
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description', 'writer')
+    list_display = ('id','title', 'description', 'writer')
 
 @admin.register(StudyNoteContent)
 class StudyNoteContentAdmin(admin.ModelAdmin):

@@ -483,7 +483,7 @@ class StudyNoteAPIView(APIView):
         # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
 
         if selected_note_writer == "":
-            all_study_note_list = StudyNote.objects.all().order_by("-id")
+            all_study_note_list = StudyNote.objects.all()
         else:
             all_study_note_list = StudyNote.objects.filter(
                 writer__username=selected_note_writer)
