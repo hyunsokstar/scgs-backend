@@ -3,6 +3,7 @@ from django.conf import settings
 # from project_progress.models import ProjectProgress, TestForTask, TestForExtraTask
 from project_progress.models import (
     ProjectProgress,
+    ExtraTask,
     TestForTask,
     TestForExtraTask
 )
@@ -11,6 +12,7 @@ from medias.serializers import (
     ReferImageForTaskSerializer,
     TestResultImageSerializer,
     TestResultImageForExtraTaskSerializer,
+    ReferImageForExtraTaskSerializer
 )
 
 from rest_framework.views import APIView
@@ -65,6 +67,7 @@ class createTestImageResult(APIView):
         else:
             raise ParseError(serializer.errors)
 
+
 class DeleteViewForRefImageForExtraTask(APIView):
 
     def get_object(self, pk):
@@ -80,6 +83,7 @@ class DeleteViewForRefImageForExtraTask(APIView):
         #     raise PermissionDenied
         ref_image.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class DeleteViewForRefImageForTask(APIView):
 
@@ -98,11 +102,39 @@ class DeleteViewForRefImageForTask(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
+class CreateViewForRefImageToExtraTaskDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return ExtraTask.objects.get(pk=pk)
+        except ExtraTask.DoesNotExist:
+            raise NotFound
+
+    def post(self, request):
+        taskPk = request.data["taskPk"]
+        # print("request.data[taskPk] : ", request.data["taskPk"])
+
+        extra_task = self.get_object(taskPk)
+
+        serializer = ReferImageForExtraTaskSerializer(
+            data=request.data)
+
+        if serializer.is_valid():
+            # photo = serializer.save(user=user)
+            photo = serializer.save(task=extra_task)
+            print("photo : ", photo)
+            serializer = ReferImageForTaskSerializer(photo)
+            print("serializer : ", serializer.data)
+            return Response(serializer.data)
+        else:
+            raise ParseError(serializer.errors)
+            # return Response(serializer.errors)
+
+
 class CreateViewForRefImageToTaskDetail(APIView):
     def get_object(self, pk):
         try:
             return ProjectProgress.objects.get(pk=pk)
-        except Photo.DoesNotExist:
+        except ProjectProgress.DoesNotExist:
             raise NotFound
 
     def post(self, request):
