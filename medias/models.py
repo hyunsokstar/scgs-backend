@@ -35,6 +35,16 @@ class ReferImageForTask(CommonModel):
         related_name="task_images"
     )
 
+class ReferImageForExtraTask(CommonModel):
+    image_url = models.URLField()
+    task = models.ForeignKey(
+        "project_progress.ExtraTask",
+        on_delete=models.CASCADE,
+        max_length=200,
+        null=True,
+        blank=True,
+        related_name="task_images"
+    )
 
 class PhotoForProfile(CommonModel):
     file = models.URLField()
