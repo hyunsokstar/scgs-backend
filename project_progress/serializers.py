@@ -329,7 +329,7 @@ class TaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
-
+# 1122 0611
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
@@ -339,6 +339,8 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     task_comments = TaskCommentSerializer(many=True)
     task_manager = UserProfileImageSerializer()
     task_urls = TaskUrlForTaskSerializer(many=True)
+    time_left_to_due_date = serializers.SerializerMethodField()
+
 
     class Meta:
         model = ProjectProgress
@@ -356,6 +358,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "started_at",
             "started_at_formatted",
             "due_date",
+            "time_left_to_due_date",
             "elapsed_time_from_started_at",
             "task_images",
             "task_comments",
@@ -368,8 +371,13 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     def get_started_at_formatted(self, obj):
         return obj.started_at_formatted()
 
+    def get_time_left_to_due_date(self, obj):
+        return obj.time_left_to_due_date()
+    
     def get_elapsed_time_from_started_at(self, obj):
         return obj.elapsed_time_from_started_at()
+    
+  
 
 
 class ChallegersForCachPrizeSerializer(serializers.ModelSerializer):
@@ -405,6 +413,7 @@ class UncompletedTaskSerializerForCashPrize(serializers.ModelSerializer):
             "check_for_cash_prize"
         )
 
+# 0612 fix
 class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -417,6 +426,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
     task_comments = ExtraTaskCommentSerializer(many=True)
     tests_for_tasks = TestSerializerForOneTask(many=True)
     extra_tasks = ExtraTasksSerializer(many=True)
+    task_images = ReferImageForTaskSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -449,6 +459,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
             "is_task_for_cash_prize",
             "is_task_for_urgent",
             "cash_prize",
+            "task_images"
         )    
 
     def get_started_at_formatted(self, obj):
