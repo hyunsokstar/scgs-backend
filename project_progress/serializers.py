@@ -1,4 +1,10 @@
-from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer,TestResultImageForExtraTaskSerializer
+# from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer,TestResultImageForExtraTaskSerializer, ReferImageForExtraTaskSerializer
+from medias.serializers import (
+    ReferImageForTaskSerializer,
+    TestResultImageForTaskSerializer,
+    TestResultImageForExtraTaskSerializer,
+    ReferImageForExtraTaskSerializer
+)
 
 from users.serializers import (
     TinyUserSerializer,
@@ -98,13 +104,14 @@ class TestForExtraTaskSerializer(ModelSerializer):
             "testers_for_test_for_extra_task"
         )
 
-# fix 0602 Let's add a test list for the extra task to the extra task detail page.
+# fix 0612
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
     task_urls = TaskUrlForTaskSerializer(many=True)
     task_comments = ExtraTaskCommentSerializer(many=True)
     tests_for_extra_task = TestForExtraTaskSerializer(many=True)
+    task_images = ReferImageForExtraTaskSerializer(many=True)
 
     class Meta:
         model = ExtraTask
@@ -113,6 +120,7 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "task_manager",
             "task",
             "task_comments",
+            "task_images",
             "tests_for_extra_task",
             "task_urls",
             "task_url1",

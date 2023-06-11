@@ -1,5 +1,12 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Photo, PhotoForProfile, ReferImageForTask, TestResultImageForTask, TestResultImageForExtraTask
+from .models import (
+    Photo,
+    PhotoForProfile,
+    ReferImageForTask,
+    TestResultImageForTask,
+    TestResultImageForExtraTask,
+    ReferImageForExtraTask
+)
 
 class TestResultImageForTaskSerializer(ModelSerializer):
     class Meta:
@@ -44,6 +51,15 @@ class ReferImageForTaskSerializer(ModelSerializer):
             "image_url",
             # "task",
         )
+
+class ReferImageForExtraTaskSerializer(ModelSerializer):
+    class Meta:
+        model = ReferImageForExtraTask
+        fields = (
+            "pk",
+            "image_url",
+            # "task",
+        )        
 
 class TestResultImageSerializer(ModelSerializer):
     class Meta:

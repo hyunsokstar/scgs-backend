@@ -7,6 +7,7 @@ from .views import (
     GetUploadURL,
     createTestImageResult,
     TestResultImageForExtraTask,
+    DeleteViewForRefImageForExtraTask
 )
 
 urlpatterns = [
@@ -14,6 +15,8 @@ urlpatterns = [
     path("photos/<int:pk>", PhotoDetail.as_view()),
     path("ref-image-for-task/<int:pk>/delete",
          DeleteViewForRefImageForTask.as_view()),
+    path("ref-image-for-extra-task/<int:pk>/delete",
+         DeleteViewForRefImageForExtraTask.as_view()),
     path("ref-image-for-task/upload",
          CreateViewForRefImageToTaskDetail.as_view()),
     path("TestResultImageForExtraTask",

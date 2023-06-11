@@ -6,6 +6,7 @@ from .models import (
     TestResultImageForTask,
     Video,
     TestResultImageForExtraTask,
+    ReferImageForExtraTask
 )
 
 # Register your models here.
@@ -18,6 +19,7 @@ class PhotoAdmin(admin.ModelAdmin):
         "file",
         "user",
     )
+
 
 @admin.register(Photo)
 class PhotoAdmin(admin.ModelAdmin):
@@ -40,9 +42,15 @@ class ReferImageForTaskAdmin(admin.ModelAdmin):
     list_display = ("image_url", "task")
 
 
+@admin.register(ReferImageForExtraTask)
+class ReferImageForExtraTaskAdmin(admin.ModelAdmin):
+    list_display = ("image_url", "task")
+
+
 @admin.register(TestResultImageForTask)
 class TestResultImageForTaskAdmin(admin.ModelAdmin):
     list_display = ("image_url", "test")
+
 
 @admin.register(TestResultImageForExtraTask)
 class TestResultImageForExtraTaskAdmin(admin.ModelAdmin):

@@ -19,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
-from .models import Photo, ReferImageForTask
+from .models import Photo, ReferImageForExtraTask, ReferImageForTask
 
 
 class TestResultImageForExtraTask(APIView):
@@ -65,6 +65,21 @@ class createTestImageResult(APIView):
         else:
             raise ParseError(serializer.errors)
 
+class DeleteViewForRefImageForExtraTask(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ReferImageForExtraTask.objects.get(pk=pk)
+        except ReferImageForExtraTask.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, pk):
+        ref_image = self.get_object(pk)
+
+        # if room.owner != request.user:
+        #     raise PermissionDenied
+        ref_image.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 class DeleteViewForRefImageForTask(APIView):
 
