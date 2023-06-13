@@ -635,6 +635,7 @@ class StudyNoteDetailView(APIView):
         print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
         response_data = {
+            "note_title": study_note.title,
             "note_user_name": study_note.writer.username,
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
