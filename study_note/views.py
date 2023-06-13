@@ -284,10 +284,14 @@ class SearchContentListView(APIView):
 
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
+        username = request.data.get('username')  # 'username' 값 받기        
         pageNumbersToEdit = request.data  # [1, 2, 3, 5]
         print("pageNumbersToEdit : ", pageNumbersToEdit)
 
+        writer = User.objects.get(username=username)  # username에 해당하는 User 객체 가져오기
+
         deleted_count = StudyNoteContent.objects.filter(
+            writer=writer,
             pk__in=pageNumbersToEdit).delete()[0]
 
         return Response({
@@ -631,6 +635,7 @@ class StudyNoteDetailView(APIView):
         print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
         response_data = {
+            "note_user_name": study_note.writer.username,
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
         }
