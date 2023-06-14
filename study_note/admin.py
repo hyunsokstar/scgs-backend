@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     StudyNote,
     StudyNoteContent,
-    CoWriterForStudyNote,
+    CoWriterForStudyNote
 )
 
 

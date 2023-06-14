@@ -23,18 +23,42 @@ from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
 # 1122 add your view
+# class ApiViewForCoWriter(APIView):
+#     def delete(self, request, co_writer_pk):
+#         # todo : CoWriterForStudyNote의 pk = co_writer_pk 인데 해당 데이터 삭제
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+
+class ApiViewForCoWriter(APIView):
+    def delete(self, request, co_writer_pk):
+        try:
+            co_writer = CoWriterForStudyNote.objects.get(pk=co_writer_pk)
+        except CoWriterForStudyNote.DoesNotExist:
+            return Response(
+                {"message": "CoWriterForStudyNote does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        co_writer.delete()
+
+        return Response(
+            {"message": "CoWriterForStudyNote has been deleted successfully."},
+            status=status.HTTP_200_OK
+        )
+
 
 # class CreateViewForCoWriterForOhterUserNote(APIView):
 #     def post(self, request, notePk):
 #         # todo
 #         # CoWriterForStudyNote 생성 뷰로 만들어줘
 #         # notePk 가 StudyNote 의 id, writer = request.user 로 해서
-#         # 적절한 http code 와 함께 message 도 프론트로 전달 
+#         # 적절한 http code 와 함께 message 도 프론트로 전달
 #         # message = request.user 님의 StudyNote에 대한 CoWriter 요청이 성공 하였습니다
 #         pass
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+
 
 class CreateViewForCoWriterForOhterUserNote(APIView):
     def post(self, request, notePk):
@@ -66,6 +90,7 @@ class CreateViewForCoWriterForOhterUserNote(APIView):
             {"message": message},
             status=status.HTTP_201_CREATED
         )
+
 
 class UpdateViewForIsApprovedForCoWorker(APIView):
     def get_cowriter_obj(self, pk):
