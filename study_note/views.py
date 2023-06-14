@@ -1,3 +1,4 @@
+from django.db import transaction
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,6 +23,50 @@ from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
 # 1122 add your view
+
+# class CreateViewForCoWriterForOhterUserNote(APIView):
+#     def post(self, request, notePk):
+#         # todo
+#         # CoWriterForStudyNote 생성 뷰로 만들어줘
+#         # notePk 가 StudyNote 의 id, writer = request.user 로 해서
+#         # 적절한 http code 와 함께 message 도 프론트로 전달 
+#         # message = request.user 님의 StudyNote에 대한 CoWriter 요청이 성공 하였습니다
+#         pass
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class CreateViewForCoWriterForOhterUserNote(APIView):
+    def post(self, request, notePk):
+        try:
+            study_note = StudyNote.objects.get(pk=notePk)
+        except StudyNote.DoesNotExist:
+            return Response(
+                {"message": "StudyNote does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if study_note.writer == request.user:
+            return Response(
+                {"message": "You cannot request to be a co-writer for your own StudyNote."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        co_writer, created = CoWriterForStudyNote.objects.get_or_create(
+            writer=request.user,
+            study_note=study_note
+        )
+
+        if created:
+            message = f"{request.user.username}님의 StudyNote에 대한 CoWriter 요청이 성공하였습니다."
+        else:
+            message = f"{request.user.username}님은 이미 이 StudyNote의 CoWriter입니다."
+
+        return Response(
+            {"message": message},
+            status=status.HTTP_201_CREATED
+        )
+
 class UpdateViewForIsApprovedForCoWorker(APIView):
     def get_cowriter_obj(self, pk):
         try:
@@ -29,14 +74,15 @@ class UpdateViewForIsApprovedForCoWorker(APIView):
         except CoWriterForStudyNote.DoesNotExist:
             print("note found !!!!!!!!!!!!!!!!!!!!!!!!")
             raise NotFound
-        
+
     def post(self, request):
         print("UpdateViewForIsApprovedForCoWorker ?????")
-        pass        
+        pass
 
     def put(self, request):
         print("update-is-approved-for-cowriter for check !!!!!!!!!!!!!!!!!")
-        cowriter_pk = request.data.get("cowriterPk")  # Use the same key "cowriterPk" as sent from the frontend
+        # Use the same key "cowriterPk" as sent from the frontend
+        cowriter_pk = request.data.get("cowriterPk")
 
         cowirter = self.get_cowriter_obj(pk=cowriter_pk)
 
@@ -59,13 +105,12 @@ class UpdateViewForIsApprovedForCoWorker(APIView):
         return Response(result_data, status=HTTP_200_OK)
 
 
-
-from django.db import transaction
-
 class CopyCopySelectedNotesToMyNoteView(APIView):
     def post(self, request):
-        selectedRowPksFromOriginalTable = request.data.get('selectedRowPksFromOriginalTable')
-        print("selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable)  # [17,18] <=> StudyNote의 pk
+        selectedRowPksFromOriginalTable = request.data.get(
+            'selectedRowPksFromOriginalTable')
+        print("selectedRowPksFromOriginalTable : ",
+              selectedRowPksFromOriginalTable)  # [17,18] <=> StudyNote의 pk
 
         with transaction.atomic():
             try:
@@ -109,13 +154,14 @@ class CopyCopySelectedNotesToMyNoteView(APIView):
 
                 return Response(response_data, status=HTTP_400_BAD_REQUEST)
 
-   
+
 class StudyNoteAPIViewForCheckedRows(APIView):
     total_page_count = 0  # 노트의 총 개수
 
     def get(self, request):
-        selected_row_pks = request.GET.get("selectedRowPksFromOriginalTable", "").split(",")
-        print("selected_row_pks :::::::::::::::::::", selected_row_pks) 
+        selected_row_pks = request.GET.get(
+            "selectedRowPksFromOriginalTable", "").split(",")
+        print("selected_row_pks :::::::::::::::::::", selected_row_pks)
 
         all_study_note_list = StudyNote.objects.filter(
             pk__in=selected_row_pks,
@@ -130,7 +176,8 @@ class StudyNoteAPIViewForCheckedRows(APIView):
             "totalPageCount": self.total_page_count,
         }
 
-        return Response(response_data, status=HTTP_200_OK)   
+        return Response(response_data, status=HTTP_200_OK)
+
 
 class UpdateNoteContentsPageForSelectedView(APIView):
     def get_object(self, pk):
@@ -306,11 +353,12 @@ class SearchContentListView(APIView):
 
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
-        username = request.data.get('username')  # 'username' 값 받기        
+        username = request.data.get('username')  # 'username' 값 받기
         pageNumbersToEdit = request.data  # [1, 2, 3, 5]
         print("pageNumbersToEdit : ", pageNumbersToEdit)
 
-        writer = User.objects.get(username=username)  # username에 해당하는 User 객체 가져오기
+        # username에 해당하는 User 객체 가져오기
+        writer = User.objects.get(username=username)
 
         deleted_count = StudyNoteContent.objects.filter(
             writer=writer,
@@ -493,7 +541,8 @@ class StudyNoteAPIView(APIView):
     note_count_per_page = 6  # 1 페이지에 몇개씩
 
     def get(self, request):
-        selected_note_writer = request.query_params.get("selectedNoteWriter", "")
+        selected_note_writer = request.query_params.get(
+            "selectedNoteWriter", "")
 
         # step1 page 번호 가져 오기
         try:
@@ -535,7 +584,8 @@ class StudyNoteAPIView(APIView):
             serializer.save(writer=request.user)
             return Response(serializer.data, status=HTTP_201_CREATED)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-    
+
+
 class StudyNoteAPIViewForCopyMode(APIView):
     total_page_count = 0  # 노트의 총 개수
     note_count_per_page = 6  # 1 페이지에 몇개씩
@@ -557,7 +607,8 @@ class StudyNoteAPIViewForCopyMode(APIView):
         # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
 
         if selected_note_writer == "":
-            all_study_note_list = StudyNote.objects.filter(~Q(writer__username=request.user.username))
+            all_study_note_list = StudyNote.objects.filter(
+                ~Q(writer__username=request.user.username))
         else:
             all_study_note_list = StudyNote.objects.filter(
                 writer__username=selected_note_writer)
@@ -583,7 +634,8 @@ class StudyNoteAPIViewForCopyMode(APIView):
             serializer.save(writer=request.user)
             return Response(serializer.data, status=HTTP_201_CREATED)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-    
+
+
 class StudyNoteAPIViewForMe(APIView):
     total_page_count = 0  # 노트의 총 개수
     note_count_per_page = 6  # 1 페이지에 몇개씩
@@ -602,7 +654,8 @@ class StudyNoteAPIViewForMe(APIView):
         end = start + self.note_count_per_page
 
         # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
-        all_study_note_list = StudyNote.objects.filter(Q(writer__username=request.user.username))
+        all_study_note_list = StudyNote.objects.filter(
+            Q(writer__username=request.user.username))
 
         # print("all_study_note_list For Me :::::::::::::::::", all_study_note_list)
 
