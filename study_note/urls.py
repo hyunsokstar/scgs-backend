@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
+    path('update-is-approved-for-cowriter', views.UpdateViewForIsApprovedForCoWorker.as_view()),
     path('get-study-note-list-for-copy-mode', views.StudyNoteAPIViewForCopyMode.as_view(), name='StudyNoteAPIView'),
     path('get-study-note-for-checked-rows/', views.StudyNoteAPIViewForCheckedRows.as_view(), name='StudyNoteAPIView'),
 

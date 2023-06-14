@@ -1,7 +1,7 @@
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import StudyNote, StudyNoteContent
+from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
 from .serializers import StudyNoteContentSerializer, StudyNoteSerializer
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
@@ -22,21 +22,43 @@ from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 
 # 1122 add your view
-# class CopyCopySelectedNotesToMyNoteView(APIView):
-#     def post(self, request):
-#         selectedRowPksFromOriginalTable = request.data.get('selectedRowPksFromOriginalTable') 
-#         print("selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable) # [17,18] <=> StudyNote의 pk
-
-#         # todo:
-#         # selectedRowPksFromOriginalTable 에 해당하는 skilnote 모델 데이터와 동일한 데이터를 추가 하되
-#         # 관련한 StudyNoteContent 도 데이터를 새로 생성
-#         # 단 각각의 writer = request.user
+class UpdateViewForIsApprovedForCoWorker(APIView):
+    def get_cowriter_obj(self, pk):
+        try:
+            return CoWriterForStudyNote.objects.get(pk=pk)
+        except CoWriterForStudyNote.DoesNotExist:
+            print("note found !!!!!!!!!!!!!!!!!!!!!!!!")
+            raise NotFound
         
-#         response_data = {
-#             'message': 'Selected notes copied to my note successfully.'
-#         }
+    def post(self, request):
+        print("UpdateViewForIsApprovedForCoWorker ?????")
+        pass        
 
-#         return Response(response_data, status=HTTP_200_OK)
+    def put(self, request):
+        print("update-is-approved-for-cowriter for check !!!!!!!!!!!!!!!!!")
+        cowriter_pk = request.data.get("cowriterPk")  # Use the same key "cowriterPk" as sent from the frontend
+
+        cowirter = self.get_cowriter_obj(pk=cowriter_pk)
+
+        # 업데이트할 값 설정 후 save()
+        if cowirter.is_approved:
+            message = "승인에서 비승인으로 update"
+            cowirter.is_approved = False
+
+        else:
+            message = "비승인에서 승인으로 update"
+            cowirter.is_approved = True
+
+        cowirter.save()
+
+        result_data = {
+            "success": True,
+            "message":  message
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 
 from django.db import transaction
 
