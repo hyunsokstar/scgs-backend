@@ -471,7 +471,7 @@ class StudyNoteAPIView(APIView):
     note_count_per_page = 6  # 1 페이지에 몇개씩
 
     def get(self, request):
-        selected_note_writer = request.query_params.get("selectedNoteWriter")
+        selected_note_writer = request.query_params.get("selectedNoteWriter", "")
 
         # step1 page 번호 가져 오기
         try:

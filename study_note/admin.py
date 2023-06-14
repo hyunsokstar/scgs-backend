@@ -1,9 +1,15 @@
 from django.contrib import admin
-from .models import StudyNote, StudyNoteContent
+from .models import (
+    StudyNote,
+    StudyNoteContent,
+    CoWriterForStudyNote,
+)
+
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):
-    list_display = ('id','title', 'description', 'writer')
+    list_display = ('id', 'title', 'description', 'writer')
+
 
 @admin.register(StudyNoteContent)
 class StudyNoteContentAdmin(admin.ModelAdmin):
@@ -15,7 +21,7 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('study_note','title', 'file_name', 'content','page')
+            'fields': ('study_note', 'title', 'file_name', 'content', 'page')
         }),
         ('Writer', {
             'fields': ('writer',)
@@ -23,4 +29,12 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
         ('Time', {
             'fields': ('created_at',),
         }),
-    )    
+    )
+
+
+@admin.register(CoWriterForStudyNote)
+class CoWriterForStudyNoteAdmin(admin.ModelAdmin):
+    list_display = ('writer', 'study_note', 'is_approved', 'created_at')
+    list_filter = ('is_approved', 'created_at')
+    search_fields = ('writer__username', 'study_note__title')
+    readonly_fields = ('created_at',)
