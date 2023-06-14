@@ -715,8 +715,9 @@ class StudyNoteDetailView(APIView):
         except StudyNote.DoesNotExist:
             raise NotFound
 
-    def get(self, request, pk):
-        study_note = self.get_object(pk)
+    def get(self, request, notePk):
+        # study note 정보 가져 오기
+        study_note = self.get_object(notePk)
         current_page = request.GET.get('currentPage', 1)
         print("current_page : ", current_page)
         note_contents = study_note.note_contents.filter(
@@ -734,11 +735,25 @@ class StudyNoteDetailView(APIView):
         exist_page_numbers = [page['page'] for page in page_numbers]
         print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
+        # todo
+        # study_note.note_cowriters를 가져와 cowriters에 담은 뒤 response_data에 추가
+        cowriters = study_note.note_cowriters.all()
+        cowriters_data = []
+        for cowriter in cowriters:
+            if cowriter.is_approved:
+                cowriters_data.append(cowriter.writer.username)
+                # cowriter_data = {
+                #     "username": cowriter.writer.username,
+                #     "is_approved": cowriter.is_approved
+                # }
+                # cowriters_data.append(cowriter_data)
+
         response_data = {
             "note_title": study_note.title,
             "note_user_name": study_note.writer.username,
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
+            "co_writers_for_approved": cowriters_data
         }
 
         return Response(response_data, status=HTTP_200_OK)
