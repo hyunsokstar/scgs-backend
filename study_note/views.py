@@ -494,6 +494,9 @@ class StudyNoteContentsView(APIView):
         title = request.data["title"]
         file = request.data["file"]
         content = request.data["content"]
+        content_option = request.data["content_option"]
+
+        print("content_option : ", content_option)
 
         # 이전 order 값 중 최대값 구하기
         max_order = StudyNoteContent.objects.filter(
