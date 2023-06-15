@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+# study note content 리스트 뷰, post view <=> ${study_note_pk}/contents
 # ${notePk}/register-for-co-writer
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
@@ -22,11 +23,18 @@ urlpatterns = [
          views.order_minus_one_for_note_content.as_view()),  # order + 1
     # 특정 노트의 contents 에 대한 crud
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
+    path('<int:study_note_pk>/content/create-sub-title-for-page',
+         views.CreateViewForSubTitleForNote.as_view()),
+
+
     path('<int:study_note_pk>/contents/delete-page',
          views.DeleteNoteContentsForSelectedPage.as_view()),  # 특정 노트의 페이지에 대해 delete
 
     # pk pk pk
-    path('<int:notePk>', views.StudyNoteDetailView.as_view(), name='api_docu_detail'),
+    path('<int:notePk>/', views.StudyNoteDetailView.as_view(),
+         name='api_docu_detail'),
+
+
     # ${notePk}/register-for-co-writer
     path('<int:notePk>/register-for-co-writer',
          views.CreateViewForCoWriterForOhterUserNote.as_view(), name='api_docu_detail'),

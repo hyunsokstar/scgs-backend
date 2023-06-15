@@ -14,22 +14,78 @@ from rest_framework import status
 from .models import StudyNoteContent
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, F
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
-
-# 1122 add your view
-# class ApiViewForCoWriter(APIView):
-#     def delete(self, request, co_writer_pk):
-#         # todo : CoWriterForStudyNote의 pk = co_writer_pk 인데 해당 데이터 삭제
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Min
+from django.db import models
+
+
+class CreateViewForSubTitleForNote(APIView):
+    def post(self, request, study_note_pk):
+        study_note_pk = int(study_note_pk)
+        current_page_number = int(request.data["current_page_number"])
+        content_option = request.data["content_option"]
+        title = request.data["title"]
+        ref_url1 = request.data["ref_url1"]
+        ref_url2 = request.data["ref_url2"]
+        content = request.data["content"]
+
+        print("content_option : ", content_option)
+
+        # 이미 sub title for page가 존재하는지 확인
+        existing_subtitle = StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk,
+            page=current_page_number,
+            content_option="subtitle_for_page"
+        ).exists()
+
+        if existing_subtitle:
+            return Response(
+                {"message": "If a sub title for the page already exists, The note will not be updated"},
+                status=status.HTTP_201_CREATED
+            )
+
+        # 이전 order 값 중 최소값 구하기
+        min_order = StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk, page=current_page_number
+        ).aggregate(Min('order'))['order__min'] or 0
+
+        # 기존의 min_order가 1인 경우, 기존의 order를 모두 +1 증가
+        if min_order == 1:
+            StudyNoteContent.objects.filter(
+                study_note_id=study_note_pk, page=current_page_number
+            ).update(order=models.F('order') + 1)
+
+        if min_order > 1:
+            order_for_update = min_order - 1
+        else:
+            order_for_update = 1
+
+        # StudyNoteContent 모델 생성
+        note_content = StudyNoteContent.objects.create(
+            study_note_id=study_note_pk,
+            page=current_page_number,
+            content_option=content_option,
+            writer=request.user,  # 작성자는 현재 요청한 유저로 설정
+            # order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
+            order=order_for_update,  # 이전 order 값 중 최대값에 1을 더하여 설정
+            title=title,
+            ref_url1=ref_url1,
+            ref_url2=ref_url2,
+            content=content
+        )
+
+        print("note_content : ", note_content)
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class ApiViewForCoWriter(APIView):
@@ -48,16 +104,6 @@ class ApiViewForCoWriter(APIView):
             {"message": "CoWriterForStudyNote has been deleted successfully."},
             status=status.HTTP_200_OK
         )
-
-
-# class CreateViewForCoWriterForOhterUserNote(APIView):
-#     def post(self, request, notePk):
-#         # todo
-#         # CoWriterForStudyNote 생성 뷰로 만들어줘
-#         # notePk 가 StudyNote 의 id, writer = request.user 로 해서
-#         # 적절한 http code 와 함께 message 도 프론트로 전달
-#         # message = request.user 님의 StudyNote에 대한 CoWriter 요청이 성공 하였습니다
-#         pass
 
 
 class CreateViewForCoWriterForOhterUserNote(APIView):
@@ -507,6 +553,7 @@ class StudyNoteContentsView(APIView):
             study_note_id=study_note_pk,
             title=title,
             file_name=file,
+            content_option=content_option,
             content=content,
             writer=request.user,  # 작성자는 현재 요청한 유저로 설정
             page=current_page_number,

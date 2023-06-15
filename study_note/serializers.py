@@ -15,7 +15,7 @@ from .models import (
 
 
 class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)    
+    writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = CoWriterForStudyNote
@@ -41,6 +41,18 @@ class StudyNoteContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudyNoteContent
-        fields = ['pk', 'title', 'file_name', 'content',
-                  'writer', 'created_at', 'page', 'order']
+        fields = [
+            'pk',
+            'page',
+            'title',
+            'file_name',
+            'content',
+            'content_option',
+            'ref_url1',
+            'ref_url2',
+            'youtube_url',
+            'writer',
+            'created_at',
+            'order'
+        ]
         read_only_fields = ['id', 'created_at']
