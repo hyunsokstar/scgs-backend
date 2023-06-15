@@ -741,12 +741,12 @@ class StudyNoteDetailView(APIView):
         cowriters_data = []
         for cowriter in cowriters:
             if cowriter.is_approved:
-                cowriters_data.append(cowriter.writer.username)
-                # cowriter_data = {
-                #     "username": cowriter.writer.username,
-                #     "is_approved": cowriter.is_approved
-                # }
-                # cowriters_data.append(cowriter_data)
+                # # cowriters_data.append(cowriter.writer.username)
+                cowriter_data = {
+                    "username": cowriter.writer.username,
+                    "profile_image": cowriter.writer.profile_image
+                }
+                cowriters_data.append(cowriter_data)
 
         response_data = {
             "note_title": study_note.title,
