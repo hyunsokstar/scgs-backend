@@ -14,7 +14,7 @@ class StudyNoteAdmin(admin.ModelAdmin):
 @admin.register(StudyNoteContent)
 class StudyNoteContentAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'file_name',
-                    'writer', 'order', 'created_at',)
+                    'writer', 'order', 'content_option', 'created_at',)
     list_filter = ('writer',)
     search_fields = ('title', 'file_name',)
     ordering = ('-created_at',)
@@ -22,7 +22,9 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('study_note', 'title', 'file_name', 'content', 'order', 'page')
+            'fields':
+            ('study_note', 'title', 'file_name',
+             'content', 'order', 'page', "content_option")
         }),
         ('Writer', {
             'fields': ('writer',)

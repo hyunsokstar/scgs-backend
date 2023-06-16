@@ -28,6 +28,38 @@ from django.db.models import Min
 from django.db import models
 
 
+class CreateViewForYoutubeContentForNote(APIView):
+    def post(self, request, study_note_pk):
+        study_note_pk = int(study_note_pk)
+        current_page_number = int(request.data["current_page_number"])
+        content_option = request.data["content_option"]
+        title = request.data["title"]
+        youtube_url = request.data["youtube_url"]
+
+        max_order = StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk, page=current_page_number).aggregate(Max('order'))['order__max'] or 0
+
+        # StudyNoteContent 모델 생성
+        note_content = StudyNoteContent.objects.create(
+            study_note_id=study_note_pk,
+            page=current_page_number,
+            order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
+            writer=request.user,  # 작성자는 현재 요청한 유저로 설정
+            content_option=content_option,
+            title=title,
+            youtube_url=youtube_url,
+        )
+
+        print("note_content : ", note_content)
+
+        return Response(
+            {
+                "message": "youtube content is created successfuly"
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
 class CreateViewForSubTitleForNote(APIView):
     def post(self, request, study_note_pk):
         study_note_pk = int(study_note_pk)
