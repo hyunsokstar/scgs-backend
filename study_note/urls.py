@@ -29,6 +29,10 @@ urlpatterns = [
     path('<int:study_note_pk>/content/create-youtube-content-for-note',
          views.CreateViewForYoutubeContentForNote.as_view()),
 
+    #     ${study_note_pk}/get-subtitle-list
+    path('<int:study_note_pk>/content/get-subtitle-list',
+         views.ApiViewForGetSubtitleListForNote.as_view()),
+
 
     path('<int:study_note_pk>/contents/delete-page',
          views.DeleteNoteContentsForSelectedPage.as_view()),  # 특정 노트의 페이지에 대해 delete

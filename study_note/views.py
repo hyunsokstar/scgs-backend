@@ -28,6 +28,18 @@ from django.db.models import Min
 from django.db import models
 
 
+class ApiViewForGetSubtitleListForNote(APIView):
+    def get(self, request, study_note_pk):
+        # study_note_pk(StudyNote의 id임)를 참조하는 StudyNoteContent 리스트를 가져옴
+        note_contents = StudyNoteContent.objects.filter(
+            study_note_id=study_note_pk, content_option='subtitle_for_page').order_by('page')
+
+        # 시리얼라이저로 응답 데이터 직렬화
+        serializer = StudyNoteContentSerializer(note_contents, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class CreateViewForYoutubeContentForNote(APIView):
     def post(self, request, study_note_pk):
         study_note_pk = int(study_note_pk)
