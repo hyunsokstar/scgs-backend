@@ -199,6 +199,7 @@ class UncompletedTaskDataForSelectedUser(APIView):
 
         return Response(data, status=HTTP_200_OK)
 
+
 class CompletedTaskDataForSelectedUser(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 50  # 1 페이지에 몇개씩
@@ -373,10 +374,11 @@ class UserNameListView (APIView):
             users, context={"request": request}, many=True)
         print("usernames only !! ", serializer.data)
         return Response(serializer.data)
-    
+
+
 class UserNameListViewWithOutMe (APIView):
     def get(self, request):
-        users = User.objects.filter(~Q(username = request.user.username))
+        users = User.objects.filter(~Q(username=request.user.username))
         print("users : ", users)
         serializer = UsersForCreateSerializer(
             users, context={"request": request}, many=True)
@@ -413,35 +415,40 @@ class AddMultiUsersView(APIView):
             row_for_pk_exists = User.objects.filter(pk=row["pk"]).exists()
             print("row_for_pk_exists ::::::::::::::::::::::::::::::::: ",
                   row_for_pk_exists)
+            print("row ::::: ", row)
 
             if (row_for_pk_exists == True):
-                print("실행 check here here here")
+                print("유저 테이블에 해당 정보가 존재 !")
                 user = User.objects.get(pk=row["pk"])
                 print("user :: ", user)
 
-                if (user):
-                    print("업데이트 하겠습니다")
-                    if (row["username"] != user.username):
-                        is_user_name_exits = User.objects.filter(
-                            username=row["username"]).exists()
-                        user_position = UserPosition.objects.get(
-                            pk=row["position"])
-
-                        if (user_position == ""):
-                            raise ParseError("유저 postion 을 선택 안하셨습니다")
-
-                        if is_user_name_exits:
-                            print("is_user_name_exits : ", User.objects.get(
-                                username=row["username"]))
-                            raise ParseError("유저 이름이 이미 존재")
-
-                        user.name = row["name"]
+                if (user.username != row["username"]):
+                    is_user_name_exits = User.objects.filter(
+                        username=row["username"]).exists()
+                    if is_user_name_exits:
+                        print("is_user_name_exits : ", User.objects.get(
+                            username=row["username"]))
+                        raise ParseError("유저 이름이 이미 존재")
+                    else:
                         user.username = row["username"]
-                        user.email = row["email"]
-                        user.admin_level = row["admin_level"]
-                        user.position = user_position
-                        print("save 합니다 !!!!!!!!!!!!!!!!!!!")
-                        user.save()
+
+                if row["position"] == "frontend" or row["position"] == "backend":
+                    print("row position ", row["position"])
+                    user_position = UserPosition.objects.get(
+                        position_name=row["position"])                
+                    user.position = user_position
+                else:
+                    print("user position update by ", row["position"])
+                    user_position = UserPosition.objects.get(
+                        pk=row["position"])                
+                    user.position = user_position
+                    
+                print("업데이트 하겠습니다 admin_level : ", row["admin_level"])
+                user.name = row["name"]
+                user.email = row["email"]
+                user.admin_level = row["admin_level"]
+                print("save 합니다 !!!!!!!!!!!!!!!!!!!")
+                user.save()
 
             else:
                 print("행 추가 ::", row)
