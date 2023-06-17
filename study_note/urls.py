@@ -5,6 +5,11 @@ from . import views
 # ${notePk}/register-for-co-writer
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
+    path('comment/<int:commentPk>/delete', views.DeleteViewForStudyNoteComment.as_view()),
+    path('comment/<int:commentPk>/update-comment', views.UpdateViewForStudyNoteComment.as_view()),
+
+    path('<int:studyNotePk>/create-comment', views.CreateViewForCommentForNote.as_view()),
+    path('comment/<int:commentPk>/update-edit-mode', views.UpdateViewForEditModeForStudyNoteBriefingBoard.as_view(), name='StudyNoteAPIView'),
     path('update-is-approved-for-cowriter',
          views.UpdateViewForIsApprovedForCoWorker.as_view()),
     path('get-study-note-list-for-copy-mode',

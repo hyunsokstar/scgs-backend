@@ -7,7 +7,8 @@ from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
 from .serializers import (
     StudyNoteContentSerializer,
     StudyNoteSerializer,
-    StudyNoteBriefingBoardSerializer
+    StudyNoteBriefingBoardSerializer,
+    CreateCommentSerializerForNote
 )
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
@@ -24,18 +25,113 @@ from django.db.models import Q, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import StudyNoteContent
 from .serializers import StudyNoteContentSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Min
 from django.db import models
+from .models import (
+    StudyNoteContent,
+    StudyNoteBriefingBoard
+)
 
-# class ListViewForStudyNoteBriefingBoard(APIView):
-#     def get(self, request, study_note_pk):
-#         # todo study_note_pk(StudyNote의 id) 에 해당하는 StudyNoteBriefingBoard 데이터 가져 와서 적절한 http 코드와 함께 응답
-#         # 시리얼라이저 사용(위에서 만든 StudyNoteBriefingBoardSerializer)
+# 1122
+# UpdateViewForStudyNoteComment
+class UpdateViewForStudyNoteComment(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNoteBriefingBoard.objects.get(pk=pk)
+        except StudyNoteBriefingBoard.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        print("request.data.get(comment) : ", request.data.get("comment"))
+        comment_obj = self.get_object(commentPk)
+        comment_obj.comment = request.data.get("comment")
+        comment_obj.is_edit_mode = False
+        comment_obj.save()
+
+        result_data = {
+            "success": True,
+            "message": "comment text update success",
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+class CreateViewForCommentForNote(APIView):
+    def get_object(self, taskPk):
+        try:
+            return StudyNote.objects.get(pk=taskPk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, studyNotePk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        serializer = CreateCommentSerializerForNote(data=request.data)
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                # original_task = self.get_object(taskPk)
+                test_for_task = serializer.save(writer=request.user)
+                serializer = CreateCommentSerializerForNote(test_for_task)
+
+                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+            except Exception as e:
+                print("e : ", e)
+                raise ParseError(
+                    "error is occured for serailizer for create extra task")
+        else: 
+            print("serializer is not valid !!!!!!!!!!!!")
+            print("Errors:", serializer.errors)
+
+class DeleteViewForStudyNoteComment(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNoteBriefingBoard.objects.get(pk=pk)
+        except StudyNoteBriefingBoard.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, commentPk):
+        comment_obj = self.get_object(commentPk)
+        comment_obj.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
+class UpdateViewForEditModeForStudyNoteBriefingBoard(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNoteBriefingBoard.objects.get(pk=pk)
+        except StudyNoteBriefingBoard.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, commentPk):
+        print("put 요청 확인")
+        message = ""
+        comment = self.get_object(commentPk)
+
+        if comment.is_edit_mode:
+            comment.is_edit_mode = False
+            message = "edit mode to read mode"
+
+        else:
+            comment.is_edit_mode = True
+            message = "from read mode to edit mode"
+
+        comment.save()
+
+        result_data = {
+            "success": True,
+            "message": message,
+        }
+
+        return Response(result_data, status=HTTP_200_OK)
+
+
 class ListViewForStudyNoteBriefingBoard(APIView):
     def get(self, request, study_note_pk):
         try:
@@ -44,9 +140,11 @@ class ListViewForStudyNoteBriefingBoard(APIView):
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
         briefing_boards = study_note.note_comments.all()
-        serializer = StudyNoteBriefingBoardSerializer(briefing_boards, many=True)
+        serializer = StudyNoteBriefingBoardSerializer(
+            briefing_boards, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ApiViewForGetSubtitleListForNote(APIView):
     def get(self, request, study_note_pk):

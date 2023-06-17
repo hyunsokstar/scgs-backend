@@ -7,8 +7,18 @@ from .models import (
     StudyNoteBriefingBoard
 )
 
+class CreateCommentSerializerForNote(serializers.ModelSerializer):
+
+    class Meta:
+        model = StudyNoteBriefingBoard
+        fields = (
+            "note",
+            "comment",
+        )
+
 class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
     # created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = StudyNoteBriefingBoard
