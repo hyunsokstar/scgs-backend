@@ -88,3 +88,34 @@ class StudyNoteContent(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class StudyNoteBriefingBoard(models.Model):
+    note = models.ForeignKey(
+        "study_note.StudyNote",
+        on_delete=models.CASCADE,
+        related_name="note_comments",
+        blank=True,
+        null=True,
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="study_note_comments",
+    )
+
+    comment = models.CharField(max_length=100)
+    like_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    is_edit_mode = models.BooleanField(default=False)
+
+    def created_at_formatted(self):
+        if (self.created_at != None):
+            local_created_at = timezone.localtime(self.created_at)
+            return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+        else:
+            return "준비"

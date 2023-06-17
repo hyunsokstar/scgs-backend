@@ -3,7 +3,12 @@ from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
-from .serializers import StudyNoteContentSerializer, StudyNoteSerializer
+# from .serializers import StudyNoteContentSerializer, StudyNoteSerializer,StudyNoteBriefingBoardSerializer
+from .serializers import (
+    StudyNoteContentSerializer,
+    StudyNoteSerializer,
+    StudyNoteBriefingBoardSerializer
+)
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
@@ -27,6 +32,21 @@ from rest_framework import status
 from django.db.models import Min
 from django.db import models
 
+# class ListViewForStudyNoteBriefingBoard(APIView):
+#     def get(self, request, study_note_pk):
+#         # todo study_note_pk(StudyNote의 id) 에 해당하는 StudyNoteBriefingBoard 데이터 가져 와서 적절한 http 코드와 함께 응답
+#         # 시리얼라이저 사용(위에서 만든 StudyNoteBriefingBoardSerializer)
+class ListViewForStudyNoteBriefingBoard(APIView):
+    def get(self, request, study_note_pk):
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        briefing_boards = study_note.note_comments.all()
+        serializer = StudyNoteBriefingBoardSerializer(briefing_boards, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ApiViewForGetSubtitleListForNote(APIView):
     def get(self, request, study_note_pk):

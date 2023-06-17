@@ -4,14 +4,17 @@ from .models import (
     StudyNote,
     StudyNoteContent,
     CoWriterForStudyNote,
+    StudyNoteBriefingBoard
 )
 
-# class StudyNoteSerializer(serializers.ModelSerializer):
-#     writer = UserProfileImageSerializer(read_only=True)
+class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
+    # created_at_formatted = serializers.SerializerMethodField()
 
-#     class Meta:
-#         model = StudyNote
-#         fields = ['pk', 'title', 'description', 'writer']
+    class Meta:
+        model = StudyNoteBriefingBoard
+        fields = ('id', 'note', 'writer', 'comment', 'like_count', 'created_at', 'updated_at', 'is_edit_mode', 'created_at_formatted')
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
 
 
 class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
