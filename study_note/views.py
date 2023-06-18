@@ -781,6 +781,36 @@ class StudyNoteAPIView(APIView):
     total_page_count = 0  # 노트의 총 개수
     note_count_per_page = 4  # 1 페이지에 몇개씩
 
+    def post(self, request):
+        print("study note post 요청")
+        serializer = StudyNoteSerializer(data=request.data)
+
+        print("request.user : ", request.user)
+
+        if serializer.is_valid():
+            serializer.save(writer=request.user)
+            return Response(serializer.data, status=HTTP_201_CREATED)
+        else:
+            errors = serializer.errors
+            print("serializer errors:", errors)  # 에러 출력
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        print("put 요청 check !!")
+        study_note_pk = request.data.get("study_note_pk")
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response({"error": "Study note does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = StudyNoteSerializer(study_note, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            errors = serializer.errors
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get(self, request):
         selected_note_writer = request.query_params.get(
             "selectedNoteWriter", "")
@@ -815,20 +845,6 @@ class StudyNoteAPIView(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
-
-    def post(self, request):
-        print("study note post 요청")
-        serializer = StudyNoteSerializer(data=request.data)
-
-        print("request.user : ", request.user)
-
-        if serializer.is_valid():
-            serializer.save(writer=request.user)
-            return Response(serializer.data, status=HTTP_201_CREATED)
-        else:
-            errors = serializer.errors
-            print("serializer errors:", errors)  # 에러 출력
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class StudyNoteAPIViewForCopyMode(APIView):
