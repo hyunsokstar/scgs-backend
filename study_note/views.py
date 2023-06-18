@@ -199,9 +199,9 @@ class CreateViewForSubTitleForNote(APIView):
         ref_url1 = request.data["ref_url1"]
         ref_url2 = request.data["ref_url2"]
         content = request.data["content"]
+        youtube_url = request.data["youtube_url"]
 
         print("content_option : ", content_option)
-
         # 이미 sub title for page가 존재하는지 확인
         existing_subtitle = StudyNoteContent.objects.filter(
             study_note_id=study_note_pk,
@@ -231,19 +231,23 @@ class CreateViewForSubTitleForNote(APIView):
         else:
             order_for_update = 1
 
-        # StudyNoteContent 모델 생성
+        # Create StudyNoteContent model
         note_content = StudyNoteContent.objects.create(
             study_note_id=study_note_pk,
             page=current_page_number,
             content_option=content_option,
-            writer=request.user,  # 작성자는 현재 요청한 유저로 설정
-            # order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
-            order=order_for_update,  # 이전 order 값 중 최대값에 1을 더하여 설정
+            writer=request.user,  # Set the current user as the writer
+            order=order_for_update,  # Set the order value
             title=title,
             ref_url1=ref_url1,
             ref_url2=ref_url2,
             content=content
         )
+
+        # Save youtube_url only if it is not empty
+        if youtube_url != "":
+            note_content.youtube_url = youtube_url
+            note_content.save()
 
         print("note_content : ", note_content)
 

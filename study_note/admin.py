@@ -25,7 +25,7 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
         (None, {
             'fields':
             ('study_note', 'title', 'file_name',
-             'content', 'order', 'page', "content_option")
+             'content', 'order', 'page', "content_option", "youtube_url")
         }),
         ('Writer', {
             'fields': ('writer',)
