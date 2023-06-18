@@ -1,8 +1,23 @@
 from django.db import models
 from django.utils import timezone
 
-
 class StudyNote(models.Model):
+    class FirstCategoryChoices(models.TextChoices):
+        FRONTEND = ("frontend", "Frontend")
+        BACKEND = ("backend", "Backend")
+        CHALLENGE = ("challenge", "Challenge")
+        BOILER_PLATE = ("boiler-plate", "Boiler Plate")
+
+    class SecondCategoryChoices(models.TextChoices):
+        TUTORIAL = ("tutorial", "Tutorial")
+        FRAMEWORK = ("framework", "Framework")
+        LIBRARY = ("library", "Library")
+        BOILER_PLATE = ("boiler-plate", "Boiler Plate")
+        SAMPLE_CODE = ("sample-code", "Sample Code")
+        CODE_REVIEW = ("code-review", "Code Review")
+        PROGRAMMING_LANGUAGE = ("programming-language", "Programming Language")
+        CHALLENGE = ("challenge", "Challenge")
+
     title = models.CharField(max_length=30, default='black')
     description = models.TextField(default='black')
 
@@ -14,6 +29,17 @@ class StudyNote(models.Model):
         related_name="study_notes",
     )
     created_at = models.DateTimeField(default=timezone.now)
+
+    first_category = models.CharField(
+        max_length=20,
+        choices=FirstCategoryChoices.choices,
+        default=FirstCategoryChoices.FRONTEND,
+    )
+    second_category = models.CharField(
+        max_length=20,
+        choices=SecondCategoryChoices.choices,
+        default=SecondCategoryChoices.TUTORIAL,
+    )
 
     def __str__(self):
         return f"{self.title} written by {self.writer.username}"

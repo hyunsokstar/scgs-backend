@@ -817,6 +817,7 @@ class StudyNoteAPIView(APIView):
         return Response(response_data, status=HTTP_200_OK)
 
     def post(self, request):
+        print("study note post 요청")
         serializer = StudyNoteSerializer(data=request.data)
 
         print("request.user : ", request.user)
@@ -824,7 +825,10 @@ class StudyNoteAPIView(APIView):
         if serializer.is_valid():
             serializer.save(writer=request.user)
             return Response(serializer.data, status=HTTP_201_CREATED)
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+        else:
+            errors = serializer.errors
+            print("serializer errors:", errors)  # 에러 출력
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class StudyNoteAPIViewForCopyMode(APIView):

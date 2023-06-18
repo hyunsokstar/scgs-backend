@@ -1133,7 +1133,10 @@ class UpdateForTaskImportanceForChecked(APIView):
 
 class taskListForChecked(APIView):
     def get(self, request):
-        checked_row_pks = [int(pk) for pk in request.query_params.get('checkedRowPks', '').split(',')]
+        print("혹시 계속 실행되고 있나?")
+        # checked_row_pks = [int(pk) for pk in request.query_params.get('checkedRowPks', '').split(',')]
+        checked_row_pks = [int(pk) for pk in request.query_params.getlist('checkedRowPks')]
+
         print("체크된 pks for task list1 : ", checked_row_pks)
         pk_list = [int(pk) for pk in checked_row_pks if pk]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)

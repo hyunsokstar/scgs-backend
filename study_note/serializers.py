@@ -7,6 +7,7 @@ from .models import (
     StudyNoteBriefingBoard
 )
 
+
 class CreateCommentSerializerForNote(serializers.ModelSerializer):
 
     class Meta:
@@ -16,15 +17,16 @@ class CreateCommentSerializerForNote(serializers.ModelSerializer):
             "comment",
         )
 
+
 class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
     # created_at_formatted = serializers.SerializerMethodField()
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = StudyNoteBriefingBoard
-        fields = ('id', 'note', 'writer', 'comment', 'like_count', 'created_at', 'updated_at', 'is_edit_mode', 'created_at_formatted')
+        fields = ('id', 'note', 'writer', 'comment', 'like_count',
+                  'created_at', 'updated_at', 'is_edit_mode', 'created_at_formatted')
         read_only_fields = ('id', 'created_at', 'updated_at')
-
 
 
 class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
@@ -49,14 +51,23 @@ class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
 #         return obj.note_contents.count()
 class StudyNoteSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
-    note_cowriters = CoWriterForStudyNoteSerializer(many=True)
+    note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
     count_for_note_contents = serializers.SerializerMethodField()
     count_for_note_comments = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyNote
-        fields = ['pk', 'title', 'description',
-                  'writer', 'count_for_note_contents', 'note_cowriters', 'count_for_note_comments']
+        fields = [
+            'pk',
+            'title',
+            'description',
+            'writer',
+            'count_for_note_contents',
+            'note_cowriters',
+            'count_for_note_comments',
+            'first_category',
+            'second_category'
+        ]
 
     def get_count_for_note_contents(self, obj):
         return obj.note_contents.count()

@@ -9,7 +9,7 @@ from .models import (
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'description', 'writer')
+    list_display = ('id', 'title', 'description', 'writer','first_category', 'second_category')
 
 
 @admin.register(StudyNoteContent)
@@ -43,8 +43,10 @@ class CoWriterForStudyNoteAdmin(admin.ModelAdmin):
     search_fields = ('writer__username', 'study_note__title')
     readonly_fields = ('created_at',)
 
+
 @admin.register(StudyNoteBriefingBoard)
 class StudyNoteBriefingBoardAdmin(admin.ModelAdmin):
-    list_display = ('id', 'note', 'writer', 'comment', 'like_count', 'created_at_formatted', 'updated_at', 'is_edit_mode')
+    list_display = ('id', 'note', 'writer', 'comment', 'like_count',
+                    'created_at_formatted', 'updated_at', 'is_edit_mode')
     list_filter = ('is_edit_mode',)
     search_fields = ('comment',)
