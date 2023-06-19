@@ -38,6 +38,8 @@ from .models import (
 
 # 1122
 # UpdateViewForStudyNoteComment
+
+
 class UpdateViewForStudyNoteComment(APIView):
     def get_object(self, pk):
         try:
@@ -59,6 +61,7 @@ class UpdateViewForStudyNoteComment(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
 
 class CreateViewForCommentForNote(APIView):
     def get_object(self, taskPk):
@@ -85,9 +88,10 @@ class CreateViewForCommentForNote(APIView):
                 print("e : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
-        else: 
+        else:
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
+
 
 class DeleteViewForStudyNoteComment(APIView):
     def get_object(self, pk):
@@ -101,6 +105,7 @@ class DeleteViewForStudyNoteComment(APIView):
         comment_obj.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class UpdateViewForEditModeForStudyNoteBriefingBoard(APIView):
     def get_object(self, pk):
@@ -781,6 +786,58 @@ class StudyNoteAPIView(APIView):
     total_page_count = 0  # 노트의 총 개수
     note_count_per_page = 4  # 1 페이지에 몇개씩
 
+    def get(self, request):
+        selected_note_writer = request.query_params.get(
+            "selectedNoteWriter", "")
+        first_category = request.query_params.get(
+            "first_category", "")
+        second_category = request.query_params.get(
+            "second_category", "")
+
+        # step1 page 번호 가져 오기
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # step2 page 에 해당하는 데이터 가져 오기
+        start = (page - 1) * self.note_count_per_page
+        end = start + self.note_count_per_page
+
+        # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
+        if selected_note_writer == "" and first_category == "" and second_category == "":
+            all_study_note_list = StudyNote.objects.all()
+        else:
+            filter_conditions = Q()
+            if selected_note_writer != "":
+                filter_conditions &= Q(writer__username=selected_note_writer)
+            if first_category != "":
+                filter_conditions &= Q(first_category=first_category)
+            if second_category != "":
+                filter_conditions &= Q(second_category=second_category)
+
+            all_study_note_list = StudyNote.objects.filter(filter_conditions)
+
+        self.total_page_count = len(all_study_note_list)
+        study_notes = all_study_note_list[start:end]
+
+        serializer = StudyNoteSerializer(study_notes, many=True)
+
+        all_study_note_list_for_users = StudyNote.objects.all()
+        note_writers = [
+            note.writer.username for note in all_study_note_list_for_users]
+        note_writers = list(set(note_writers))  # Convert to set to remove duplicates, then convert back to list
+
+        response_data = {
+            "note_writers": note_writers,  # Include the note writers in the response
+            "noteList": serializer.data,
+            "totalPageCount": self.total_page_count,
+            "note_count_per_page": self.note_count_per_page
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
+
     def post(self, request):
         print("study note post 요청")
         serializer = StudyNoteSerializer(data=request.data)
@@ -794,7 +851,7 @@ class StudyNoteAPIView(APIView):
             errors = serializer.errors
             print("serializer errors:", errors)  # 에러 출력
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def put(self, request):
         print("put 요청 check !!")
         study_note_pk = request.data.get("study_note_pk")
@@ -810,41 +867,6 @@ class StudyNoteAPIView(APIView):
         else:
             errors = serializer.errors
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def get(self, request):
-        selected_note_writer = request.query_params.get(
-            "selectedNoteWriter", "")
-
-        # step1 page 번호 가져 오기
-        try:
-            page = request.query_params.get("page", 1)
-            page = int(page)
-        except ValueError:
-            page = 1
-
-        # step2 page 에 해당하는 데이터 가져 오기
-        start = (page - 1) * self.note_count_per_page
-        end = start + self.note_count_per_page
-
-        # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
-
-        if selected_note_writer == "":
-            all_study_note_list = StudyNote.objects.all()
-        else:
-            all_study_note_list = StudyNote.objects.filter(
-                writer__username=selected_note_writer)
-        self.total_page_count = len(all_study_note_list)
-        study_notes = all_study_note_list[start:end]
-
-        serializer = StudyNoteSerializer(study_notes, many=True)
-
-        response_data = {
-            "noteList": serializer.data,
-            "totalPageCount": self.total_page_count,
-            "note_count_per_page": self.note_count_per_page
-        }
-
-        return Response(response_data, status=HTTP_200_OK)
 
 
 class StudyNoteAPIViewForCopyMode(APIView):

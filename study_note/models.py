@@ -5,8 +5,6 @@ class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):
         FRONTEND = ("frontend", "Frontend")
         BACKEND = ("backend", "Backend")
-        CHALLENGE = ("challenge", "Challenge")
-        BOILER_PLATE = ("boiler-plate", "Boiler Plate")
 
     class SecondCategoryChoices(models.TextChoices):
         TUTORIAL = ("tutorial", "Tutorial")
