@@ -1021,8 +1021,8 @@ class StudyNoteDetailView(APIView):
     #     result = [page['page'] for page in page_count]
     #     return Response(result)
 
-    def delete(self, request, pk):
-        api_docu = self.get_object(pk)
+    def delete(self, request, notePk):
+        api_docu = self.get_object(notePk)
         api_docu.delete()
 
         return Response(status=HTTP_204_NO_CONTENT)
