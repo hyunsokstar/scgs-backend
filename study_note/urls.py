@@ -1,8 +1,6 @@
 from django.urls import path
 from . import views
 
-# study note content 리스트 뷰, post view <=> ${study_note_pk}/contents
-# ${notePk}/register-for-co-writer
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
     path('comment/<int:commentPk>/delete', views.DeleteViewForStudyNoteComment.as_view()),
@@ -35,7 +33,6 @@ urlpatterns = [
     path('<int:study_note_pk>/content/create-youtube-content-for-note',
          views.CreateViewForYoutubeContentForNote.as_view()),
 
-    #     ${study_note_pk}/get-subtitle-list
     path('<int:study_note_pk>/content/get-subtitle-list',
          views.ApiViewForGetSubtitleListForNote.as_view()),
 
