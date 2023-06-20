@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
+    path('<int:notePk>/', views.StudyNoteDetailView.as_view()),
     path('comment/<int:commentPk>/delete', views.DeleteViewForStudyNoteComment.as_view()),
     path('comment/<int:commentPk>/update-comment', views.UpdateViewForStudyNoteComment.as_view()),
 
@@ -40,7 +41,6 @@ urlpatterns = [
     path('<int:study_note_pk>/contents/delete-page',
          views.DeleteNoteContentsForSelectedPage.as_view()),  # 특정 노트의 페이지에 대해 delete
 
-    path('<int:notePk>/', views.StudyNoteDetailView.as_view()),
 
     path('<int:study_note_pk>/comment/get-comment-list', views.ListViewForStudyNoteBriefingBoard.as_view()),     
 

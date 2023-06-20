@@ -957,7 +957,6 @@ class StudyNoteAPIViewForMe(APIView):
 
     def post(self, request):
         serializer = StudyNoteSerializer(data=request.data)
-
         print("request.user : ", request.user)
 
         if serializer.is_valid():
@@ -1009,6 +1008,7 @@ class StudyNoteDetailView(APIView):
         response_data = {
             "note_title": study_note.title,
             "note_user_name": study_note.writer.username,
+            "note_user_profile_image": study_note.writer.profile_image,
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
             "co_writers_for_approved": cowriters_data
