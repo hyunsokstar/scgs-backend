@@ -92,7 +92,9 @@ class UserProfileSerializer(ModelSerializer):
             'about_me',
             'admin_level',
             'profile_image',
-            'is_edit_mode_for_study_note_contents'
+            'is_edit_mode_for_study_note_contents',
+            'study_note_url1',
+            'study_note_url2'
         )
 
 

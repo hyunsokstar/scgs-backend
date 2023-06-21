@@ -41,6 +41,9 @@ class User(AbstractUser):
 
     profile_image = models.URLField(null=True, blank=True)
     cash = models.IntegerField(default=0)
+    # note_url1, note_url2
+    study_note_url1 = models.URLField(null=True, blank=True)
+    study_note_url2 = models.URLField(null=True, blank=True)
 
     # 스터디 노트 콘텐츠 리스트 에디터 모드
     is_edit_mode_for_study_note_contents = models.BooleanField(default=False)
