@@ -25,7 +25,11 @@ from django.db.models import Q, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import StudyNoteContentSerializer, ClassRoomForStudyNoteSerializer
+from .serializers import (
+    StudyNoteContentSerializer,
+    ClassRoomForStudyNoteSerializer,
+    QnABoardSerializer
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -38,6 +42,21 @@ from .models import (
 )
 
 # 1122
+
+
+class QnABoard(APIView):
+    def get(self, request, study_note_pk):
+        print("study_note_pk : ", study_note_pk)
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        qa_list = study_note.question_list.all()
+        serializer = QnABoardSerializer(
+            qa_list, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetSavedPageForCurrentNote(APIView):

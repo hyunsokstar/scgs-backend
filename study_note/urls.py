@@ -28,9 +28,11 @@ urlpatterns = [
 
     # 특정 pk
 #     class-room/load-saved-page/${study_note_pk}
+    path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
+    path('<int:study_note_pk>/qa-list', views.QnABoard.as_view()),
+
     path('class-room/load-saved-page/<int:study_note_pk>', views.GetSavedPageForCurrentNote.as_view()),
 
-    path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
     path('<int:study_note_pk>/content/create-sub-title-for-page',

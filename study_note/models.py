@@ -47,6 +47,25 @@ class StudyNote(models.Model):
         ordering = ['-id']
 
 
+class QnABoard(models.Model):
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="question_list"
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )    
+    created_at = models.DateTimeField(default=timezone.now)    
+    updated_at = models.DateTimeField(default=timezone.now)
+
 class ClassRoomForStudyNote(models.Model):
     current_note = models.ForeignKey(
         "study_note.StudyNote",

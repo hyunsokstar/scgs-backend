@@ -5,18 +5,27 @@ from .models import (
     StudyNoteContent,
     CoWriterForStudyNote,
     StudyNoteBriefingBoard,
-    ClassRoomForStudyNote
+    ClassRoomForStudyNote,
+    QnABoard
 )
 
+# 1122
+class QnABoardSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = QnABoard
+        fields = ['study_note', 'title', 'content',
+                  'writer', 'created_at', 'updated_at']
 
 class CreateCommentSerializerForNote(serializers.ModelSerializer):
-
     class Meta:
         model = StudyNoteBriefingBoard
         fields = (
             "note",
             "comment",
         )
+
 
 class ClassRoomForStudyNoteSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
@@ -26,9 +35,9 @@ class ClassRoomForStudyNoteSerializer(serializers.ModelSerializer):
         model = ClassRoomForStudyNote
         fields = ['id', 'current_note', 'current_page',
                   'writer', 'is_approved', 'created_at_formatted']
-        
+
     def get_created_at_formatted(self, obj):
-        return obj.created_at_formatted()        
+        return obj.created_at_formatted()
 
 
 class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
