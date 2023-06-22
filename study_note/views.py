@@ -25,7 +25,7 @@ from django.db.models import Q, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import StudyNoteContentSerializer
+from .serializers import StudyNoteContentSerializer, ClassRoomForStudyNoteSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -33,10 +33,62 @@ from django.db.models import Min
 from django.db import models
 from .models import (
     StudyNoteContent,
+    ClassRoomForStudyNote,
     StudyNoteBriefingBoard
 )
 
 # 1122
+
+
+class ClasssRoomView(APIView):
+
+    def get_object(self, taskPk):
+        try:
+            return StudyNote.objects.get(pk=taskPk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, study_note_pk):
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        class_list = study_note.class_list.all()
+        serializer = ClassRoomForStudyNoteSerializer(
+            class_list, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, study_note_pk):
+        try:
+            study_note = self.get_object(study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        if not request.user.is_authenticated:
+            return Response("Please log in", status=status.HTTP_401_UNAUTHORIZED)
+
+        writer = request.user
+        current_page = request.data.get("current_page")
+
+        # Check if a ClassRoomForStudyNote already exists with current_note=study_note
+        existing_class_room = ClassRoomForStudyNote.objects.filter(
+            current_note=study_note
+        ).exists()
+
+        if existing_class_room:
+            return Response("ClassRoomForStudyNote already exists for this study note", status=status.HTTP_409_CONFLICT)
+
+        class_room = ClassRoomForStudyNote.objects.create(
+            current_note=study_note,
+            current_page=current_page,
+            writer=writer
+        )
+
+        serializer = ClassRoomForStudyNoteSerializer(class_room)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 # UpdateViewForStudyNoteComment
 
 
@@ -827,7 +879,8 @@ class StudyNoteAPIView(APIView):
         all_study_note_list_for_users = StudyNote.objects.all()
         note_writers = [
             note.writer.username for note in all_study_note_list_for_users]
-        note_writers = list(set(note_writers))  # Convert to set to remove duplicates, then convert back to list
+        # Convert to set to remove duplicates, then convert back to list
+        note_writers = list(set(note_writers))
 
         response_data = {
             "note_writers": note_writers,  # Include the note writers in the response

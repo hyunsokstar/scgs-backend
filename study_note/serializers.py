@@ -4,7 +4,8 @@ from .models import (
     StudyNote,
     StudyNoteContent,
     CoWriterForStudyNote,
-    StudyNoteBriefingBoard
+    StudyNoteBriefingBoard,
+    ClassRoomForStudyNote
 )
 
 
@@ -16,6 +17,18 @@ class CreateCommentSerializerForNote(serializers.ModelSerializer):
             "note",
             "comment",
         )
+
+class ClassRoomForStudyNoteSerializer(serializers.ModelSerializer):
+    created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = ClassRoomForStudyNote
+        fields = ['id', 'current_note', 'current_page',
+                  'writer', 'is_approved', 'created_at_formatted']
+        
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()        
 
 
 class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):

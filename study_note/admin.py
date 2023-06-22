@@ -3,13 +3,15 @@ from .models import (
     StudyNote,
     StudyNoteBriefingBoard,
     StudyNoteContent,
-    CoWriterForStudyNote
+    CoWriterForStudyNote,
+    ClassRoomForStudyNote
 )
 
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'description', 'writer','first_category', 'second_category')
+    list_display = ('id', 'title', 'description', 'writer',
+                    'first_category', 'second_category')
 
 
 @admin.register(StudyNoteContent)
@@ -50,3 +52,11 @@ class StudyNoteBriefingBoardAdmin(admin.ModelAdmin):
                     'created_at_formatted', 'updated_at', 'is_edit_mode')
     list_filter = ('is_edit_mode',)
     search_fields = ('comment',)
+
+
+@admin.register(ClassRoomForStudyNote)
+class ClassRoomForStudyNoteAdmin(admin.ModelAdmin):
+    list_display = ['current_note', 'current_page',
+                    'writer', 'is_approved', 'created_at']
+    list_filter = ['is_approved', 'created_at']
+    search_fields = ['current_note__title', 'writer__username']

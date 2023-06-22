@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):
         FRONTEND = ("frontend", "Frontend")
@@ -44,6 +45,29 @@ class StudyNote(models.Model):
 
     class Meta:
         ordering = ['-id']
+
+
+class ClassRoomForStudyNote(models.Model):
+    current_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="class_list"
+    )
+    current_page = models.PositiveIntegerField(default=1)
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
 
 class CoWriterForStudyNote(models.Model):
@@ -95,7 +119,6 @@ class StudyNoteContent(models.Model):
     )
 
     order = models.IntegerField(default=1)
-
 
     page = models.IntegerField(default=1)
 

@@ -25,7 +25,9 @@ urlpatterns = [
          views.order_plus_one_for_note_content.as_view()),  # order + 1
     path('contents/<int:content_pk>/order-minus-one-for-note-content',
          views.order_minus_one_for_note_content.as_view()),  # order + 1
-    # 특정 노트의 contents 에 대한 crud
+
+    # 특정 pk
+    path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
     path('<int:study_note_pk>/content/create-sub-title-for-page',
