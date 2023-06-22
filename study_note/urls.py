@@ -27,6 +27,9 @@ urlpatterns = [
          views.order_minus_one_for_note_content.as_view()),  # order + 1
 
     # 특정 pk
+#     class-room/load-saved-page/${study_note_pk}
+    path('class-room/load-saved-page/<int:study_note_pk>', views.GetSavedPageForCurrentNote.as_view()),
+
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),

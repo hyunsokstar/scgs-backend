@@ -40,6 +40,31 @@ from .models import (
 # 1122
 
 
+class GetSavedPageForCurrentNote(APIView):
+    def get(self, request, study_note_pk):
+        try:
+            study_note = StudyNote.objects.get(
+                pk=study_note_pk, writer=request.user)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        existing_class_room = ClassRoomForStudyNote.objects.filter(
+            current_note=study_note,
+            writer=request.user
+        ).exists()
+
+        if existing_class_room:
+            class_room = ClassRoomForStudyNote.objects.filter(
+                current_note=study_note, writer=request.user).first()
+            current_page = class_room.current_page  # class_room.current_page를 변수로 추출
+            print("current_page : ", current_page)
+            return Response({"current_page": current_page}, status=status.HTTP_200_OK)
+        else:
+            return Response("saved_data is not exist",
+                     status=status.HTTP_404_NOT_FOUND)
+
+
+
 class ClasssRoomView(APIView):
 
     def get_object(self, taskPk):
@@ -92,7 +117,7 @@ class ClasssRoomView(APIView):
                 print("original : ", existing_class_room.current_page)
                 print("current_page : ", current_page)
                 print("original type: ", type(existing_class_room.current_page))
-                print("current_page type: ", type(current_page))                
+                print("current_page type: ", type(current_page))
                 existing_class_room.current_page = current_page
                 existing_class_room.save()
                 return Response(f"current page num is updated to {current_page}", status=status.HTTP_200_OK)
