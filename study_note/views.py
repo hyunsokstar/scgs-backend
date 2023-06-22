@@ -61,24 +61,48 @@ class ClasssRoomView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, study_note_pk):
+        print("실행 check !!!!!!!!!!!!!!!!!!!!!!!!!!")
         try:
             study_note = self.get_object(study_note_pk)
         except StudyNote.DoesNotExist:
+            print("여기 실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
         if not request.user.is_authenticated:
             return Response("Please log in", status=status.HTTP_401_UNAUTHORIZED)
 
         writer = request.user
-        current_page = request.data.get("current_page")
+        current_page = int(request.data.get("current_page"))
 
         # Check if a ClassRoomForStudyNote already exists with current_note=study_note
         existing_class_room = ClassRoomForStudyNote.objects.filter(
-            current_note=study_note
+            current_note=study_note,
+            writer=request.user
         ).exists()
 
+        # todo
+        # existing_class_room 이 true 이지만 existing_class_room.current_page 와 current_page 가 다를 경우
+        # existing_class_room.current_page = current_page 로 업데이트 후
+        # return Response("current page num is update to current_page(전달 받은값)", status=status.HTTP_409_CONFLICT)
+
         if existing_class_room:
-            return Response("ClassRoomForStudyNote already exists for this study note", status=status.HTTP_409_CONFLICT)
+            existing_class_room = ClassRoomForStudyNote.objects.filter(
+                current_note=study_note, writer=request.user).first()
+            if existing_class_room.current_page != current_page:
+                print("original : ", existing_class_room.current_page)
+                print("current_page : ", current_page)
+                print("original type: ", type(existing_class_room.current_page))
+                print("current_page type: ", type(current_page))                
+                existing_class_room.current_page = current_page
+                existing_class_room.save()
+                return Response(f"current page num is updated to {current_page}", status=status.HTTP_200_OK)
+            else:
+                print("페이지 번호가 다르지 않습니다")
+        # update
+        if existing_class_room:
+            return Response({"message_type": "warnning", "message": "The record for the current page already exists, so it will not be updated"}, status=status.HTTP_400_BAD_REQUEST)
+
+        print("excute check !!")
 
         class_room = ClassRoomForStudyNote.objects.create(
             current_note=study_note,
@@ -86,8 +110,8 @@ class ClasssRoomView(APIView):
             writer=writer
         )
 
-        serializer = ClassRoomForStudyNoteSerializer(class_room)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # serializer = ClassRoomForStudyNoteSerializer(class_room)
+        return Response("page record is created for class room !", status=status.HTTP_201_CREATED)
 
 # UpdateViewForStudyNoteComment
 
