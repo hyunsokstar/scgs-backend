@@ -118,3 +118,12 @@ class StudyNoteContentSerializer(serializers.ModelSerializer):
             'order'
         ]
         read_only_fields = ['id', 'created_at']
+
+class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
+    class Meta:
+        model = QnABoard
+        fields = (
+            "study_note",
+            "title",
+            "content",
+        )        

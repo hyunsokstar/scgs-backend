@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
 # from .serializers import StudyNoteContentSerializer, StudyNoteSerializer,StudyNoteBriefingBoardSerializer
 from .serializers import (
+    SerializerForCreateQuestionForNote,
     StudyNoteContentSerializer,
     StudyNoteSerializer,
     StudyNoteBriefingBoardSerializer,
@@ -42,6 +43,35 @@ from .models import (
 )
 
 # 1122
+# CreateViewForQnABoard
+
+
+class CreateViewForQnABoard(APIView):
+    def get_object(self, study_note_pk):
+        try:
+            return StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, study_note_pk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        study_note = self.get_object(study_note_pk)  # study_note_pk에 해당하는 StudyNote 가져오기
+
+        serializer = SerializerForCreateQuestionForNote(data=request.data)
+
+        if serializer.is_valid():
+            try:
+                question = serializer.save(writer=request.user, study_note=study_note)  # study_note 정보 추가
+                serializer = SerializerForCreateQuestionForNote(question)
+                return Response({'success': True, "result": serializer.data}, status=HTTP_200_OK)
+            except Exception as e:
+                print("e: ", e)
+                raise ParseError("An error occurred while serializing the create question data")
+        else:
+            print("serializer is not valid !!!!!!!!!!!!")
+            print("Errors:", serializer.errors)
 
 
 class QnABoard(APIView):
@@ -55,7 +85,7 @@ class QnABoard(APIView):
         qa_list = study_note.question_list.all()
         serializer = QnABoardSerializer(
             qa_list, many=True)
-        
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
