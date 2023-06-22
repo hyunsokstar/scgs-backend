@@ -10,13 +10,16 @@ from .models import (
 )
 
 # 1122
+
+
 class QnABoardSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = QnABoard
-        fields = ['study_note', 'title', 'content',
+        fields = ['study_note', 'title', 'content', 'page',
                   'writer', 'created_at', 'updated_at']
+
 
 class CreateCommentSerializerForNote(serializers.ModelSerializer):
     class Meta:
@@ -119,6 +122,7 @@ class StudyNoteContentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
 
+
 class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
     class Meta:
         model = QnABoard
@@ -126,4 +130,5 @@ class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
             "study_note",
             "title",
             "content",
-        )        
+            "page"
+        )
