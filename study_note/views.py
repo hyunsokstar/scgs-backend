@@ -44,9 +44,15 @@ class GetSavedPageForCurrentNote(APIView):
     def get(self, request, study_note_pk):
         try:
             study_note = StudyNote.objects.get(
-                pk=study_note_pk, writer=request.user)
+                pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        # todo
+        # login 안했으면 로그인 사용자가 아닐 경우 저장된 페이지를 불러 올수 없습니다라고 메세지 응답
+        if not request.user.is_authenticated:
+            print("비로그인 유저에 대한 체크 실행 !")
+            return Response("Please log in to retrieve the saved page", status=status.HTTP_401_UNAUTHORIZED)
 
         existing_class_room = ClassRoomForStudyNote.objects.filter(
             current_note=study_note,
@@ -61,8 +67,7 @@ class GetSavedPageForCurrentNote(APIView):
             return Response({"current_page": current_page}, status=status.HTTP_200_OK)
         else:
             return Response("saved_data is not exist",
-                     status=status.HTTP_404_NOT_FOUND)
-
+                            status=status.HTTP_404_NOT_FOUND)
 
 
 class ClasssRoomView(APIView):
