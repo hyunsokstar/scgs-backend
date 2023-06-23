@@ -67,9 +67,13 @@ class QnABoard(models.Model):
     created_at = models.DateTimeField(default=timezone.now)    
     updated_at = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return f"{self.id} - {self.title}"
+    
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class AnswerForQaBoard(models.Model):
     question = models.ForeignKey(

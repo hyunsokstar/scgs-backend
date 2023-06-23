@@ -6,20 +6,36 @@ from .models import (
     CoWriterForStudyNote,
     StudyNoteBriefingBoard,
     ClassRoomForStudyNote,
-    QnABoard
+    QnABoard,
+    AnswerForQaBoard
 )
 
 # 1122
 
 
-class QnABoardSerializer(serializers.ModelSerializer):
+class AnswerForQaBoardSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
+        model = AnswerForQaBoard
+        fields = ['pk', 'question', 'content',
+                  'writer', 'created_at_formatted']
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()
+
+
+class QnABoardSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+    created_at_formatted = serializers.SerializerMethodField()
+    answers_for_qa_board = AnswerForQaBoardSerializer(
+        many=True, read_only=True)
+
+    class Meta:
         model = QnABoard
         fields = ['pk', 'study_note', 'title', 'content', 'page',
-                  'writer', 'created_at_formatted', 'updated_at']
+                  'writer', 'created_at_formatted', 'updated_at', 'answers_for_qa_board']
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()

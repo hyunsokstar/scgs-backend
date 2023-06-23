@@ -46,20 +46,14 @@ from django.utils import timezone
 
 
 # 1122
-# CreateViewForQnABoard
-# UpdateViewForQnABoard
-# class UpdateViewForQnABoard(APIView):
-#     def get_object(self, study_note_pk):
-#         try:
-#             return QnABoard.objects.get(pk=study_note_pk)
-#         except QnABoard.DoesNotExist:
-#             raise NotFound
-
-#     def put(self, request, question_pk):
-#         if not request.user.is_authenticated:
-#             raise NotAuthenticated
-#         # todo: question_pk 에 해당하는 QnABoard 찾고
-#         # api 에서 받은   title, content,page 에 대해 업데이트 updated_at은 현재로
+class DeleteViewForQuestionBoard(APIView):
+    def delete(self, request, question_pk):
+        try:
+            question = QnABoard.objects.get(pk=question_pk)
+            question.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except QnABoard.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UpdateViewForQnABoard(APIView):
@@ -192,7 +186,7 @@ class ClasssRoomView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, study_note_pk):
-        print("실행 check !!!!!!!!!!!!!!!!!!!!!!!!!!")
+        # print("실행 check !!!!!!!!!!!!!!!!!!!!!!!!!!")
         try:
             study_note = self.get_object(study_note_pk)
         except StudyNote.DoesNotExist:
