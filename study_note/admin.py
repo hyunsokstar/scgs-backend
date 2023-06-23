@@ -5,7 +5,8 @@ from .models import (
     StudyNoteContent,
     CoWriterForStudyNote,
     ClassRoomForStudyNote,
-    QnABoard
+    QnABoard,
+    AnswerForQaBoard
 )
 
 
@@ -62,9 +63,16 @@ class ClassRoomForStudyNoteAdmin(admin.ModelAdmin):
     list_filter = ['is_approved', 'created_at']
     search_fields = ['current_note__title', 'writer__username']
 
+
 @admin.register(QnABoard)
 class QnABoardAdmin(admin.ModelAdmin):
     list_display = ['title', 'writer', 'created_at', 'updated_at']
     list_filter = ['writer', 'created_at']
     search_fields = ['title', 'content']
     readonly_fields = ['created_at', 'updated_at']
+
+@admin.register(AnswerForQaBoard)
+class AnswerForQaBoardAdmin(admin.ModelAdmin):
+    list_display = ['id', 'question', 'writer', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['question__title', 'writer__username']    
