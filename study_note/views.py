@@ -40,12 +40,59 @@ from .models import (
     StudyNoteContent,
     ClassRoomForStudyNote,
     StudyNoteBriefingBoard,
-    QnABoard
+    QnABoard,
+    AnswerForQaBoard
 )
 from django.utils import timezone
 
 
 # 1122
+# CreateViewForCommentForQuestionForNote
+class UpdateViewForCommentForQuestionForNote(APIView):
+    def put(self, request, commentPk):
+        try:
+            contentForUpdate = request.data.get("content")
+            answer = AnswerForQaBoard.objects.get(pk=commentPk)
+
+            if request.user.is_authenticated:
+                writer = request.user
+                # todo commentPk 에 해당하는 answer 의 content 를 위에서 얻은 content 로 수정
+                answer.content= contentForUpdate
+                answer.save()
+
+                # todo 적당한 http 응답 message 는 comment update success
+                return Response({"message": "Comment update success"}, status=status.HTTP_200_OK)
+
+            else:
+                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+        except AnswerForQaBoard.DoesNotExist:
+            print("AnswerForQaBoard is note exist")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+class CreateViewForCommentForQuestionForNote(APIView):
+    def post(self, request, question_pk):
+        try:
+            question = QnABoard.objects.get(pk=question_pk)
+            content = request.data.get("content")
+
+            if request.user.is_authenticated:
+                writer = request.user
+
+                if content:
+                    answer = AnswerForQaBoard(
+                        question=question, content=content, writer=writer)
+                    answer.save()
+                    return Response(status=status.HTTP_201_CREATED)
+                else:
+                    print("content 가 없습니다")
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+        except QnABoard.DoesNotExist:
+            print("qa board is note exist")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 class DeleteViewForQuestionBoard(APIView):
     def delete(self, request, question_pk):
         try:

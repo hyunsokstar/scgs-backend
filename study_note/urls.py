@@ -4,11 +4,15 @@ from . import views
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
     path('<int:notePk>/', views.StudyNoteDetailView.as_view()),
-    path('comment/<int:commentPk>/delete', views.DeleteViewForStudyNoteComment.as_view()),
-    path('comment/<int:commentPk>/update-comment', views.UpdateViewForStudyNoteComment.as_view()),
+    path('comment/<int:commentPk>/delete',
+         views.DeleteViewForStudyNoteComment.as_view()),
+    path('comment/<int:commentPk>/update-comment',
+         views.UpdateViewForStudyNoteComment.as_view()),
 
-    path('<int:studyNotePk>/create-comment', views.CreateViewForCommentForNote.as_view()),
-    path('comment/<int:commentPk>/update-edit-mode', views.UpdateViewForEditModeForStudyNoteBriefingBoard.as_view(), name='StudyNoteAPIView'),
+    path('<int:studyNotePk>/create-comment',
+         views.CreateViewForCommentForNote.as_view()),
+    path('comment/<int:commentPk>/update-edit-mode',
+         views.UpdateViewForEditModeForStudyNoteBriefingBoard.as_view(), name='StudyNoteAPIView'),
     path('update-is-approved-for-cowriter',
          views.UpdateViewForIsApprovedForCoWorker.as_view()),
     path('get-study-note-list-for-copy-mode',
@@ -27,14 +31,25 @@ urlpatterns = [
          views.order_minus_one_for_note_content.as_view()),  # order + 1
 
     # 특정 pk
-    path('qa-board/<int:question_pk>/update', views.UpdateViewForQnABoard.as_view()),
-    path('qa-board/<int:question_pk>/delete', views.DeleteViewForQuestionBoard.as_view()),
-    path('<int:study_note_pk>/create-question', views.CreateViewForQnABoard.as_view()),
+    path('qa-board/<int:question_pk>/update',
+         views.UpdateViewForQnABoard.as_view()),
+    path('qa-board/<int:question_pk>/delete',
+         views.DeleteViewForQuestionBoard.as_view()),
+
+    #   질문에 댓글 추가
+    path('qa-board/<int:question_pk>/add-comment',
+         views.CreateViewForCommentForQuestionForNote.as_view()),
+    path('answer-for-qaboard/<int:commentPk>/update-comment',
+         views.UpdateViewForCommentForQuestionForNote.as_view()),
+
+    path('<int:study_note_pk>/create-question',
+         views.CreateViewForQnABoard.as_view()),
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
 
 
-    path('class-room/load-saved-page/<int:study_note_pk>', views.GetSavedPageForCurrentNote.as_view()),
+    path('class-room/load-saved-page/<int:study_note_pk>',
+         views.GetSavedPageForCurrentNote.as_view()),
 
 
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
@@ -52,7 +67,8 @@ urlpatterns = [
          views.DeleteNoteContentsForSelectedPage.as_view()),  # 특정 노트의 페이지에 대해 delete
 
 
-    path('<int:study_note_pk>/comment/get-comment-list', views.ListViewForStudyNoteBriefingBoard.as_view()),     
+    path('<int:study_note_pk>/comment/get-comment-list',
+         views.ListViewForStudyNoteBriefingBoard.as_view()),
 
 
     # ${notePk}/register-for-co-writer
