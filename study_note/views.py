@@ -39,11 +39,60 @@ from django.db import models
 from .models import (
     StudyNoteContent,
     ClassRoomForStudyNote,
-    StudyNoteBriefingBoard
+    StudyNoteBriefingBoard,
+    QnABoard
 )
+from django.utils import timezone
+
 
 # 1122
 # CreateViewForQnABoard
+# UpdateViewForQnABoard
+# class UpdateViewForQnABoard(APIView):
+#     def get_object(self, study_note_pk):
+#         try:
+#             return QnABoard.objects.get(pk=study_note_pk)
+#         except QnABoard.DoesNotExist:
+#             raise NotFound
+
+#     def put(self, request, question_pk):
+#         if not request.user.is_authenticated:
+#             raise NotAuthenticated
+#         # todo: question_pk 에 해당하는 QnABoard 찾고
+#         # api 에서 받은   title, content,page 에 대해 업데이트 updated_at은 현재로
+
+
+class UpdateViewForQnABoard(APIView):
+    def get_object(self, question_pk):
+        try:
+            return QnABoard.objects.get(pk=question_pk)
+        except QnABoard.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, question_pk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        print("question_pk !!!!!!!!!!!!! : ", question_pk)
+        qna_board = self.get_object(question_pk)
+        if qna_board.writer != request.user:
+            raise PermissionDenied
+
+        # 업데이트할 데이터 받기
+        title = request.data.get("title")
+        content = request.data.get("content")
+        page = request.data.get("page")
+
+        # 필요한 필드 업데이트
+        qna_board.title = title
+        qna_board.content = content
+        qna_board.page = page
+        qna_board.updated_at = timezone.now()
+
+        # 저장
+        qna_board.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class CreateViewForQnABoard(APIView):
@@ -57,24 +106,27 @@ class CreateViewForQnABoard(APIView):
         if not request.user.is_authenticated:
             raise NotAuthenticated
 
-        study_note = self.get_object(study_note_pk)  # study_note_pk에 해당하는 StudyNote 가져오기
+        # study_note_pk에 해당하는 StudyNote 가져오기
+        study_note = self.get_object(study_note_pk)
 
         serializer = SerializerForCreateQuestionForNote(data=request.data)
 
         if serializer.is_valid():
             try:
-                question = serializer.save(writer=request.user, study_note=study_note)  # study_note 정보 추가
+                question = serializer.save(
+                    writer=request.user, study_note=study_note)  # study_note 정보 추가
                 serializer = SerializerForCreateQuestionForNote(question)
                 return Response({'success': True, "result": serializer.data}, status=HTTP_200_OK)
             except Exception as e:
                 print("e: ", e)
-                raise ParseError("An error occurred while serializing the create question data")
+                raise ParseError(
+                    "An error occurred while serializing the create question data")
         else:
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
 
 
-class QnABoard(APIView):
+class QnABoardView(APIView):
     def get(self, request, study_note_pk):
         print("study_note_pk : ", study_note_pk)
         try:

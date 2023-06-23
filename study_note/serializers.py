@@ -14,11 +14,15 @@ from .models import (
 
 class QnABoardSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
+    created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = QnABoard
-        fields = ['study_note', 'title', 'content', 'page',
-                  'writer', 'created_at', 'updated_at']
+        fields = ['pk', 'study_note', 'title', 'content', 'page',
+                  'writer', 'created_at_formatted', 'updated_at']
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()
 
 
 class CreateCommentSerializerForNote(serializers.ModelSerializer):
