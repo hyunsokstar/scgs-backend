@@ -48,6 +48,20 @@ from django.utils import timezone
 
 # 1122
 # CreateViewForCommentForQuestionForNote
+# class DeleteViewForCommentForQuestionForNote(APIView)
+#     def delete(self, request, commentPk):
+#         # todo commentPk 에 해당하는 AnswerForQaBoard 삭제뒤에 적절한 http 응답
+class DeleteViewForCommentForQuestionForNote(APIView):
+    def delete(self, request, commentPk):
+        try:
+            comment = AnswerForQaBoard.objects.get(pk=commentPk)
+            comment.delete()
+            return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except AnswerForQaBoard.DoesNotExist:
+            return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class UpdateViewForCommentForQuestionForNote(APIView):
     def put(self, request, commentPk):
         try:

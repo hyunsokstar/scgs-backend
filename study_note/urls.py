@@ -42,6 +42,9 @@ urlpatterns = [
     path('answer-for-qaboard/<int:commentPk>/update-comment',
          views.UpdateViewForCommentForQuestionForNote.as_view()),
 
+    path('answer-for-qaboard/<int:commentPk>/delete-comment',
+         views.DeleteViewForCommentForQuestionForNote.as_view()),
+
     path('<int:study_note_pk>/create-question',
          views.CreateViewForQnABoard.as_view()),
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
