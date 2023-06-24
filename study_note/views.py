@@ -62,6 +62,7 @@ class DeleteViewForCommentForQuestionForNote(APIView):
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class UpdateViewForCommentForQuestionForNote(APIView):
     def put(self, request, commentPk):
         try:
@@ -71,7 +72,7 @@ class UpdateViewForCommentForQuestionForNote(APIView):
             if request.user.is_authenticated:
                 writer = request.user
                 # todo commentPk 에 해당하는 answer 의 content 를 위에서 얻은 content 로 수정
-                answer.content= contentForUpdate
+                answer.content = contentForUpdate
                 answer.save()
 
                 # todo 적당한 http 응답 message 는 comment update success
@@ -82,7 +83,8 @@ class UpdateViewForCommentForQuestionForNote(APIView):
         except AnswerForQaBoard.DoesNotExist:
             print("AnswerForQaBoard is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
+
 class CreateViewForCommentForQuestionForNote(APIView):
     def post(self, request, question_pk):
         try:
@@ -181,18 +183,41 @@ class CreateViewForQnABoard(APIView):
             print("Errors:", serializer.errors)
 
 
+# class QnABoardView(APIView):
+#     def get(self, request, study_note_pk):
+#         print("study_note_pk : ", study_note_pk)
+#         try:
+#             study_note = StudyNote.objects.get(pk=study_note_pk)
+#         except StudyNote.DoesNotExist:
+#             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+#         qa_list = study_note.question_list.all()
+#         serializer = QnABoardSerializer(
+#             qa_list, many=True)
+
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 class QnABoardView(APIView):
     def get(self, request, study_note_pk):
-        print("study_note_pk : ", study_note_pk)
+        print("study_note_pk:", study_note_pk)
+        note_page_num = request.query_params.get("note_page_num", None)
+
+        print("note_page_num ::::::::::::::::???????", note_page_num)
+
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
-        qa_list = study_note.question_list.all()
-        serializer = QnABoardSerializer(
-            qa_list, many=True)
+        if note_page_num is not None:
+            qa_list = QnABoard.objects.filter(
+                Q(study_note=study_note) & Q(
+                    page=note_page_num)
+            )
+        else:
+            qa_list = QnABoard.objects.filter(
+                study_note=study_note)
 
+        serializer = QnABoardSerializer(qa_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

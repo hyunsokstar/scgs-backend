@@ -98,7 +98,10 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
     count_for_note_contents = serializers.SerializerMethodField()
+    count_for_note_contents_for_subtitle = serializers.SerializerMethodField()
     count_for_note_comments = serializers.SerializerMethodField()
+    count_for_qna_boards = serializers.SerializerMethodField()
+    count_for_class_list = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyNote
@@ -107,18 +110,31 @@ class StudyNoteSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'writer',
-            'count_for_note_contents',
             'note_cowriters',
-            'count_for_note_comments',
             'first_category',
-            'second_category'
+            'second_category',
+            'count_for_note_contents',
+            'count_for_note_contents_for_subtitle',
+            'count_for_note_comments',
+            'count_for_qna_boards',
+            'count_for_class_list'
         ]
 
     def get_count_for_note_contents(self, obj):
         return obj.note_contents.count()
 
+    def get_count_for_note_contents_for_subtitle(self, obj):
+        return obj.note_contents.filter(content_option="subtitle_for_page").count()
+
     def get_count_for_note_comments(self, obj):
         return obj.note_comments.count()
+
+    def get_count_for_qna_boards(self, obj):
+        return obj.question_list.count()
+    
+    def get_count_for_class_list(self, obj):
+        return obj.class_list.count()
+
 
 
 class StudyNoteContentSerializer(serializers.ModelSerializer):
