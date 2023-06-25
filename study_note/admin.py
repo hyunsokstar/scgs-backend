@@ -6,7 +6,8 @@ from .models import (
     CoWriterForStudyNote,
     ClassRoomForStudyNote,
     QnABoard,
-    AnswerForQaBoard
+    AnswerForQaBoard,
+    ErrorReportForStudyNote
 )
 
 
@@ -15,6 +16,13 @@ class StudyNoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'description', 'writer',
                     'first_category', 'second_category')
 
+
+@admin.register(ErrorReportForStudyNote)
+class ErrorReportForStudyNoteAdmin(admin.ModelAdmin):
+    list_display = ['study_note', 'writer', 'page', 'is_resolved', 'created_at']
+    list_filter = ['is_resolved', 'created_at']
+    search_fields = ['study_note__title', 'writer__username']
+    readonly_fields = ['created_at', 'updated_at']
 
 @admin.register(StudyNoteContent)
 class StudyNoteContentAdmin(admin.ModelAdmin):

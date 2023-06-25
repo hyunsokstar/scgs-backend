@@ -29,7 +29,8 @@ from rest_framework import status
 from .serializers import (
     StudyNoteContentSerializer,
     ClassRoomForStudyNoteSerializer,
-    QnABoardSerializer
+    QnABoardSerializer,
+    ErrorReportForStudyNoteSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -51,6 +52,19 @@ from django.utils import timezone
 # class DeleteViewForCommentForQuestionForNote(APIView)
 #     def delete(self, request, commentPk):
 #         # todo commentPk 에 해당하는 AnswerForQaBoard 삭제뒤에 적절한 http 응답
+
+class ErrorReportForStudyNoteView(APIView):
+    def get(self, request, study_note_pk):
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+            error_reports = study_note.error_reports.all()
+            serializer = ErrorReportForStudyNoteSerializer(
+                error_reports, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except StudyNote.DoesNotExist:
+            return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 class DeleteViewForCommentForQuestionForNote(APIView):
     def delete(self, request, commentPk):
         try:

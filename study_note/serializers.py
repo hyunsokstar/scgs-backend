@@ -7,7 +7,8 @@ from .models import (
     StudyNoteBriefingBoard,
     ClassRoomForStudyNote,
     QnABoard,
-    AnswerForQaBoard
+    AnswerForQaBoard,
+    ErrorReportForStudyNote
 )
 
 # 1122
@@ -82,18 +83,6 @@ class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
         fields = ('id', 'writer', 'study_note', 'is_approved', 'created_at')
 
 
-# class StudyNoteSerializer(serializers.ModelSerializer):
-#     writer = UserProfileImageSerializer(read_only=True)
-#     note_cowriters = CoWriterForStudyNoteSerializer(many=True)
-#     count_for_note_contents = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = StudyNote
-#         fields = ['pk', 'title', 'description',
-#                   'writer', 'count_for_note_contents', 'note_cowriters']
-
-#     def get_count_for_note_contents(self, obj):
-#         return obj.note_contents.count()
 class StudyNoteSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
@@ -131,10 +120,24 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 
     def get_count_for_qna_boards(self, obj):
         return obj.question_list.count()
-    
+
     def get_count_for_class_list(self, obj):
         return obj.class_list.count()
 
+
+class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
+    study_note = serializers.PrimaryKeyRelatedField(read_only=True)
+    writer = serializers.PrimaryKeyRelatedField(read_only=True)
+    page = serializers.IntegerField()
+    content = serializers.CharField(allow_blank=True, allow_null=True)
+    is_resolved = serializers.BooleanField(default=False)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = ErrorReportForStudyNote
+        fields = ['study_note', 'writer', 'page', 'content',
+                  'is_resolved', 'created_at', 'updated_at']
 
 
 class StudyNoteContentSerializer(serializers.ModelSerializer):

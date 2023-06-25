@@ -46,6 +46,32 @@ class StudyNote(models.Model):
     class Meta:
         ordering = ['-id']
 
+class ErrorReportForStudyNote(models.Model):
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="error_reports"
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    page = models.PositiveIntegerField(default=1)
+
+    content = models.TextField(null=True, blank=True) 
+
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.study_note.title} <=> 의 에러 리포트"
 
 class QnABoard(models.Model):
     study_note = models.ForeignKey(

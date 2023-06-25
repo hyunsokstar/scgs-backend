@@ -48,8 +48,9 @@ urlpatterns = [
     path('<int:study_note_pk>/create-question',
          views.CreateViewForQnABoard.as_view()),
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
-    path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
 
+    path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
+    path('<int:study_note_pk>/error-report-list', views.ErrorReportForStudyNoteView.as_view()),
 
     path('class-room/load-saved-page/<int:study_note_pk>',
          views.GetSavedPageForCurrentNote.as_view()),
