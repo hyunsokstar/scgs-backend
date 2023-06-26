@@ -43,12 +43,48 @@ from .models import (
     ClassRoomForStudyNote,
     StudyNoteBriefingBoard,
     QnABoard,
-    AnswerForQaBoard
+    AnswerForQaBoard,
+    ErrorReportForStudyNote
 )
 from django.utils import timezone
 
 
 # 1122
+class DeleteViewForErrorReport(APIView):
+    def delete(self, request, error_report_pk):
+        try:
+            error_report = ErrorReportForStudyNote.objects.get(pk=error_report_pk)
+
+            if request.user.is_authenticated:
+                error_report.delete()
+                return Response({"message": "delete ErrorReport success"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "에러 노트를 삭제 할수 없습니다 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+        except ErrorReportForStudyNote.DoesNotExist:
+            print("ErrorReport is note exist")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+class UpdateViewForErrorReport(APIView):
+    def put(self, request, error_report_pk):
+        try:
+            contentForUpdate = request.data.get("content")
+            answer = ErrorReportForStudyNote.objects.get(pk=error_report_pk)
+
+            if request.user.is_authenticated:
+                writer = request.user
+                # todo commentPk 에 해당하는 answer 의 content 를 위에서 얻은 content 로 수정
+                answer.content = contentForUpdate
+                answer.save()
+
+                # todo 적당한 http 응답 message 는 comment update success
+                return Response({"message": "ErrorReport content update success"}, status=status.HTTP_200_OK)
+
+            else:
+                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+        except ErrorReportForStudyNote.DoesNotExist:
+            print("ErrorReport is note exist")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
 class CreateViewForErrorRecordForNote(APIView):
     def get_object(self, study_note_pk):
         try:

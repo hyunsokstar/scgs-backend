@@ -131,7 +131,7 @@ class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ErrorReportForStudyNote
-        fields = ['study_note', 'writer', 'page', 'content',
+        fields = ['pk','study_note', 'writer', 'page', 'content',
                   'is_resolved', 'created_at_formatted', 'updated_at']
         
     def get_created_at_formatted(self, obj):

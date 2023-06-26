@@ -58,6 +58,11 @@ urlpatterns = [
 
     path('class-room/load-saved-page/<int:study_note_pk>',
          views.GetSavedPageForCurrentNote.as_view()),
+    path('error-report/<int:error_report_pk>/delete',
+         views.DeleteViewForErrorReport.as_view()),
+    path('error-report/<int:error_report_pk>/update',
+         views.UpdateViewForErrorReport.as_view()),
+
 
 
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
