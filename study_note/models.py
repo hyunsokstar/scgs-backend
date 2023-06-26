@@ -54,6 +54,7 @@ class ErrorReportForStudyNote(models.Model):
         on_delete=models.CASCADE,
         related_name="error_reports"
     )
+    page = models.PositiveIntegerField(default=1)
 
     writer = models.ForeignKey(
         "users.User",
@@ -61,8 +62,6 @@ class ErrorReportForStudyNote(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-
-    page = models.PositiveIntegerField(default=1)
 
     content = models.TextField(null=True, blank=True) 
 
@@ -72,6 +71,10 @@ class ErrorReportForStudyNote(models.Model):
 
     def __str__(self):
         return f"{self.study_note.title} <=> 의 에러 리포트"
+
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
 class QnABoard(models.Model):
     study_note = models.ForeignKey(

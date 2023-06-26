@@ -30,7 +30,8 @@ from .serializers import (
     StudyNoteContentSerializer,
     ClassRoomForStudyNoteSerializer,
     QnABoardSerializer,
-    ErrorReportForStudyNoteSerializer
+    ErrorReportForStudyNoteSerializer,
+    SerializerForCreateErrorReportForNote
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -48,16 +49,53 @@ from django.utils import timezone
 
 
 # 1122
-# CreateViewForCommentForQuestionForNote
-# class DeleteViewForCommentForQuestionForNote(APIView)
-#     def delete(self, request, commentPk):
-#         # todo commentPk 에 해당하는 AnswerForQaBoard 삭제뒤에 적절한 http 응답
+class CreateViewForErrorRecordForNote(APIView):
+    def get_object(self, study_note_pk):
+        try:
+            return StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, study_note_pk):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated
+
+        # study_note_pk에 해당하는 StudyNote 가져오기
+        study_note = self.get_object(study_note_pk)
+
+        serializer = SerializerForCreateErrorReportForNote(data=request.data)
+
+        if serializer.is_valid():
+            try:
+                question = serializer.save(
+                    writer=request.user, study_note=study_note)  # study_note 정보 추가
+                serializer = SerializerForCreateErrorReportForNote(question)
+                return Response({'success': True, "result": serializer.data}, status=HTTP_200_OK)
+            except Exception as e:
+                print("e: ", e)
+                raise ParseError(
+                    "An error occurred while serializing the create question data")
+        else:
+            print("serializer is not valid !!!!!!!!!!!!")
+            print("Errors:", serializer.errors)
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class ErrorReportForStudyNoteView(APIView):
     def get(self, request, study_note_pk):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
             error_reports = study_note.error_reports.all()
+            serializer = ErrorReportForStudyNoteSerializer(
+                error_reports, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except StudyNote.DoesNotExist:
+            return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class ErrorReportForPageForStudyNoteView(APIView):
+    def get(self, request, study_note_pk, page):
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+            error_reports = study_note.error_reports.filter(page=page)
             serializer = ErrorReportForStudyNoteSerializer(
                 error_reports, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)

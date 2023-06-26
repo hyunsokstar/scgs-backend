@@ -126,18 +126,16 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 
 
 class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
-    study_note = serializers.PrimaryKeyRelatedField(read_only=True)
-    writer = serializers.PrimaryKeyRelatedField(read_only=True)
-    page = serializers.IntegerField()
-    content = serializers.CharField(allow_blank=True, allow_null=True)
-    is_resolved = serializers.BooleanField(default=False)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
+    writer = UserProfileImageSerializer(read_only=True)
+    created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = ErrorReportForStudyNote
         fields = ['study_note', 'writer', 'page', 'content',
-                  'is_resolved', 'created_at', 'updated_at']
+                  'is_resolved', 'created_at_formatted', 'updated_at']
+        
+    def get_created_at_formatted(self, obj):
+        return obj.created_at_formatted()
 
 
 class StudyNoteContentSerializer(serializers.ModelSerializer):
@@ -171,3 +169,12 @@ class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
             "content",
             "page"
         )
+
+class SerializerForCreateErrorReportForNote(serializers.ModelSerializer):
+    class Meta:
+        model = ErrorReportForStudyNote
+        fields = (
+            "study_note",
+            "page",
+            "content",
+        )        
