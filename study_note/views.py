@@ -1352,6 +1352,10 @@ class StudyNoteDetailView(APIView):
         # study note 정보 가져 오기
         study_note = self.get_object(notePk)
         current_page = request.GET.get('currentPage', 1)
+
+        question_count_for_current_page = study_note.question_list.filter(page=current_page).count()
+        print("question_count_for_current_page ::::::::::::::::::::::::::::::::::::::::", question_count_for_current_page)
+
         print("current_page : ", current_page)
         note_contents = study_note.note_contents.filter(
             page=current_page).order_by('order')
@@ -1360,13 +1364,13 @@ class StudyNoteDetailView(APIView):
         data = serializer.data
 
         total_note_contents = study_note.note_contents.all().order_by('order')
-        print("total_note_contents :::::::::::::::::::: ", total_note_contents)
+        # print("total_note_contents :::::::::::::::::::: ", total_note_contents)
 
         page_numbers = total_note_contents.values(
             'page').annotate(count=Count('id')).order_by('page')
-        print("page_numbers :::::::::::::::::", page_numbers)
+        # print("page_numbers :::::::::::::::::", page_numbers)
         exist_page_numbers = [page['page'] for page in page_numbers]
-        print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
+        # print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
         # todo
         # study_note.note_cowriters를 가져와 cowriters에 담은 뒤 response_data에 추가
@@ -1387,7 +1391,8 @@ class StudyNoteDetailView(APIView):
             "note_user_profile_image": study_note.writer.profile_image,
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
-            "co_writers_for_approved": cowriters_data
+            "co_writers_for_approved": cowriters_data,
+            "question_count_for_current_page":question_count_for_current_page
         }
 
         return Response(response_data, status=HTTP_200_OK)
