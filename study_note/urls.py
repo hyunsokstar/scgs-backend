@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
-    path('<int:notePk>/', views.StudyNoteDetailView.as_view()),
+    path('<int:notePk>/<int:pageNum>', views.StudyNoteDetailView.as_view()),
     path('comment/<int:commentPk>/delete',
          views.DeleteViewForStudyNoteComment.as_view()),
     path('comment/<int:commentPk>/update-comment',

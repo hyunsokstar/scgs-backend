@@ -1348,17 +1348,17 @@ class StudyNoteDetailView(APIView):
         except StudyNote.DoesNotExist:
             raise NotFound
 
-    def get(self, request, notePk):
+    def get(self, request, notePk, pageNum):
         # study note 정보 가져 오기
         study_note = self.get_object(notePk)
-        current_page = request.GET.get('currentPage', 1)
+        # current_page = request.GET.get('currentPage', 1)
 
-        question_count_for_current_page = study_note.question_list.filter(page=current_page).count()
+        question_count_for_current_page = study_note.question_list.filter(page=pageNum).count()
         print("question_count_for_current_page ::::::::::::::::::::::::::::::::::::::::", question_count_for_current_page)
 
-        print("current_page : ", current_page)
+        print("current_page : ", pageNum)
         note_contents = study_note.note_contents.filter(
-            page=current_page).order_by('order')
+            page=pageNum).order_by('order')
 
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
