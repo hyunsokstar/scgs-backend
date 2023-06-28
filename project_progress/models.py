@@ -117,7 +117,7 @@ class ProjectProgress(models.Model):
             completed_at_str = "미정"
         else:
             completed_at_str = local_completed_at.strftime(
-                '%y년 %m월 %d일 %H시 %M분')
+                '%m월 %d일 %H시 %M분')
             print("completed_at_str : ", completed_at_str)
 
         return completed_at_str
@@ -125,7 +125,7 @@ class ProjectProgress(models.Model):
     def started_at_formatted(self):
         if (self.started_at_utc != None):
             local_started_at = timezone.localtime(self.started_at_utc)
-            return local_started_at.strftime('%y년 %m월 %d일 %H시 %M분')
+            return local_started_at.strftime('%m월 %d일 %H시 %M분')
         else:
             return "미정"
 
@@ -136,7 +136,7 @@ class ProjectProgress(models.Model):
         local_due_date = timezone.localtime(self.due_date)
         local_due_date = pytz.timezone(
             client_timezone).normalize(local_due_date)
-        due_date_str = local_due_date.strftime('%y년 %m월 %d일 %H시 %M분')
+        due_date_str = local_due_date.strftime('%m월 %d일 %H시 %M분')
         print("due_date_str : ", due_date_str)
         return due_date_str
 
@@ -415,7 +415,7 @@ class ExtraTask(models.Model):
             completed_at_str = "미정"
         else:
             completed_at_str = local_completed_at.strftime(
-                '%y년 %m월 %d일 %H시 %M분')
+                '%m월 %d일 %H시 %M분')
             print("completed_at_str : ", completed_at_str)
 
         return completed_at_str
