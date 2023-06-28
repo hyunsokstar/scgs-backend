@@ -496,7 +496,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     elapsed_time_from_started_at = serializers.SerializerMethodField()
     time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
-    task_manager = TinyUserSerializer(read_only=True)
+    task_manager = UserProfileImageSerializer()
     # task_urls = TaskUrlForTaskSerializer(many=True)
     # challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
 
