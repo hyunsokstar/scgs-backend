@@ -191,7 +191,7 @@ class ProjectProgress(models.Model):
             if time_left.total_seconds() < 0:
                 hours, seconds = divmod(abs(time_left).seconds, 3600)
                 minutes = seconds // 60
-                time_left_to_due_date_str = f"{hours}시간 {minutes}분 초과"
+                time_left_to_due_date_str = f"{hours}시간 {minutes}분"
             else:
                 days, remainder = divmod(time_left.total_seconds(), 86400)
                 hours, seconds = divmod(remainder, 3600)

@@ -439,7 +439,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
     class Meta:
         model = ProjectProgress
         fields = (
-            "pk",
+            "id",
             "writer",
             "task",
             "task_description",
@@ -503,7 +503,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectProgress
         fields = (
-            "pk",
+            "id",
             "writer",
             "task",
             "task_description",
