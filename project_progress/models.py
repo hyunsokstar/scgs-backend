@@ -8,7 +8,8 @@ import math
 
 seoul_timezone = pytz.timezone('Asia/Seoul')
 
-class ProjectProgress(models.Model):    
+
+class ProjectProgress(models.Model):
     class TaskClassificationChoices(models.TextChoices):
         CRUD = ("crud", "CRUD 작업")
         NEW_FUTURE = ("new-future", "새로운 기능 개발")
@@ -47,8 +48,7 @@ class ProjectProgress(models.Model):
     # 마감일
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
-    
-    # morning_tasks afternoon_tasks 
+
     # due_date_option = models.CharField(max_length=20, default="")
     due_date_option = models.CharField(
         max_length=20,
@@ -56,7 +56,8 @@ class ProjectProgress(models.Model):
         default=TimeOptionChoices.MORNING_TASKS,
     )
 
-    task_description = models.TextField(max_length=300, default="")
+    task_description = models.TextField(
+        max_length=300, blank=True, null=True, default="")
 
     task_classification = models.CharField(
         max_length=20,
@@ -96,7 +97,8 @@ class ProjectProgress(models.Model):
 
     def save(self, *args, **kwargs):
         if self.order is None:
-            max_order = ProjectProgress.objects.all().aggregate(models.Max('order'))['order__max']
+            max_order = ProjectProgress.objects.all().aggregate(
+                models.Max('order'))['order__max']
             if max_order is None:
                 self.order = 1
             else:
@@ -174,12 +176,13 @@ class ProjectProgress(models.Model):
 
     def time_left_to_due_date(self, client_timezone='Asia/Seoul'):
         time_left_to_due_date_str = ""
-        print("self.due_date ::::::::::::::::::::::::::::", self.due_date   )
+        print("self.due_date ::::::::::::::::::::::::::::", self.due_date)
 
         if self.due_date is not None and self.started_at_utc is not None:
             # 로컬 타임존으로 변환
             local_due_date = timezone.localtime(self.due_date)
-            local_started_at = timezone.localtime(timezone.now())  # Set local_started_at to current time
+            # Set local_started_at to current time
+            local_started_at = timezone.localtime(timezone.now())
 
             # 시간 차이 계산
             time_left = local_due_date - local_started_at
@@ -199,6 +202,7 @@ class ProjectProgress(models.Model):
                     time_left_to_due_date_str = f"{int(hours)}시간 {int(minutes)}분 남음"
 
         return time_left_to_due_date_str
+
 
 class TestForTask(models.Model):
     class TestMethodChoices(models.TextChoices):
@@ -296,6 +300,7 @@ class TaskComment(models.Model):
         else:
             return "준비"
 
+
 class TaskLog(models.Model):
     original_task = models.ForeignKey(
         "project_progress.ProjectProgress",
@@ -320,8 +325,8 @@ class TaskLog(models.Model):
     interval_between_team_task = models.DurationField(blank=True, null=True)
     interval_between_my_task = models.DurationField(blank=True, null=True)
 
-    time_distance_for_team_task  = models.IntegerField(default=0)
-    time_distance_for_my_task  = models.IntegerField(default=0)
+    time_distance_for_team_task = models.IntegerField(default=0)
+    time_distance_for_my_task = models.IntegerField(default=0)
 
     def __str__(self):
         return self.task
@@ -329,28 +334,34 @@ class TaskLog(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             # 이전 row와의 차이 시간 계산
-            previous_task_log = TaskLog.objects.order_by('-completed_at').first()
+            previous_task_log = TaskLog.objects.order_by(
+                '-completed_at').first()
 
             if previous_task_log:
                 time_difference = timezone.now() - previous_task_log.completed_at
                 self.interval_between_team_task = time_difference  # timedelta 객체를 그대로 저장
-                self.time_distance_for_team_task = math.floor(time_difference.total_seconds() / 600)
+                self.time_distance_for_team_task = math.floor(
+                    time_difference.total_seconds() / 600)
 
                 if time_difference.total_seconds() % 600 >= 360:
                     self.time_distance_for_team_task += 1
 
             # 작성자가 같은 이전의 업무에 대해 시간 차이 계산
-            previous_task_log_same_writer = TaskLog.objects.filter(writer=self.writer).order_by('-completed_at').first()
+            previous_task_log_same_writer = TaskLog.objects.filter(
+                writer=self.writer).order_by('-completed_at').first()
 
             if previous_task_log_same_writer:
-                time_difference_same_writer = timezone.now() - previous_task_log_same_writer.completed_at
+                time_difference_same_writer = timezone.now(
+                ) - previous_task_log_same_writer.completed_at
                 self.interval_between_my_task = time_difference_same_writer  # timedelta 객체를 그대로 저장
-                self.time_distance_for_my_task = math.floor(time_difference_same_writer.total_seconds() / 600)
+                self.time_distance_for_my_task = math.floor(
+                    time_difference_same_writer.total_seconds() / 600)
 
                 if time_difference_same_writer.total_seconds() % 600 >= 360:
                     self.time_distance_for_my_task += 1
 
         super().save(*args, **kwargs)
+
 
 class TaskUrlForTask(models.Model):
     task = models.ForeignKey(
@@ -362,6 +373,7 @@ class TaskUrlForTask(models.Model):
     )
     task_url = models.URLField(null=True, blank=True)
     task_description = models.CharField(max_length=30, default="")
+
 
 class ExtraTask(models.Model):
     class TaskStatusChoices(models.TextChoices):
@@ -427,6 +439,7 @@ class ExtraTask(models.Model):
         else:
             return "준비"
 
+
 class TaskUrlForExtraTask(models.Model):
     task = models.ForeignKey(
         "project_progress.ExtraTask",
@@ -437,7 +450,8 @@ class TaskUrlForExtraTask(models.Model):
     )
     task_url = models.URLField(null=True, blank=True)
     task_description = models.CharField(max_length=30, default="")
-    
+
+
 class ExtraTaskComment(models.Model):
     task = models.ForeignKey(
         "project_progress.ExtraTask",
@@ -466,7 +480,8 @@ class ExtraTaskComment(models.Model):
             return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
             return "준비"
-        
+
+
 class TestForExtraTask(models.Model):
     class TestMethodChoices(models.TextChoices):
         browser = ("browser", "브라우져")
@@ -493,7 +508,8 @@ class TestForExtraTask(models.Model):
 
     def __str__(self):
         return self.test_description
-    
+
+
 class TestersForTestForExtraTask(models.Model):
     test = models.ForeignKey(                  # 어떤 태스크의 테스트
         "project_progress.TestForExtraTask",
