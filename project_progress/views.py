@@ -54,6 +54,7 @@ from django.shortcuts import get_object_or_404
 
 # 1122
 
+
 class DeleteViewForTestForExtraTask(APIView):
     def get_object(self, taskPk):
         try:
@@ -66,6 +67,7 @@ class DeleteViewForTestForExtraTask(APIView):
         test_for_task = self.get_object(testPk)
         test_for_task.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+
 
 class UpateViewForTesterForExtraTask(APIView):
 
@@ -527,7 +529,6 @@ class TaskLogView(APIView):
             task_logs = TaskLog.objects.filter(
                 completed_at__range=(today_start, today_end))
 
-
             writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
 
             for task_log in task_logs:
@@ -827,7 +828,8 @@ class TaskStatusViewForToday(APIView):
         )
 
         # Step 1: Initialize a default dictionary to store task counts for each task manager
-        task_managers = defaultdict(lambda: {'completed_count': 0, 'uncompleted_count': 0})
+        task_managers = defaultdict(
+            lambda: {'completed_count': 0, 'uncompleted_count': 0})
 
         # step2 오늘의 업무에 대해 task_manager 와 count 정보를 dict 형식으로 초기화
         for task in today_tasks:
@@ -849,7 +851,8 @@ class TaskStatusViewForToday(APIView):
             task_managers_data.append(task_manager_data)
 
         # Step 4: Sort the task_managers_data list based on the completed_count in descending order
-        task_managers_data = sorted(task_managers_data, key=lambda x: x['completed_count'], reverse=True)
+        task_managers_data = sorted(
+            task_managers_data, key=lambda x: x['completed_count'], reverse=True)
 
         response_data = {
             "toal_task_count_for_today":  toal_task_count_for_today,
@@ -1134,7 +1137,8 @@ class UpdateForTaskImportanceForChecked(APIView):
 class taskListForChecked(APIView):
     def get(self, request):
         print("혹시 계속 실행되고 있나?")
-        checked_row_pks = [int(pk) for pk in request.query_params.get('checkedRowPks', '').split(',')]
+        checked_row_pks = [int(pk) for pk in request.query_params.get(
+            'checkedRowPks', '').split(',')]
         # checked_row_pks = [int(pk) for pk in request.query_params.getlist('checkedRowPks')]
 
         print("체크된 pks for task list1 : ", checked_row_pks)
@@ -1159,6 +1163,8 @@ class taskListForChecked(APIView):
         return Response(data, status=HTTP_200_OK)
 
 # fix 0603 마감날짜 update 월화수목금토일 단 오늘 이전이면 업데이트 할수 없음
+
+
 class UpdateViewForTaskDueDateForChecked(APIView):
     def put(self, request):
         # duration_option 값을 가져옵니다.
@@ -1222,7 +1228,7 @@ class UpdateViewForTaskDueDateForChecked(APIView):
                     task.save()
                     updated_count += 1
                 except ProjectProgress.DoesNotExist:
-                    pass                
+                    pass
 
         elif duration_option == "tomorrow":
             for pk in checked_row_pks:
@@ -1297,6 +1303,7 @@ class DeleteTasksForChecked(APIView):
         return Response({
             'message': f'{deleted_count} StudyNoteContent instances deleted.'
         })
+
 
 class UpatedChallengersForCashPrize(APIView):
 
@@ -1483,7 +1490,8 @@ def get_writers_info(complete_status):
         }
         task_managers_info.append(writer_info)
 
-    sorted_task_managers_info = sorted(task_managers_info, key=lambda x: x['task_count'], reverse=True)
+    sorted_task_managers_info = sorted(
+        task_managers_info, key=lambda x: x['task_count'], reverse=True)
     return sorted_task_managers_info
 
 
@@ -1705,10 +1713,12 @@ class TestForTasks(APIView):
                 print("e : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
-                    
+
+
 class CreateViewForTestForExtraTask(APIView):
 
     print("test 추가 요청 22 !!!!!!!!!!")
+
     def get_object(self, taskPk):
         print("taskPk :::::::::::::: ", taskPk)
         try:
@@ -1733,7 +1743,7 @@ class CreateViewForTestForExtraTask(APIView):
                 print("eeeeeeeeeeeeee : ", e)
                 raise ParseError(
                     "error is occured for serailizer for create extra task")
-        else: 
+        else:
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
@@ -2243,19 +2253,19 @@ class UncompletedTaskListView(APIView):
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False).order_by('-is_testing', '-in_progress', '-created_at')
+                task_completed=False).order_by('-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__gte=one_week_ago).order_by('-created_at')
         elif period_option == "within_a_month":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__gte=one_month_ago).order_by('-created_at')
         elif period_option == "over_a_month_ago":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                task_completed=False, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=False, created_at__lt=one_month_ago).order_by('-created_at')
 
         # total count 초기화
         if self.user_for_search == "":
@@ -2312,7 +2322,7 @@ class UncompletedTaskListView(APIView):
             deadline = datetime.combine(datetime.today(), evening)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
-            
+
         if due_date_option_for_filtering == "until-night":
             print("due_date_option_for_filtering !!!!!!!!!!!! ")
             evening = time(hour=23, minute=59, second=59)
@@ -2884,7 +2894,6 @@ class UpdateScoreByTesterView(APIView):
         print("score_by_tester :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::", score_by_tester)
         project_task.score_by_tester = score_by_tester
 
-
         # 유저 모델 조회
         try:
             user = User.objects.get(username=username)
@@ -2896,9 +2905,9 @@ class UpdateScoreByTesterView(APIView):
         user.save()
 
         if (cashInfoForUpdate > 0):
-            cash_message = cashInfoForUpdate , "원 추가"
+            cash_message = cashInfoForUpdate, "원 추가"
         else:
-            cash_message = cashInfoForUpdate , "원"
+            cash_message = cashInfoForUpdate, "원"
 
         message = f"{score_by_tester} 점으로 task score update {username} 의 cash update : {cash_message}"
 
