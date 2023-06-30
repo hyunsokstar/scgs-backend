@@ -1137,11 +1137,12 @@ class UpdateForTaskImportanceForChecked(APIView):
 class taskListForChecked(APIView):
     def get(self, request):
         print("혹시 계속 실행되고 있나?")
-        checked_row_pks = [int(pk) for pk in request.query_params.get(
-            'checkedRowPks', '').split(',')]
-        # checked_row_pks = [int(pk) for pk in request.query_params.getlist('checkedRowPks')]
+        checked_row_pks = request.query_params.get(
+            "checkedRowPks", "").split("|")
+        checked_row_pks = [int(pk) for pk in checked_row_pks if pk]
 
         print("체크된 pks for task list1 : ", checked_row_pks)
+
         pk_list = [int(pk) for pk in checked_row_pks if pk]
         all_project_tasks = ProjectProgress.objects.filter(pk__in=pk_list)
 
@@ -1149,18 +1150,13 @@ class taskListForChecked(APIView):
         serializer = SerializerForUncompletedTaskDetailListForChecked(
             all_project_tasks, many=True)
 
-        # serializer = ProjectProgressListSerializer(
-        #     all_project_tasks,
-        #     many=True,
-        #     context={"request": request}
-        # )
-
         data = {
             "total_count": total_count,
             "ProjectProgressList": serializer.data
         }
 
         return Response(data, status=HTTP_200_OK)
+
 
 # fix 0603 마감날짜 update 월화수목금토일 단 오늘 이전이면 업데이트 할수 없음
 
