@@ -404,7 +404,7 @@ class TaskLogView(APIView):
                 task_completed=True
             ).count()
 
-            # time_difference = now - today_start
+            
             time_difference = now - task_start
             hours_elapsed = int(time_difference.total_seconds() // 3600)
             minutes_elapsed = int(
@@ -492,15 +492,21 @@ class TaskLogView(APIView):
         else:
             # Replace 'YOUR_TIMEZONE' with your desired timezone
             now = datetime.now(pytz.timezone('Asia/Seoul'))
-            today_start = datetime.combine(
-                now.date(), time(hour=0, minute=0, second=0))
-            task_start = datetime.combine(
-                now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            today_end = datetime.combine(now.date(), datetime.max.time())
+
+            today_start = datetime.combine(now.date(), time(hour=0, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            today_end = datetime.combine(now.date(), time(hour=23, minute=59, second=59), tzinfo=pytz.timezone('Asia/Seoul'))
+            
+            task_start = datetime.combine(now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            task_end = datetime.combine(now.date(), time(hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+
+            print("task_start : ", task_start)
+            print("task_end : ", task_end)
 
             total_today_task_count = ProjectProgress.objects.filter(
                 due_date__range=(today_start, today_end)
             ).count()
+
+            print("total_today_task_count !!!!!!!!!!! ", total_today_task_count)
 
             total_today_completed_task_count = ProjectProgress.objects.filter(
                 due_date__range=(today_start, today_end),
@@ -512,22 +518,26 @@ class TaskLogView(APIView):
                 task_completed=False
             ).count()
 
-            # time_difference = now - today_start
-            time_difference = now - task_start
+            time_difference = task_end - task_start
             hours_elapsed = int(time_difference.total_seconds() // 3600)
+            # 총 개수가 total_today_task_count 완료 개수가 total_today_uncompleted_task_count 시간이 hours_elapsed 일때 시간당 완료 개수 => average_number_per_hour
+            if hours_elapsed > 0:
+                average_number_per_hour = total_today_completed_task_count / hours_elapsed
+            else:
+                average_number_per_hour = 0            
             minutes_elapsed = int(
                 (time_difference.total_seconds() % 3600) // 60)
 
-            if hours_elapsed > 0:
-                average_number_per_hour = round(
-                    total_today_completed_task_count / hours_elapsed, 1)
-            else:
-                average_number_per_hour = 0
-
+            # if hours_elapsed > 0:
+            #     average_number_per_hour = round(
+            #         total_today_completed_task_count / hours_elapsed, 1)
+            # else:
+            #     average_number_per_hour = 0
             elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
+
             task_logs = TaskLog.objects.filter(
-                completed_at__range=(today_start, today_end))
+                completed_at__range=(task_start, task_end))
 
             writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
 
