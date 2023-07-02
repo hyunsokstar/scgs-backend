@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+    path("<int:pk>/update-due-date-by-due-date-option", views.UpdateViewForTaskDueDateForDueDateOption.as_view()),
 
     path("comment/<int:commentPk>/edit-mode/update",
          views.UpdateViewForCommentEdit.as_view()),

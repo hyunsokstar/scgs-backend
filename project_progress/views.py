@@ -23,7 +23,6 @@ from project_progress.serializers import (
     TaskUrlForExtraTaskSerializer,
     TaskUrlForTaskSerializer,
     TestSerializerForOneTask,
-    TestersForTestSerializer,
     UncompletedTaskSerializerForCashPrize,
     TaskLogSerializer,
     CreateTestSerializerForExtraTask
@@ -53,6 +52,37 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
+
+# class UpdateViewForTaskDueDateForDueDateOption(APIView):
+#     def put(self, request, pk):
+#         due_date_option = request.data.get("due_date_option")
+#         # due_date_option  이
+#         # until-noon 일 경우 pk에 해당하는 ProjectProgress.due_date 를 12시 59분        
+#         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분      
+#         # until-morning 일 경우 pk에 해당하는  ProjectProgress.due_date 를 23시 59분
+
+class UpdateViewForTaskDueDateForDueDateOption(APIView):
+    def put(self, request, pk):
+        due_date_option = request.data.get("due_date_option")
+        project_progress = get_object_or_404(ProjectProgress, pk=pk)
+
+        local_tz = pytz.timezone('Asia/Seoul')
+        now = datetime.now().astimezone(local_tz)
+
+        if due_date_option == "until-morning":
+            # Set the due date to 12:59 PM today
+            project_progress.due_date = now.replace(hour=12, minute=59)
+        elif due_date_option == "until-evening":
+            # Set the due date to 6:59 PM today
+            project_progress.due_date = now.replace(hour=18, minute=59)
+        elif due_date_option == "until-night":
+            # Set the due date to 11:59 PM today
+            project_progress.due_date = now.replace(hour=23, minute=59)
+
+        project_progress.save()
+
+        return Response({"message": "Due date updated successfully."}, status=200)
+
 
 
 class DeleteViewForTestForExtraTask(APIView):
@@ -638,7 +668,6 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         """)
 
         if ordering_option == "switch_order_of_two_tasks":
-
             print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
             # Fetch taskPk object
             task_to_update = ProjectProgress.objects.get(pk=taskPk)
@@ -2317,7 +2346,7 @@ class UncompletedTaskListView(APIView):
                 due_date__lt=deadline)
 
         if due_date_option_for_filtering == "until-noon":
-            noon = time(hour=12, minute=10, second=0)
+            noon = time(hour=13, minute=00, second=0)
             deadline = datetime.combine(datetime.today(), noon)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
