@@ -620,7 +620,9 @@ class TaskLogView(APIView):
 
 
             task_logs = TaskLog.objects.filter(
-                completed_at__range=(task_start, task_end))
+                completed_at__range=(today_start, today_end))
+
+            print("task_logs :;:::::::::::::::: ", task_logs)
 
             writers = defaultdict(int)  # 작성자별 데이터 개수를 저장할 defaultdict 초기화
 
