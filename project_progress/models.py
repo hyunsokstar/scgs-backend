@@ -34,7 +34,7 @@ class ProjectProgress(models.Model):
     class DueDateOptionChoices(models.TextChoices):
         UNTIL_NOON = ("until-noon", "오전까지")
         UNTIL_EVENING = ("until-evening", "오후까지")
-        UNTIL_AFTERNOON = ("until-afternoon", "오후 이후까지")
+        UNTIL_NIGHT = ("until-night", "밤 늦게 까지")
 
     task_manager = models.ForeignKey(
         "users.User",
@@ -121,10 +121,10 @@ class ProjectProgress(models.Model):
             local_due_date = timezone.localtime(self.due_date, pytz.timezone(client_timezone))
             if local_due_date.time() <= timezone.datetime.strptime('13:00', '%H:%M').time():
                 self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_NOON
-            elif local_due_date.time() <= timezone.datetime.strptime('19:00', '%H:%M').time():
+            elif local_due_date.time() <= timezone.datetime.strptime('19:00', '%H:%M').time() and local_due_date.time() > timezone.datetime.strptime('13:00', '%H:%M').time():
                 self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_EVENING
-            else:
-                self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_AFTERNOON
+            elif local_due_date.time() <= timezone.datetime.strptime('23:59', '%H:%M').time() and local_due_date.time() > timezone.datetime.strptime('19:00', '%H:%M').time():
+                self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_NIGHT
 
         super().save(*args, **kwargs)
 

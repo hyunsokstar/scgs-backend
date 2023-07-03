@@ -37,8 +37,12 @@ urlpatterns = [
          views.UpdateForTaskClassificationForChecked.as_view()),
     path('task-list-for-checked', views.taskListForChecked.as_view(),
          name='project_progress'),
+
     path('update-task-due-date-for-checked',
          views.UpdateViewForTaskDueDateForChecked.as_view()),
+
+    path('update-task-due-date',
+         views.UpdateViewForTaskDueDateForOneTask.as_view()),
 
     path('update-task-time-option-and-order',
          views.UpdateTaskTimeOptionAndOrder.as_view()),

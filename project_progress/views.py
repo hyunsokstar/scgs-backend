@@ -61,25 +61,76 @@ from django.shortcuts import get_object_or_404
 #         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분      
 #         # until-morning 일 경우 pk에 해당하는  ProjectProgress.due_date 를 23시 59분
 
+class UpdateViewForTaskDueDateForOneTask(APIView):
+    def put(self, request):
+        # duration_option 값을 가져옵니다.
+        duration_option = request.data.get("duration_option")
+        # checkedRowPks 값을 가져옵니다.
+        pk = request.data.get("taskPk")
+
+        print("UpdateViewForTaskDueDateForOneTask check !!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("duration_option : ", duration_option)
+
+        # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
+        updated_count = 0
+
+
+        if duration_option == "until-noon":
+            try:
+                task = ProjectProgress.objects.get(pk=pk)
+                task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=12, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                task.started_at_utc = timezone.localtime(
+                    timezone.now()).astimezone(timezone.utc)
+                task.save()
+                updated_count += 1
+            except ProjectProgress.DoesNotExist:
+                pass            
+
+        elif duration_option == "until-evening":
+            try:
+                task = ProjectProgress.objects.get(pk=pk)
+                task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                timezone.now()).date(), time(hour=18, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+                task.started_at_utc = timezone.localtime(
+                timezone.now()).astimezone(timezone.utc)
+                task.save()
+                updated_count += 1
+            except ProjectProgress.DoesNotExist:
+                    pass
+
+        elif duration_option == "until-night":
+            try:
+                task = ProjectProgress.objects.get(pk=pk)
+                task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
+                    timezone.now()).date(), time(hour=23, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
+                task.started_at_utc = timezone.localtime(
+                    timezone.now()).astimezone(timezone.utc)
+                task.save()
+                updated_count += 1
+            except ProjectProgress.DoesNotExist:
+                pass
+
+
+        message = f"task due_date is updated !!"
+        return Response({'message': message}, status=HTTP_204_NO_CONTENT)
+
 class UpdateViewForTaskDueDateForDueDateOption(APIView):
     def put(self, request, pk):
         due_date_option = request.data.get("due_date_option")
         project_progress = get_object_or_404(ProjectProgress, pk=pk)
 
-        print("due_date_option : ", due_date_option)
-
-        local_tz = pytz.timezone('Asia/Seoul')
-        now = datetime.now().astimezone(local_tz)
-
-        if due_date_option == "until-noon":
-            # Set the due date to 12:59 PM today
-            project_progress.due_date = now.replace(hour=12, minute=59)
+        if due_date_option == "until-morning":
+            # Set the due date to 12:59 PM
+            project_progress.due_date = project_progress.due_date.replace(hour=12, minute=59)
         elif due_date_option == "until-evening":
-            # Set the due date to 6:59 PM today
-            project_progress.due_date = now.replace(hour=18, minute=59)
+            # Set the due date to 6:59 PM
+            project_progress.due_date = project_progress.due_date.replace(hour=18, minute=59)
         elif due_date_option == "until-night":
-            # Set the due date to 11:59 PM today
-            project_progress.due_date = now.replace(hour=23, minute=59)
+            # Set the due date to 11:59 PM
+            project_progress.due_date = project_progress.due_date.replace(hour=23, minute=59)
 
         project_progress.save()
 
@@ -2348,7 +2399,7 @@ class UncompletedTaskListView(APIView):
                 due_date__lt=deadline)
 
         if due_date_option_for_filtering == "until-noon":
-            noon = time(hour=13, minute=00, second=0)
+            noon = time(hour=12, minute=10, second=0)
             deadline = datetime.combine(datetime.today(), noon)
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lte=deadline)
