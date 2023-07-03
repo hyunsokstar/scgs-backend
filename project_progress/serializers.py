@@ -497,8 +497,6 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = UserProfileImageSerializer()
-    # task_urls = TaskUrlForTaskSerializer(many=True)
-    # challegers_for_cach_prize = ChallegersForCachPrizeSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -527,6 +525,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "is_task_for_cash_prize",
             "is_task_for_urgent",
             "cash_prize",
+            'due_date_option_for_today'
             # "task_urls"
         )
 

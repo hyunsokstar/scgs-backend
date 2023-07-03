@@ -66,10 +66,12 @@ class UpdateViewForTaskDueDateForDueDateOption(APIView):
         due_date_option = request.data.get("due_date_option")
         project_progress = get_object_or_404(ProjectProgress, pk=pk)
 
+        print("due_date_option : ", due_date_option)
+
         local_tz = pytz.timezone('Asia/Seoul')
         now = datetime.now().astimezone(local_tz)
 
-        if due_date_option == "until-morning":
+        if due_date_option == "until-noon":
             # Set the due date to 12:59 PM today
             project_progress.due_date = now.replace(hour=12, minute=59)
         elif due_date_option == "until-evening":

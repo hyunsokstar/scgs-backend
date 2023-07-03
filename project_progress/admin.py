@@ -12,15 +12,19 @@ from .models import (
 @admin.register(ProjectProgress)
 class ProjectProgressAdmin(admin.ModelAdmin):
     list_display = (
-        "pk",
-        "task_manager",
-        "writer",
-        "task",
-        "task_description",
-        "importance",
-        "task_completed",
-        "password",
-        "due_date_option"
+        'task',
+        'task_manager',
+        'task_classification',
+        'current_status',
+        'due_date',
+    )
+    list_filter = (
+        'task_classification',
+        'current_status',
+    )
+    search_fields = (
+        'task',
+        'task_manager__username',
     )
 
 

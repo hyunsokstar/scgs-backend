@@ -31,6 +31,11 @@ class ProjectProgress(models.Model):
         AFTERNOON_TASKS = 'afternoon_tasks', '오후 작업'
         NIGHT_TASKS = 'night_tasks', '밤 작업'
 
+    class DueDateOptionChoices(models.TextChoices):
+        UNTIL_NOON = ("until-noon", "오전까지")
+        UNTIL_EVENING = ("until-evening", "오후까지")
+        UNTIL_AFTERNOON = ("until-afternoon", "오후 이후까지")
+
     task_manager = models.ForeignKey(
         "users.User",
         blank=True,
@@ -95,6 +100,12 @@ class ProjectProgress(models.Model):
     is_urgent_request = models.BooleanField(default=False)
     is_task_for_cash_prize = models.BooleanField(default=False)
 
+    due_date_option_for_today = models.CharField(
+        max_length=20,
+        choices=DueDateOptionChoices.choices,
+        default=DueDateOptionChoices.UNTIL_NOON  # 기본값을 "오전까지"로 설정
+    )
+
     def save(self, *args, **kwargs):
         if self.order is None:
             max_order = ProjectProgress.objects.all().aggregate(
@@ -103,6 +114,18 @@ class ProjectProgress(models.Model):
                 self.order = 1
             else:
                 self.order = max_order + 1
+
+        # 현지 시간 기준으로 due_date_option_for_today 값을 설정
+        if self.due_date:
+            client_timezone = 'Asia/Seoul'  # 클라이언트의 시간대에 맞게 설정
+            local_due_date = timezone.localtime(self.due_date, pytz.timezone(client_timezone))
+            if local_due_date.time() <= timezone.datetime.strptime('13:00', '%H:%M').time():
+                self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_NOON
+            elif local_due_date.time() <= timezone.datetime.strptime('19:00', '%H:%M').time():
+                self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_EVENING
+            else:
+                self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_AFTERNOON
+
         super().save(*args, **kwargs)
 
     @property
