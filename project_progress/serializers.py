@@ -502,9 +502,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
     def get_time_left_to_due_date(self, obj):
         return obj.time_left_to_due_date()
 
-# fix 0607
-
-
+# fix 0704
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -513,6 +511,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = UserProfileImageSerializer()
+    task_images = ReferImageForTaskSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -520,6 +519,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "id",
             "writer",
             "task",
+            "task_images",
             "task_description",
             "task_manager",
             "importance",
@@ -542,7 +542,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "is_task_for_urgent",
             "cash_prize",
             'due_date_option_for_today',
-            'is_for_today'
+            'is_for_today',
             # "task_urls"
         )
 
