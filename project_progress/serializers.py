@@ -26,6 +26,7 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
+
 class CreateCommentSerializerForExtraTask(ModelSerializer):
 
     class Meta:
@@ -75,6 +76,7 @@ class ExtraTaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
+
 class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
     tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
 
@@ -88,8 +90,11 @@ class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
         )
 
 # fix 0602
+
+
 class TestForExtraTaskSerializer(ModelSerializer):
-    testers_for_test_for_extra_task = TestersForTestForExtraTaskSerializer(many=True)
+    testers_for_test_for_extra_task = TestersForTestForExtraTaskSerializer(
+        many=True)
     test_result_images = TestResultImageForExtraTaskSerializer(many=True)
 
     class Meta:
@@ -105,6 +110,8 @@ class TestForExtraTaskSerializer(ModelSerializer):
         )
 
 # fix 0612
+
+
 class ExtraTasksDetailSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
     started_at_formatted = serializers.SerializerMethodField()
@@ -205,6 +212,7 @@ class TestersForTestSerializer(serializers.ModelSerializer):
             "tester"
         )
 
+
 class TestersForTestForExtraTaskSerializer(serializers.ModelSerializer):
     tester = UserProfileImageSerializer()  # 필요한 경우 태스크 정보를 시리얼화
 
@@ -252,6 +260,8 @@ class CreateExtraTaskSerializer(serializers.ModelSerializer):
         )
 
 # 0602 refer
+
+
 class TestSerializerForOneTask(ModelSerializer):
     testers_for_test = TestersForTestSerializer(many=True)
     test_result_images = TestResultImageForTaskSerializer(many=True)
@@ -268,6 +278,7 @@ class TestSerializerForOneTask(ModelSerializer):
             "test_result_images"
         )
 
+
 class CreateTestSerializerForExtraTask(ModelSerializer):
     class Meta:
         model = TestForExtraTask
@@ -276,6 +287,7 @@ class CreateTestSerializerForExtraTask(ModelSerializer):
             "test_method",
             "test_passed"
         )
+
 
 class TestSerializerForExtraTask(ModelSerializer):
     testers_for_test = TestersForTestForExtraTaskSerializer(many=True)
@@ -292,6 +304,7 @@ class TestSerializerForExtraTask(ModelSerializer):
             "testers_for_test",
             "test_result_images"
         )
+
 
 class ExtraTasksSerializer(ModelSerializer):
     task_manager = UserProfileImageSerializer()
@@ -338,6 +351,8 @@ class TaskCommentSerializer(serializers.ModelSerializer):
         return obj.created_at_formatted()
 
 # 1122 0611
+
+
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
@@ -348,7 +363,6 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     task_manager = UserProfileImageSerializer()
     task_urls = TaskUrlForTaskSerializer(many=True)
     time_left_to_due_date = serializers.SerializerMethodField()
-
 
     class Meta:
         model = ProjectProgress
@@ -381,11 +395,9 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
 
     def get_time_left_to_due_date(self, obj):
         return obj.time_left_to_due_date()
-    
+
     def get_elapsed_time_from_started_at(self, obj):
         return obj.elapsed_time_from_started_at()
-    
-  
 
 
 class ChallegersForCachPrizeSerializer(serializers.ModelSerializer):
@@ -422,6 +434,8 @@ class UncompletedTaskSerializerForCashPrize(serializers.ModelSerializer):
         )
 
 # 0612 fix
+
+
 class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -468,7 +482,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
             "is_task_for_urgent",
             "cash_prize",
             "task_images"
-        )    
+        )
 
     def get_started_at_formatted(self, obj):
         return obj.started_at_formatted()
@@ -489,6 +503,8 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
         return obj.time_left_to_due_date()
 
 # fix 0607
+
+
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -525,7 +541,8 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "is_task_for_cash_prize",
             "is_task_for_urgent",
             "cash_prize",
-            'due_date_option_for_today'
+            'due_date_option_for_today',
+            'is_for_today'
             # "task_urls"
         )
 

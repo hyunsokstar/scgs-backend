@@ -106,6 +106,8 @@ class ProjectProgress(models.Model):
         default=DueDateOptionChoices.UNTIL_NOON  # 기본값을 "오전까지"로 설정
     )
 
+    is_for_today = models.BooleanField(default=False)
+
     def save(self, *args, **kwargs):
         if self.order is None:
             max_order = ProjectProgress.objects.all().aggregate(
@@ -125,6 +127,16 @@ class ProjectProgress(models.Model):
                 self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_EVENING
             elif local_due_date.time() <= timezone.datetime.strptime('23:59', '%H:%M').time() and local_due_date.time() > timezone.datetime.strptime('19:00', '%H:%M').time():
                 self.due_date_option_for_today = self.DueDateOptionChoices.UNTIL_NIGHT
+
+        if self.due_date:
+            client_timezone = 'Asia/Seoul'  # 클라이언트의 시간대에 맞게 설정
+            local_due_date = timezone.localtime(self.due_date, pytz.timezone(client_timezone))
+
+            current_time = datetime.now().time()
+            if local_due_date.date() == datetime.today().date() and local_due_date.time() > current_time:
+                self.is_for_today = True
+            else:
+                self.is_for_today = False
 
         super().save(*args, **kwargs)
 
