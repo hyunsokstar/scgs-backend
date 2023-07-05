@@ -10,6 +10,7 @@ from project_progress.models import (
 # from medias.serializers import ReferImageForTaskSerializer, TestResultImageSerializer, TestResultImageForExtraTaskSerializer
 from medias.serializers import (
     ReferImageForTaskSerializer,
+    TestResultImageForCompletedTaskSerializer,
     TestResultImageSerializer,
     TestResultImageForExtraTaskSerializer,
     ReferImageForExtraTaskSerializer
@@ -22,6 +23,32 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 from .models import Photo, ReferImageForExtraTask, ReferImageForTask
+from rest_framework import status
+
+
+class CreateViewForResultImageForCompletedTask(APIView):
+    def get_object(self, pk):
+        try:
+            return ProjectProgress.objects.get(pk=pk)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def post(self, request):
+        taskPk = request.data["taskPk"]
+        project_task = self.get_object(taskPk)
+
+        serializer = TestResultImageForCompletedTaskSerializer(data=request.data)
+
+        if serializer.is_valid():
+            photo = serializer.save(task=project_task)
+            serializer = TestResultImageForCompletedTaskSerializer(photo)
+            response_data = {
+                "message": "Image upload for completed task is successful.",
+                "data": serializer.data
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TestResultImageForExtraTask(APIView):

@@ -8,7 +8,8 @@ from .views import (
     createTestImageResult,
     TestResultImageForExtraTask,
     DeleteViewForRefImageForExtraTask,
-    CreateViewForRefImageToExtraTaskDetail
+    CreateViewForRefImageToExtraTaskDetail,
+    CreateViewForResultImageForCompletedTask
 )
 
 urlpatterns = [
@@ -18,8 +19,12 @@ urlpatterns = [
          DeleteViewForRefImageForTask.as_view()),
     path("ref-image-for-extra-task/<int:pk>/delete",
          DeleteViewForRefImageForExtraTask.as_view()),
+
+    #  ref 0705
     path("ref-image-for-task/upload",
          CreateViewForRefImageToTaskDetail.as_view()),
+     path("create-result-image-for-completed-task", CreateViewForResultImageForCompletedTask.as_view()),
+
     path("ref-image-for-extra-task/upload",
          CreateViewForRefImageToExtraTaskDetail.as_view()),
     path("TestResultImageForExtraTask",
