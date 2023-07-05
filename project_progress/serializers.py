@@ -1,6 +1,7 @@
 # from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer,TestResultImageForExtraTaskSerializer, ReferImageForExtraTaskSerializer
 from medias.serializers import (
     ReferImageForTaskSerializer,
+    TestResultImageForCompletedTaskSerializer,
     TestResultImageForTaskSerializer,
     TestResultImageForExtraTaskSerializer,
     ReferImageForExtraTaskSerializer
@@ -502,7 +503,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
     def get_time_left_to_due_date(self, obj):
         return obj.time_left_to_due_date()
 
-# fix 0704
+# fix 0705
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -512,6 +513,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = UserProfileImageSerializer()
     task_images = ReferImageForTaskSerializer(many=True)
+    test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -543,7 +545,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "cash_prize",
             'due_date_option_for_today',
             'is_for_today',
-            # "task_urls"
+            'test_result_images'
         )
 
     def get_started_at_formatted(self, obj):

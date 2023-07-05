@@ -5,8 +5,19 @@ from .models import (
     ReferImageForTask,
     TestResultImageForTask,
     TestResultImageForExtraTask,
-    ReferImageForExtraTask
+    ReferImageForExtraTask,
+    TestResultImageForCompletedTask
 )
+
+
+class TestResultImageForCompletedTaskSerializer(ModelSerializer):
+    class Meta:
+        model = TestResultImageForCompletedTask
+        fields = (
+            "pk",
+            "image_url",
+        )
+
 
 class TestResultImageForTaskSerializer(ModelSerializer):
     class Meta:
@@ -16,6 +27,7 @@ class TestResultImageForTaskSerializer(ModelSerializer):
             "image_url"
         )
 
+
 class TestResultImageForExtraTaskSerializer(ModelSerializer):
     class Meta:
         model = TestResultImageForExtraTask
@@ -23,6 +35,7 @@ class TestResultImageForExtraTaskSerializer(ModelSerializer):
             "pk",
             "image_url"
         )
+
 
 class ProfilePhotoSerializer(ModelSerializer):
     class Meta:
@@ -52,6 +65,7 @@ class ReferImageForTaskSerializer(ModelSerializer):
             # "task",
         )
 
+
 class ReferImageForExtraTaskSerializer(ModelSerializer):
     class Meta:
         model = ReferImageForExtraTask
@@ -59,7 +73,8 @@ class ReferImageForExtraTaskSerializer(ModelSerializer):
             "pk",
             "image_url",
             # "task",
-        )        
+        )
+
 
 class TestResultImageSerializer(ModelSerializer):
     class Meta:
@@ -68,4 +83,3 @@ class TestResultImageSerializer(ModelSerializer):
             "pk",
             "image_url",
         )
-

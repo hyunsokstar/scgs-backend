@@ -6,10 +6,16 @@ from .models import (
     TestResultImageForTask,
     Video,
     TestResultImageForExtraTask,
-    ReferImageForExtraTask
+    ReferImageForExtraTask,
+    TestResultImageForCompletedTask
 )
 
 # Register your models here.
+
+
+@admin.register(TestResultImageForCompletedTask)
+class TestResultImageForCompletedTaskAdmin(admin.ModelAdmin):
+    list_display = ['image_url', 'task']
 
 
 @admin.register(PhotoForProfile)
