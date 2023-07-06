@@ -27,6 +27,75 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
+class CompletedTaskSerializer(serializers.ModelSerializer):
+    started_at_formatted = serializers.SerializerMethodField()
+    completed_at_formatted = serializers.SerializerMethodField()
+    due_date_formatted = serializers.SerializerMethodField()
+    elapsed_time_from_started_at = serializers.SerializerMethodField()
+    time_consumed_from_start_to_complete = serializers.SerializerMethodField()
+    time_left_to_due_date = serializers.SerializerMethodField()
+    task_manager = UserProfileImageSerializer()
+    task_images = ReferImageForTaskSerializer(many=True)
+    test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
+
+    is_for_today = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "id",
+            "writer",
+            "task",
+            "task_images",
+            "task_description",
+            "task_manager",
+            "importance",
+            "is_testing",
+            "in_progress",
+            "task_completed",
+            "current_status",
+            "due_date",
+            "task_classification",
+            "started_at",
+            "started_at_formatted",
+            "completed_at_formatted",
+            "due_date_formatted",
+            "elapsed_time_from_started_at",
+            "time_consumed_from_start_to_complete",
+            "time_left_to_due_date",
+            "check_result_by_tester",
+            "score_by_tester",
+            "is_task_for_cash_prize",
+            "is_task_for_urgent",
+            "cash_prize",
+            'due_date_option_for_today',
+            'is_for_today',
+            'test_result_images'
+        )
+
+    def get_started_at_formatted(self, obj):
+        return obj.started_at_formatted()
+
+    def completed_at_formatted(self, obj):
+        return obj.completed_at_formatted()
+
+    def get_due_date_formatted(self, obj):
+        return obj.due_date_formatted()
+
+    def get_elapsed_time_from_started_at(self, obj):
+        return obj.elapsed_time_from_started_at()
+
+    def get_time_consumed_from_start_to_complete(self, obj):
+        return obj.time_consumed_from_start_to_complete()
+
+    def get_time_left_to_due_date(self, obj):
+        return obj.time_left_to_due_date()
+    def get_is_for_today(self, obj):
+        # 현재 시간을 현지 시간으로 설정
+        local_time = timezone.localtime(timezone.now()).date()
+
+        # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
+        return obj.completed_at.date() == local_time
 
 class CreateCommentSerializerForExtraTask(ModelSerializer):
 
@@ -514,6 +583,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     task_manager = UserProfileImageSerializer()
     task_images = ReferImageForTaskSerializer(many=True)
     test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
+    is_for_today = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectProgress
@@ -566,6 +636,12 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     def get_time_left_to_due_date(self, obj):
         return obj.time_left_to_due_date()
 
+    def get_is_for_today(self, obj):
+        # 현재 시간을 현지 시간으로 설정
+        local_time = timezone.localtime(timezone.now()).date()
+
+        # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
+        return obj.due_date.date() == local_time
 
 def get_current_time_in_seoul():
     seoul_tz = pytz.timezone('Asia/Seoul')

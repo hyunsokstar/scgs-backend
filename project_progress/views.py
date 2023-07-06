@@ -25,7 +25,8 @@ from project_progress.serializers import (
     TestSerializerForOneTask,
     UncompletedTaskSerializerForCashPrize,
     TaskLogSerializer,
-    CreateTestSerializerForExtraTask
+    CreateTestSerializerForExtraTask,
+    CompletedTaskSerializer
 )
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -2620,7 +2621,7 @@ class CompletedTaskListView(APIView):
                 start:end]
 
         # 직렬화
-        serializer = ProjectProgressListSerializer(
+        serializer = CompletedTaskSerializer(
             self.completed_project_task_list_for_current_page, many=True)
         data = serializer.data
 
