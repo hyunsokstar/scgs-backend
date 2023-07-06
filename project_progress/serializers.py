@@ -584,6 +584,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     task_images = ReferImageForTaskSerializer(many=True)
     test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
     is_for_today = serializers.SerializerMethodField()
+    task_comments = ExtraTaskCommentSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -615,7 +616,8 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "cash_prize",
             'due_date_option_for_today',
             'is_for_today',
-            'test_result_images'
+            'test_result_images',
+            'task_comments'
         )
 
     def get_started_at_formatted(self, obj):
