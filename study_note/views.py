@@ -53,7 +53,8 @@ from django.utils import timezone
 class DeleteViewForErrorReport(APIView):
     def delete(self, request, error_report_pk):
         try:
-            error_report = ErrorReportForStudyNote.objects.get(pk=error_report_pk)
+            error_report = ErrorReportForStudyNote.objects.get(
+                pk=error_report_pk)
 
             if request.user.is_authenticated:
                 error_report.delete()
@@ -63,6 +64,7 @@ class DeleteViewForErrorReport(APIView):
         except ErrorReportForStudyNote.DoesNotExist:
             print("ErrorReport is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 class UpdateViewForErrorReport(APIView):
     def put(self, request, error_report_pk):
@@ -84,6 +86,7 @@ class UpdateViewForErrorReport(APIView):
         except ErrorReportForStudyNote.DoesNotExist:
             print("ErrorReport is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 class CreateViewForErrorRecordForNote(APIView):
     def get_object(self, study_note_pk):
@@ -116,6 +119,7 @@ class CreateViewForErrorRecordForNote(APIView):
             print("Errors:", serializer.errors)
             return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ErrorReportForStudyNoteView(APIView):
     def get(self, request, study_note_pk):
         try:
@@ -126,6 +130,7 @@ class ErrorReportForStudyNoteView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except StudyNote.DoesNotExist:
             return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class ErrorReportForPageForStudyNoteView(APIView):
     def get(self, request, study_note_pk, page):
@@ -394,7 +399,12 @@ class ClasssRoomView(APIView):
                 print("current_page type: ", type(current_page))
                 existing_class_room.current_page = current_page
                 existing_class_room.save()
-                return Response(f"current page num is updated to {current_page}", status=status.HTTP_200_OK)
+
+                response_data = {
+                    'save_page_num': current_page
+                }
+
+                return Response(response_data, status=status.HTTP_200_OK)
             else:
                 print("페이지 번호가 다르지 않습니다")
         # update
@@ -409,8 +419,12 @@ class ClasssRoomView(APIView):
             writer=writer
         )
 
+        response_data = {
+            'save_page_num': current_page
+        }
+
         # serializer = ClassRoomForStudyNoteSerializer(class_room)
-        return Response("page record is created for class room !", status=status.HTTP_201_CREATED)
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 # UpdateViewForStudyNoteComment
 
@@ -1353,8 +1367,10 @@ class StudyNoteDetailView(APIView):
         study_note = self.get_object(notePk)
         # current_page = request.GET.get('currentPage', 1)
 
-        question_count_for_current_page = study_note.question_list.filter(page=pageNum).count()
-        print("question_count_for_current_page ::::::::::::::::::::::::::::::::::::::::", question_count_for_current_page)
+        question_count_for_current_page = study_note.question_list.filter(
+            page=pageNum).count()
+        print("question_count_for_current_page ::::::::::::::::::::::::::::::::::::::::",
+              question_count_for_current_page)
 
         print("current_page : ", pageNum)
         note_contents = study_note.note_contents.filter(
@@ -1392,7 +1408,7 @@ class StudyNoteDetailView(APIView):
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
             "co_writers_for_approved": cowriters_data,
-            "question_count_for_current_page":question_count_for_current_page
+            "question_count_for_current_page": question_count_for_current_page
         }
 
         return Response(response_data, status=HTTP_200_OK)
