@@ -50,6 +50,19 @@ from django.utils import timezone
 
 
 # 1122
+class DeleteViewForStudyNote(APIView):
+    def get_object(self, pk):
+        try:
+            return StudyNote.objects.get(pk=pk)
+        except StudyNote.DoesNotExist:
+            raise NotFound
+
+    def delete(self, request, notePk):
+        api_docu = self.get_object(notePk)
+        api_docu.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
 class DeleteViewForErrorReport(APIView):
     def delete(self, request, error_report_pk):
         try:
@@ -1412,18 +1425,6 @@ class StudyNoteDetailView(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
-
-    # def get(self, request, pk):
-    #     page_count = StudyNoteContent.objects.values('page').annotate(count=Count('id')).order_by('page')
-    #     result = [page['page'] for page in page_count]
-    #     return Response(result)
-
-    def delete(self, request, notePk):
-        api_docu = self.get_object(notePk)
-        api_docu.delete()
-
-        return Response(status=HTTP_204_NO_CONTENT)
-
 
 class AddDummyDataForStudyNote(APIView):
     def post(self, request):
