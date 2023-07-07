@@ -49,7 +49,7 @@ from .models import (
 from django.utils import timezone
 
 
-# 1122N
+# 1122
 class DeleteViewForStudyNote(APIView):
     def get_object(self, pk):
         try:
@@ -61,7 +61,7 @@ class DeleteViewForStudyNote(APIView):
         api_docu = self.get_object(notePk)
         api_docu.delete()
 
-        return Response(status=HTTP_204_O_CONTENT)
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class DeleteViewForErrorReport(APIView):
