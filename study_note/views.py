@@ -1390,7 +1390,12 @@ class StudyNoteDetailView(APIView):
         note_contents = study_note.note_contents.filter(
             page=pageNum).order_by('order')
         
-        subtitle_for_page = note_contents.filter(content_option="subtitle_for_page")[0].title
+        filtered_contents = note_contents.filter(content_option="subtitle_for_page")
+
+        if filtered_contents.exists():
+            subtitle_for_page = filtered_contents[0].title
+        else:
+            subtitle_for_page = "no data" 
 
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
