@@ -1389,6 +1389,8 @@ class StudyNoteDetailView(APIView):
         print("current_page : ", pageNum)
         note_contents = study_note.note_contents.filter(
             page=pageNum).order_by('order')
+        
+        subtitle_for_page = note_contents.filter(content_option="subtitle_for_page")[0].title
 
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
@@ -1417,6 +1419,7 @@ class StudyNoteDetailView(APIView):
 
         response_data = {
             "note_title": study_note.title,
+            "subtitle_for_page": subtitle_for_page,
             "note_user_name": study_note.writer.username,
             "note_user_profile_image": study_note.writer.profile_image,
             "exist_page_numbers": exist_page_numbers,
