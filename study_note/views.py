@@ -50,6 +50,28 @@ from django.utils import timezone
 
 
 # 1122
+
+class UpdateViewForNoteSubtitle(APIView):
+
+    def put(self, request, content_pk, format=None):
+        study_note_content = StudyNoteContent.objects.get(pk=content_pk)
+
+        study_note_content.title = request.data.get(
+            'title', study_note_content.title)
+        study_note_content.content = request.data.get(
+            'content', study_note_content.content)
+        study_note_content.ref_url1 = request.data.get(
+            'ref_url1', study_note_content.ref_url1)
+        study_note_content.ref_url2 = request.data.get(
+            'ref_url2', study_note_content.ref_url2)
+        study_note_content.youtube_url = request.data.get(
+            'youtube_url', study_note_content.youtube_url)
+
+        study_note_content.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
 class DeleteViewForStudyNote(APIView):
     def get_object(self, pk):
         try:
@@ -1389,13 +1411,14 @@ class StudyNoteDetailView(APIView):
         print("current_page : ", pageNum)
         note_contents = study_note.note_contents.filter(
             page=pageNum).order_by('order')
-        
-        filtered_contents = note_contents.filter(content_option="subtitle_for_page")
+
+        filtered_contents = note_contents.filter(
+            content_option="subtitle_for_page")
 
         if filtered_contents.exists():
             subtitle_for_page = filtered_contents[0].title
         else:
-            subtitle_for_page = "no data" 
+            subtitle_for_page = "no data"
 
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data

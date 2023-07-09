@@ -24,7 +24,11 @@ urlpatterns = [
          views.StudyNoteContentReOrderAPIView.as_view(), name='study-note-contents-re-order'),
     path('contents/delete-for-checked',
          views.DeleteNoteContentsForChecked.as_view(), name='StudyNoteAPIView'),
+
+    #  content update view
     path('contents/<int:content_pk>', views.StudyNoteContentView.as_view()),
+    path('content/<int:content_pk>/update-subtitle', views.UpdateViewForNoteSubtitle.as_view()),
+
     path('contents/<int:content_pk>/order-plus-one-for-note-content',
          views.order_plus_one_for_note_content.as_view()),  # order + 1
     path('contents/<int:content_pk>/order-minus-one-for-note-content',
