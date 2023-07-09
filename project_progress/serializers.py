@@ -584,7 +584,9 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     task_images = ReferImageForTaskSerializer(many=True)
     test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
     is_for_today = serializers.SerializerMethodField()
+    is_due_date_has_passed = serializers.SerializerMethodField()
     task_comments = ExtraTaskCommentSerializer(many=True)
+    d_day_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectProgress
@@ -616,8 +618,10 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "cash_prize",
             'due_date_option_for_today',
             'is_for_today',
+            'is_due_date_has_passed',
+            'd_day_count',
             'test_result_images',
-            'task_comments'
+            'task_comments',
         )
 
     def get_started_at_formatted(self, obj):
@@ -644,6 +648,31 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 
         # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
         return obj.due_date.date() == local_time
+    
+    def get_is_due_date_has_passed(self, obj):
+        # 현재 시간을 현지 시간으로 설정
+        local_time = timezone.localtime(timezone.now())
+
+        # obj.due_date를 현지 시간으로 변환하여 현재 시간과 비교
+        obj_local_time = timezone.localtime(obj.due_date)
+        is_due_date_has_passed = obj_local_time < local_time
+        return is_due_date_has_passed
+
+    def get_d_day_count(self, obj):
+        # 현재 시간을 현지 시간으로 설정
+        local_time = timezone.localtime(timezone.now()).date()
+
+        # obj.due_date를 현지 시간으로 변환하여 현재 시간과 비교
+        obj_local_time = timezone.localtime(obj.due_date).date()
+
+        if obj_local_time > local_time:
+            # D-day까지 남은 일 수 계산
+            d_day = obj_local_time - local_time
+            return d_day.days
+        else:
+            # 이미 D-day가 지났거나 오늘인 경우
+            return ""
+
 
 def get_current_time_in_seoul():
     seoul_tz = pytz.timezone('Asia/Seoul')
