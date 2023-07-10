@@ -198,7 +198,7 @@ class StudyNoteContent(models.Model):
 
     page = models.IntegerField(default=1)
 
-    content_option = models.CharField(
+    content_option = models.TextField(
         max_length=20,
         choices=ContentOptionChoices.choices,
         default=ContentOptionChoices.NOTE_CONTENT,
