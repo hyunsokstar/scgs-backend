@@ -2305,6 +2305,7 @@ class UncompletedTaskListView(APIView):
         except ValueError:
             page = 1
 
+
         # period option 가져 오기
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
@@ -2321,7 +2322,6 @@ class UncompletedTaskListView(APIView):
         rating_for_filter_option = request.query_params.get(
             "rating_for_filter_option", "")
         #   isForUrgent,
-        #   checkForCashPrize
         isForUrgent = request.query_params.get(
             "isForUrgent", False)
 
@@ -2332,14 +2332,12 @@ class UncompletedTaskListView(APIView):
             "groupByOption", "")
         print("groupByOption : ", groupByOption)
 
-        # print("self.user_for_search : ", self.user_for_search)
-        # print("due_date_option_for_filtering : ",
-        #       due_date_option_for_filtering)
-        # print("rating_for_filter_option : ",
-        #       rating_for_filter_option)
         print("isForUrgent : ", isForUrgent)
         print("checkForCashPrize : ",
               checkForCashPrize)
+
+        is_task_due_date_has_passed = request.query_params.get(
+            "is_task_due_date_has_passed", False)
 
         # self.all_uncompleted_project_task_list 초기화 하기 for period option
         if period_option == "all":
@@ -2482,6 +2480,15 @@ class UncompletedTaskListView(APIView):
             if groupByOption == "importance":
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
                     'importance')
+
+        print("is_task_due_date_has_passed ::::::::::::::: ", is_task_due_date_has_passed)
+        if is_task_due_date_has_passed == "true":
+            # todo due_date 가 지금 시간 보다 과거인것들 검색 (현지 시간 기준)
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+
+            self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                due_date__lt=current_datetime, due_date__isnull=False
+            )
 
         # 직렬화
         serializer = ProjectProgressListSerializer(
