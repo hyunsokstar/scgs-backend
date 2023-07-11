@@ -2565,6 +2565,10 @@ class UncompletedTaskListView(APIView):
                 completed_task_count_for_today / total_task_count_for_today) * 100
             achievement_rate_for_today = round(achievement_rate_for_today)
 
+        current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+        task_count_for_due_date_passed = self.all_uncompleted_project_task_list.filter(
+            due_date__lt=current_datetime, due_date__isnull=False).count()        
+
         response_data = {
             "writers_info": writers_info,
             "ProjectProgressList": data,
@@ -2575,7 +2579,8 @@ class UncompletedTaskListView(APIView):
             "task_number_for_one_page": self.task_number_for_one_page,
             "total_task_count_for_today": total_task_count_for_today,
             "completed_task_count_for_today": completed_task_count_for_today,
-            "achievement_rate_for_today": achievement_rate_for_today
+            "achievement_rate_for_today": achievement_rate_for_today,
+            "task_count_for_due_date_passed":task_count_for_due_date_passed
         }
 
         return Response(response_data, status=HTTP_200_OK)
