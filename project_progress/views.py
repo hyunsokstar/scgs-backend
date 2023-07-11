@@ -58,9 +58,10 @@ from django.shortcuts import get_object_or_404
 #     def put(self, request, pk):
 #         due_date_option = request.data.get("due_date_option")
 #         # due_date_option  이
-#         # until-noon 일 경우 pk에 해당하는 ProjectProgress.due_date 를 12시 59분        
-#         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분      
+#         # until-noon 일 경우 pk에 해당하는 ProjectProgress.due_date 를 12시 59분
+#         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분
 #         # until-morning 일 경우 pk에 해당하는  ProjectProgress.due_date 를 23시 59분
+
 
 class UpdateViewForTaskDueDateForOneTask(APIView):
     def put(self, request):
@@ -75,7 +76,6 @@ class UpdateViewForTaskDueDateForOneTask(APIView):
         # pk가 checked_row_pks에 포함된 ProjectProgress 모델 인스턴스들의 due_date와 started_at_utc를 업데이트합니다.
         updated_count = 0
 
-
         if duration_option == "until-noon":
             try:
                 task = ProjectProgress.objects.get(pk=pk)
@@ -86,20 +86,20 @@ class UpdateViewForTaskDueDateForOneTask(APIView):
                 task.save()
                 updated_count += 1
             except ProjectProgress.DoesNotExist:
-                pass            
+                pass
 
         elif duration_option == "until-evening":
             try:
                 task = ProjectProgress.objects.get(pk=pk)
                 task.due_date = timezone.make_aware(datetime.combine(timezone.localtime(
-                timezone.now()).date(), time(hour=18, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
+                    timezone.now()).date(), time(hour=18, minute=59)))  # 서버 시간 기준으로 오늘 오후 7시로 설정
                 # started_at_utc 필드를 서버 시간 기준으로 현재 시간으로 업데이트합니다.
                 task.started_at_utc = timezone.localtime(
-                timezone.now()).astimezone(timezone.utc)
+                    timezone.now()).astimezone(timezone.utc)
                 task.save()
                 updated_count += 1
             except ProjectProgress.DoesNotExist:
-                    pass
+                pass
 
         elif duration_option == "until-night":
             try:
@@ -114,9 +114,9 @@ class UpdateViewForTaskDueDateForOneTask(APIView):
             except ProjectProgress.DoesNotExist:
                 pass
 
-
         message = f"task due_date is updated !!"
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
+
 
 class UpdateViewForTaskDueDateForDueDateOption(APIView):
     def put(self, request, pk):
@@ -125,18 +125,20 @@ class UpdateViewForTaskDueDateForDueDateOption(APIView):
 
         if due_date_option == "until-morning":
             # Set the due date to 12:59 PM
-            project_progress.due_date = project_progress.due_date.replace(hour=12, minute=59)
+            project_progress.due_date = project_progress.due_date.replace(
+                hour=12, minute=59)
         elif due_date_option == "until-evening":
             # Set the due date to 6:59 PM
-            project_progress.due_date = project_progress.due_date.replace(hour=18, minute=59)
+            project_progress.due_date = project_progress.due_date.replace(
+                hour=18, minute=59)
         elif due_date_option == "until-night":
             # Set the due date to 11:59 PM
-            project_progress.due_date = project_progress.due_date.replace(hour=23, minute=59)
+            project_progress.due_date = project_progress.due_date.replace(
+                hour=23, minute=59)
 
         project_progress.save()
 
         return Response({"message": "Due date updated successfully."}, status=200)
-
 
 
 class DeleteViewForTestForExtraTask(APIView):
@@ -488,7 +490,6 @@ class TaskLogView(APIView):
                 task_completed=True
             ).count()
 
-            
             time_difference = now - task_start
             hours_elapsed = int(time_difference.total_seconds() // 3600)
             minutes_elapsed = int(
@@ -577,11 +578,15 @@ class TaskLogView(APIView):
             # Replace 'YOUR_TIMEZONE' with your desired timezone
             now = datetime.now(pytz.timezone('Asia/Seoul'))
 
-            today_start = datetime.combine(now.date(), time(hour=0, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            today_end = datetime.combine(now.date(), time(hour=23, minute=59, second=59), tzinfo=pytz.timezone('Asia/Seoul'))
-            
-            task_start = datetime.combine(now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            task_end = datetime.combine(now.date(), time(hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            today_start = datetime.combine(now.date(), time(
+                hour=0, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            today_end = datetime.combine(now.date(), time(
+                hour=23, minute=59, second=59), tzinfo=pytz.timezone('Asia/Seoul'))
+
+            task_start = datetime.combine(now.date(), time(
+                hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            task_end = datetime.combine(now.date(), time(
+                hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
 
             print("task_start : ", task_start)
             print("task_end : ", task_end)
@@ -608,7 +613,7 @@ class TaskLogView(APIView):
             if hours_elapsed > 0:
                 average_number_per_hour = total_today_completed_task_count / hours_elapsed
             else:
-                average_number_per_hour = 0            
+                average_number_per_hour = 0
             minutes_elapsed = int(
                 (time_difference.total_seconds() % 3600) // 60)
 
@@ -618,7 +623,6 @@ class TaskLogView(APIView):
             # else:
             #     average_number_per_hour = 0
             elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
-
 
             task_logs = TaskLog.objects.filter(
                 completed_at__range=(today_start, today_end))
@@ -2305,7 +2309,6 @@ class UncompletedTaskListView(APIView):
         except ValueError:
             page = 1
 
-
         # period option 가져 오기
         period_option = request.query_params.get(
             "selectedPeriodOptionForUncompletedTaskList", "all")
@@ -2363,6 +2366,11 @@ class UncompletedTaskListView(APIView):
         else:
             count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
                 task_completed=False, task_manager__username=self.user_for_search).count()
+
+        if is_task_due_date_has_passed == "true":
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+            count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+                due_date__lt=current_datetime, due_date__isnull=False).count()
 
         print("count_for_all_uncompleted_project_task_list : ",
               count_for_all_uncompleted_project_task_list)
@@ -2481,11 +2489,10 @@ class UncompletedTaskListView(APIView):
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
                     'importance')
 
-        print("is_task_due_date_has_passed ::::::::::::::: ", is_task_due_date_has_passed)
         if is_task_due_date_has_passed == "true":
             # todo due_date 가 지금 시간 보다 과거인것들 검색 (현지 시간 기준)
-            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
 
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
             self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                 due_date__lt=current_datetime, due_date__isnull=False
             )
@@ -2504,13 +2511,25 @@ class UncompletedTaskListView(APIView):
         else:
             serializer = ProjectProgressListSerializer(
                 self.uncompleted_project_task_list_for_current_page, many=True)
-            # , task_manager = self.user_for_search
             count_for_ready = self.all_uncompleted_project_task_list.filter(
                 in_progress=False, task_manager__username=self.user_for_search).count()
             count_for_in_progress = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
+
+        print("is_task_due_date_has_passed ::::::::::::::: ",
+              is_task_due_date_has_passed)
+        
+        if is_task_due_date_has_passed == "true":
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+
+            count_for_ready = self.all_uncompleted_project_task_list.filter(
+                in_progress=False, due_date__lt=current_datetime, due_date__isnull=False).count()
+            count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=False, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
+            count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+                in_progress=True, is_testing=True, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
 
         # 리스트 직렬화
         data = serializer.data
@@ -2532,6 +2551,7 @@ class UncompletedTaskListView(APIView):
             datetime.combine(date.today(), time.min))
         today_end = timezone.localize(datetime.combine(date.today(), time.max))
 
+        
         total_task_count_for_today = ProjectProgress.objects.filter(
             due_date__range=(today_start, today_end)).count()
 
