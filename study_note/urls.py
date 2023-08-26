@@ -56,6 +56,8 @@ urlpatterns = [
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
+    path('FAQBoard/<int:study_note_pk>', views.FAQBoardView.as_view()),
+
     path('<int:study_note_pk>/error-report-list',
          views.ErrorReportForStudyNoteView.as_view()),
     path('<int:study_note_pk>/error-report/<int:page>',

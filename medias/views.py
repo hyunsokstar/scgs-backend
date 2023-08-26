@@ -37,7 +37,8 @@ class CreateViewForResultImageForCompletedTask(APIView):
         taskPk = request.data["taskPk"]
         project_task = self.get_object(taskPk)
 
-        serializer = TestResultImageForCompletedTaskSerializer(data=request.data)
+        serializer = TestResultImageForCompletedTaskSerializer(
+            data=request.data)
 
         if serializer.is_valid():
             photo = serializer.save(task=project_task)

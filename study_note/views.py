@@ -3,14 +3,19 @@ from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
-# from .serializers import StudyNoteContentSerializer, StudyNoteSerializer,StudyNoteBriefingBoardSerializer
 from .serializers import (
     SerializerForCreateQuestionForNote,
     StudyNoteContentSerializer,
     StudyNoteSerializer,
     StudyNoteBriefingBoardSerializer,
-    CreateCommentSerializerForNote
+    CreateCommentSerializerForNote,
+    ClassRoomForStudyNoteSerializer,
+    QnABoardSerializer,
+    ErrorReportForStudyNoteSerializer,
+    SerializerForCreateErrorReportForNote,
+    FAQBoardSerializer
 )
+
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
@@ -26,13 +31,6 @@ from django.db.models import Q, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import (
-    StudyNoteContentSerializer,
-    ClassRoomForStudyNoteSerializer,
-    QnABoardSerializer,
-    ErrorReportForStudyNoteSerializer,
-    SerializerForCreateErrorReportForNote
-)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -42,9 +40,10 @@ from .models import (
     StudyNoteContent,
     ClassRoomForStudyNote,
     StudyNoteBriefingBoard,
-    QnABoard,
     AnswerForQaBoard,
-    ErrorReportForStudyNote
+    ErrorReportForStudyNote,
+    QnABoard,
+    FAQBoard,
 )
 from django.utils import timezone
 
@@ -325,6 +324,22 @@ class CreateViewForQnABoard(APIView):
 #             qa_list, many=True)
 
 #         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FAQBoardView(APIView):
+    def get(self, request, study_note_pk):
+        print("study_note_pk : ", study_note_pk)
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        qa_list = study_note.faq_list.all()  # FAQBoard 모델과 연결된 related_name인 "faq_list" 사용
+        serializer = FAQBoardSerializer(qa_list, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 class QnABoardView(APIView):
     def get(self, request, study_note_pk):
         print("study_note_pk:", study_note_pk)
@@ -846,6 +861,8 @@ class StudyNoteAPIViewForCheckedRows(APIView):
         return Response(response_data, status=HTTP_200_OK)
 
 
+from django.db import transaction
+
 class UpdateNoteContentsPageForSelectedView(APIView):
     def get_object(self, pk):
         try:
@@ -855,103 +872,113 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
     def put(self, request, study_note_pk):
         direction = request.data.get('direction')
-        pageNumbersToEdit = request.data.get('pageNumbersToEdit')
-        pageNumbersToMove = request.data.get('pageNumbersToMove')
+        pageNumbersToEdit = request.data.get('pageNumbersToEdit') # 초록색
+        pageNumbersToMove = request.data.get('pageNumbersToMove') # 주황색
 
-        # 데이터 출력
-        print("----- API 데이터 -----\n")
-        print(f"Direction: {direction}")
-        print(f"Study Note PK: {study_note_pk}")
-        print(f"Page Numbers to Edit: {pageNumbersToEdit}")
-        print(f"Page Numbers to Move: {pageNumbersToMove}")
-        print("\n----------------------")
+        try:
+            with transaction.atomic():
+                study_note = self.get_object(study_note_pk)  # 특정 노트
+                study_note_contents = study_note.note_contents.all()  # 모든 노트
 
-        study_note = self.get_object(study_note_pk)
-        study_note_contents = study_note.note_contents.all()
-        # todo1
-        # direction: forward 이라면
-        #
-        # pageNumbersToEdit: [1, 2]
-        # pageNumbersToMove: [3, 4]
-        # 에 대해
+                if direction == 'forward':
+                    for content in study_note_contents:
+                        if content.page in pageNumbersToEdit:
+                            new_page = pageNumbersToMove[pageNumbersToEdit.index(content.page)]
+                            content.page = new_page
+                            content.created_at = timezone.now()
+                            content.save()
 
-        # 이때 study_note_contents 가 1인것은 3으로 2인것은 4로 바꾸기
+                elif direction == 'backward':
+                    for content in study_note_contents:
+                        if content.page in pageNumbersToMove:
+                            new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                            content.page = new_page
+                            content.save()
 
-        # direction: backward 이라면
-        #
-        # pageNumbersToEdit: [1, 2]
-        # pageNumbersToMove: [3, 4]
-        # 에 대해
-        # 이때 study_note_contents 가 3인것은 1으로 4인것은 2로 바꾸기
+                elif direction == 'switch':
+                    for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
+                        edit_contents = study_note_contents.filter(page=edit_page)
+                        move_contents = study_note_contents.filter(page=move_page)
 
-        # step1 일단 노트 내용 다 가져 오기
-        study_note = self.get_object(study_note_pk)
-        study_note_contents = study_note.note_contents.all()
+                        if edit_contents.count() == move_contents.count() == 1:
+                            edit_content = edit_contents.first()
+                            move_content = move_contents.first()
 
-        if direction == 'forward':
-            # todo1: study_note_contents의 page 번호가 pageNumbersToEdit에 포함되어 있는 경우
-            # 설명 pageNumbersToEdit.index(content.page) <=> content.page 에 해당하는 값이 있을 경우 index 를 구해라
-            # 해당 page 번호를 pageNumbersToMove와 동일한 인덱스의 값으로 업데이트
-            for content in study_note_contents:
-                if content.page in pageNumbersToEdit:
-                    new_page = pageNumbersToMove[pageNumbersToEdit.index(
-                        content.page)]
-                    content.page = new_page
-                    content.save()
+                            edit_content.page, move_content.page = move_page, edit_page
+                            edit_content.save()
+                            move_content.save()
 
-        elif direction == 'backward':
-            # todo2: study_note_contents의 page 번호가 pageNumbersToMove에 포함되어 있는 경우
-            # 해당 page 번호를 pageNumbersToEdit와 동일한 인덱스의 값으로 업데이트
-            for content in study_note_contents:
-                if content.page in pageNumbersToMove:
-                    new_page = pageNumbersToEdit[pageNumbersToMove.index(
-                        content.page)]
-                    content.page = new_page
-                    content.save()
+                elif direction == 'add_whitespace':
+                    max_page = 0  # 초기값 설정
 
-        # elif direction == 'switch':
-            # todo3
-            # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
-            # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
+                    if pageNumbersToEdit:
+                        max_page = max(max_page, max(pageNumbersToEdit))
 
-        elif direction == 'switch':
-            # todo3
-            # pageNumbersToEdit: [1, 2] , pageNumbersToMove: [3, 4] 일 경우 1 과 3을 교체 2와 4를 교체, 즉 인덱스가 같은 것들을 교체
-            # 즉 for content in study_note_contents: 에서 content.page 가 1인것들은 contet.page 를 3으로 3이었던것들은 1로
+                    # 공백 만들 페이지 이후의 번호를 a만큼 증가시킴
+                    a = len(pageNumbersToEdit)
+                    for content in study_note_contents:
+                        if content.page > max_page:
+                            content.page += a
+                            content.save()
 
-            # 인덱스가 같은 요소들을 교체하기 위해 zip 함수를 사용하여 pageNumbersToEdit와 pageNumbersToMove를 묶습니다.
-            for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
-                # page 번호가 edit_page인 study_note_contents를 찾습니다.
-                edit_contents = study_note_contents.filter(page=edit_page)
-                # page 번호가 move_page인 study_note_contents를 찾습니다.
-                move_contents = study_note_contents.filter(page=move_page)
+                    # pageNumbersToEdit의 페이지도 a만큼 증가시킴
+                    for page_num in pageNumbersToEdit:
+                        contents_to_update = study_note_contents.filter(page=page_num)
+                        for content in contents_to_update:
+                            content.page += a
+                            content.save()
 
-                # edit_contents와 move_contents의 개수가 같고, 모두 존재할 경우에만 교체를 수행합니다.
-                if edit_contents.count() == move_contents.count() == 1:
+                elif direction == 'insert':
+                    max_page = 0  # 초기값 설정
 
-                    # save 하기 위한 객체를 각각 초기화
-                    edit_content = edit_contents.first()
-                    move_content = move_contents.first()
+                    if pageNumbersToEdit:
+                        max_page = max(max_page, max(pageNumbersToEdit))
 
-                    # page 번호를 교체합니다.
-                    edit_content.page, move_content.page = move_page, edit_page
-                    edit_content.save()
-                    move_content.save()
+                    # 모든 페이지 번호를 a만큼 증가시킴
+                    a = len(pageNumbersToEdit)
+                    for content in study_note_contents:
+                        if content.page > max_page:
+                            content.page += a
+                            content.save()
 
-        if direction == "forward":
-            message = f"{pageNumbersToEdit}를 pageNumbersToMove로 이동 성공"
-        elif direction == "backward":
-            message = f"pageNumbersToMove를 {pageNumbersToEdit}로 이동 성공"
-        elif direction == "switch":
-            message = f"{pageNumbersToEdit} <=> {pageNumbersToMove} 교체 성공"
+                    # pageNumbersToEdit의 페이지도 a만큼 증가시킴
+                    for page_num in pageNumbersToEdit:
+                        contents_to_update = study_note_contents.filter(page=page_num)
+                        for content in contents_to_update:
+                            content.page += a
+                            content.save()
 
-        response_data = {
-            "message": message,
-            "direction": direction,
-        }
+                    # pageNumbersToMove 의 모든 요소들을 a 만큼 더함
+                    pageNumbersToMove = [x + a for x in pageNumbersToMove] 
 
-        # HTTP 200 OK 응답 반환
-        return Response(data=response_data, status=status.HTTP_200_OK)
+                    for content in study_note_contents:
+                        if content.page in pageNumbersToMove:
+                            new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                            content.page = new_page
+                            content.save()                    
+
+
+                if direction == "forward":
+                    message = f"{pageNumbersToEdit}를 pageNumbersToMove로 이동 성공"
+                elif direction == "backward":
+                    message = f"pageNumbersToMove를 {pageNumbersToEdit}로 이동 성공"
+                elif direction == "switch":
+                    message = f"{pageNumbersToEdit} <=> {pageNumbersToMove} 교체 성공"
+                elif direction == "add_whitespace":
+                    message = f"{pageNumbersToEdit} 공백 만들기 성공"
+                elif direction == "insert":
+                    message = f"공백 만들기 + 끼워 넣기 성공"
+
+                response_data = {
+                    "message": message,
+                    "direction": direction,
+                }
+
+                return Response(data=response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return Response(data={"message": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class StudyNoteContentReOrderAPIView(APIView):

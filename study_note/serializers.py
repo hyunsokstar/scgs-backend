@@ -6,12 +6,24 @@ from .models import (
     CoWriterForStudyNote,
     StudyNoteBriefingBoard,
     ClassRoomForStudyNote,
-    QnABoard,
     AnswerForQaBoard,
-    ErrorReportForStudyNote
+    ErrorReportForStudyNote,
+    QnABoard,
+    FAQBoard
 )
+from django.utils import timezone  # timezone 모듈 임포트
 
-# 1122
+
+class FAQBoardSerializer(serializers.ModelSerializer):
+    created_at_formatted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FAQBoard
+        fields = ['pk', 'study_note', 'title', 'content', 'page', 'writer', 'created_at_formatted', 'updated_at']
+
+    def get_created_at_formatted(self, obj):
+        local_created_at = timezone.localtime(obj.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
 
 class AnswerForQaBoardSerializer(serializers.ModelSerializer):

@@ -103,6 +103,32 @@ class QnABoard(models.Model):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
+class FAQBoard(models.Model):
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="faq_list"
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    page = models.PositiveIntegerField(default=1)
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )    
+    created_at = models.DateTimeField(default=timezone.now)    
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.id} - {self.title}"
+    
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')        
 
 class AnswerForQaBoard(models.Model):
     question = models.ForeignKey(

@@ -7,7 +7,8 @@ from .models import (
     ClassRoomForStudyNote,
     QnABoard,
     AnswerForQaBoard,
-    ErrorReportForStudyNote
+    ErrorReportForStudyNote,
+    FAQBoard
 )
 
 
@@ -79,8 +80,35 @@ class QnABoardAdmin(admin.ModelAdmin):
     search_fields = ['title', 'content']
     readonly_fields = ['created_at', 'updated_at']
 
+
+
 @admin.register(AnswerForQaBoard)
 class AnswerForQaBoardAdmin(admin.ModelAdmin):
     list_display = ['id', 'question', 'writer', 'created_at']
     list_filter = ['created_at']
     search_fields = ['question__title', 'writer__username']    
+
+@admin.register(FAQBoard)
+class FAQBoardAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "study_note", "page", "writer", "created_at")
+    list_filter = ("study_note", "writer", "created_at")
+    search_fields = ("title", "content")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at", "updated_at", "created_at_formatted")
+
+    fieldsets = (
+        ("FAQ 정보", {
+            "fields": ("study_note", "title", "content", "page", "writer")
+        }),
+        ("시간 정보", {
+            "fields": ("created_at", "updated_at", "created_at_formatted"),
+            "classes": ("collapse",)
+        }),
+    )
+    
+    def created_at_formatted(self, obj):
+        return obj.created_at_formatted()
+    created_at_formatted.short_description = "작성일시"
+
+admin.site.site_header = "FAQBoard 관리"
+admin.site.site_title = "FAQBoard 관리"
