@@ -310,33 +310,54 @@ class CreateViewForQnABoard(APIView):
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
 
-
-# class QnABoardView(APIView):
-#     def get(self, request, study_note_pk):
-#         print("study_note_pk : ", study_note_pk)
-#         try:
-#             study_note = StudyNote.objects.get(pk=study_note_pk)
-#         except StudyNote.DoesNotExist:
-#             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
-
-#         qa_list = study_note.question_list.all()
-#         serializer = QnABoardSerializer(
-#             qa_list, many=True)
-
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
+# faq list
 class FAQBoardView(APIView):
+    # pageNation 에 필요한 변수 선언
+    totalFaqCount = 0
+    perPage = 3
+    faqList = []
+
     def get(self, request, study_note_pk):
-        print("study_note_pk : ", study_note_pk)
+        # page 번호 받기
         try:
+            pageNum = request.query_params.get("pageNum", 1)
+            pageNum = int(pageNum)
+            print(pageNum)
+        except ValueError:
+            pageNum = 1
+            
+        try:
+            # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
-
+    
+        # 해당 노트에 대한 faq 목록 가져오기 
         qa_list = study_note.faq_list.all()  # FAQBoard 모델과 연결된 related_name인 "faq_list" 사용
-        serializer = FAQBoardSerializer(qa_list, many=True)
+        self.faqList = qa_list;
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # 총 개수 초기화 하기
+        self.totalFaqCount = qa_list.count()
+        print("totalFaqCount : ", self.totalFaqCount)
+
+        # faq 목록 범위 지정 하기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.faqList = self.faqList[start:end]
+        print("start, end : ", start, end)
+        print("faqList : ", self.faqList)
+
+        # 시리얼라이징 하기
+        serializer = FAQBoardSerializer(self.faqList, many=True)
+
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+        response_data = {
+            "faqList": serializer.data,
+            "totalFaqCount": self.totalFaqCount,
+            "perPage": self.perPage,
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
 
 
 

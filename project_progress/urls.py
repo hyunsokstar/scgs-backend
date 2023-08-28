@@ -60,8 +60,10 @@ urlpatterns = [
     path("tasks-with-cash-prize", views.TasksWithCashPrize.as_view(),
          name="completed_task_list"),
 
+    # 참고 
     path("uncompleted", views.UncompletedTaskListView.as_view(),
          name="completed_task_list"),
+
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(),
          name="uncompleted_task_list_for_me"),
     path("completed", views.CompletedTaskListView.as_view(),

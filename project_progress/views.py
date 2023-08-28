@@ -2296,7 +2296,7 @@ class UncompletedTaskListViewForMe(APIView):
 
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
-    task_number_for_one_page = 50  # 1 페이지에 몇개씩
+    task_number_for_one_page = 5  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
     completed_project_task_list_for_current_page = []
     user_for_search = ""
