@@ -16,10 +16,11 @@ from django.utils import timezone  # timezone 모듈 임포트
 
 class FAQBoardSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = FAQBoard
-        fields = ['pk', 'study_note', 'title', 'content', 'page', 'writer', 'created_at_formatted', 'updated_at']
+        fields = ['pk', 'study_note', 'title', 'content' , 'writer', 'created_at_formatted', 'updated_at']
 
     def get_created_at_formatted(self, obj):
         local_created_at = timezone.localtime(obj.created_at)

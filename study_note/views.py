@@ -1155,7 +1155,6 @@ class StudyNoteContentView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-
 class StudyNoteContentsView(APIView):
     def post(self, request, study_note_pk):
         study_note_pk = int(study_note_pk)
@@ -1164,7 +1163,6 @@ class StudyNoteContentsView(APIView):
         file = request.data["file"]
         content = request.data["content"]
         content_option = request.data["content_option"]
-
         print("content_option : ", content_option)
 
         # 이전 order 값 중 최대값 구하기
@@ -1182,7 +1180,22 @@ class StudyNoteContentsView(APIView):
             page=current_page_number,
             order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
         )
+        print("note_content : ", note_content)
 
+        return Response(status=status.HTTP_201_CREATED)
+
+class CreteViewForFAQBoard(APIView):
+    def post(self, request, study_note_pk):
+        study_note_pk = int(study_note_pk)
+        title = request.data["title"]
+        content = request.data["content"]
+
+        note_content = FAQBoard.objects.create(
+            study_note_id=study_note_pk,
+            title=title,
+            content=content,
+            writer=request.user
+        )
         print("note_content : ", note_content)
 
         return Response(status=status.HTTP_201_CREATED)

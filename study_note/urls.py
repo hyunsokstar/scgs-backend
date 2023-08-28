@@ -56,7 +56,7 @@ urlpatterns = [
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
-    path('FAQBoard/<int:study_note_pk>', views.FAQBoardView.as_view()),
+    path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
 
     path('<int:study_note_pk>/error-report-list',
          views.ErrorReportForStudyNoteView.as_view()),
@@ -70,9 +70,10 @@ urlpatterns = [
     path('error-report/<int:error_report_pk>/update',
          views.UpdateViewForErrorReport.as_view()),
 
-
-
+    # 추가 뷰
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
+    path('<int:study_note_pk>/FAQBoard/add', views.CreteViewForFAQBoard.as_view()),
+
     path('<int:study_note_pk>/content/create-sub-title-for-page',
          views.CreateViewForSubTitleForNote.as_view()),
 

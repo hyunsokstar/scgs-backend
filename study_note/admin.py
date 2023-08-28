@@ -90,7 +90,7 @@ class AnswerForQaBoardAdmin(admin.ModelAdmin):
 
 @admin.register(FAQBoard)
 class FAQBoardAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "study_note", "page", "writer", "created_at")
+    list_display = ("id", "title", "study_note",  "writer", "created_at")
     list_filter = ("study_note", "writer", "created_at")
     search_fields = ("title", "content")
     ordering = ("-created_at",)

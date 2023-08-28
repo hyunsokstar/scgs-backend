@@ -113,7 +113,7 @@ class FAQBoard(models.Model):
     )
     title = models.CharField(max_length=200)
     content = models.TextField()
-    page = models.PositiveIntegerField(default=1)
+    # page = models.PositiveIntegerField(default=1)
     writer = models.ForeignKey(
         "users.User",
         blank=True,
