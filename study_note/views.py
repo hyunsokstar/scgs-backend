@@ -47,8 +47,42 @@ from .models import (
 )
 from django.utils import timezone
 
-
 # 1122
+# search view
+class SearchViewForStudyNoteFaqList(APIView):
+    faqList = []
+
+    def get(self, request, study_note_pk):
+        print("search 요청 check !! ")
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+    
+        search_words = request.query_params.get("searchWords", "")
+        
+        qa_list = study_note.faq_list.all()
+        self.faqList = qa_list;
+        
+        if search_words:
+            print("search_words : ", search_words)
+            qa_list = qa_list.filter(title__icontains=search_words)         
+            print("qa_list : ", qa_list)
+
+        self.faqList = qa_list;
+        
+        result_count = self.faqList.count()  # Count the number of search results
+
+        serializer = FAQBoardSerializer(self.faqList, many=True)
+        
+        # Create a custom response data dictionary
+        response_data = {
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",  # Include the result count in the message
+            "data": serializer.data  # Include the serialized data
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+
 
 class UpdateViewForNoteSubtitle(APIView):
 
@@ -312,7 +346,6 @@ class CreateViewForQnABoard(APIView):
 
 # faq list
 class FAQBoardView(APIView):
-    # pageNation 에 필요한 변수 선언
     totalFaqCount = 0
     perPage = 3
     faqList = []
@@ -325,27 +358,35 @@ class FAQBoardView(APIView):
             print(pageNum)
         except ValueError:
             pageNum = 1
-            
+
         try:
             # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
     
+        # 검색어 가져오기
+        search_words = request.query_params.get("searchWords", "")
         # 해당 노트에 대한 faq 목록 가져오기 
-        qa_list = study_note.faq_list.all()  # FAQBoard 모델과 연결된 related_name인 "faq_list" 사용
-        self.faqList = qa_list;
+        
+        qa_list = study_note.faq_list.all()
+        
+        if search_words:
+            # print("search_words : ", search_words)
+            qa_list = qa_list.filter(title__icontains=search_words) 
+
+        self.faqList = qa_list;        
 
         # 총 개수 초기화 하기
         self.totalFaqCount = qa_list.count()
-        print("totalFaqCount : ", self.totalFaqCount)
+        # print("totalFaqCount : ", self.totalFaqCount)
 
         # faq 목록 범위 지정 하기
         start = (pageNum - 1) * self.perPage
         end = start + self.perPage
         self.faqList = self.faqList[start:end]
-        print("start, end : ", start, end)
-        print("faqList : ", self.faqList)
+        # print("start, end : ", start, end)
+        # print("faqList : ", self.faqList)
 
         # 시리얼라이징 하기
         serializer = FAQBoardSerializer(self.faqList, many=True)

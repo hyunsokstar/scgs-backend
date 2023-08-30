@@ -83,14 +83,15 @@ urlpatterns = [
     path('<int:study_note_pk>/content/get-subtitle-list',
          views.ApiViewForGetSubtitleListForNote.as_view()),
 
-
     path('<int:study_note_pk>/contents/delete-page',
          views.DeleteNoteContentsForSelectedPage.as_view()),  # 특정 노트의 페이지에 대해 delete
-
 
     path('<int:study_note_pk>/comment/get-comment-list',
          views.ListViewForStudyNoteBriefingBoard.as_view()),
 
+    # search
+    path('<int:study_note_pk>/faq/search',
+         views.SearchViewForStudyNoteFaqList.as_view()),
 
     # ${notePk}/register-for-co-writer
     path('<int:notePk>/register-for-co-writer',
