@@ -27,7 +27,8 @@ urlpatterns = [
 
     #  content update view
     path('contents/<int:content_pk>', views.StudyNoteContentView.as_view()),
-    path('content/<int:content_pk>/update-subtitle', views.UpdateViewForNoteSubtitle.as_view()),
+    path('content/<int:content_pk>/update-subtitle',
+         views.UpdateViewForNoteSubtitle.as_view()),
 
     path('contents/<int:content_pk>/order-plus-one-for-note-content',
          views.order_plus_one_for_note_content.as_view()),  # order + 1
@@ -72,7 +73,8 @@ urlpatterns = [
 
     # 추가 뷰
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
-    path('<int:study_note_pk>/FAQBoard/add', views.CreteViewForFAQBoard.as_view()),
+    path('<int:study_note_pk>/FAQBoard/add',
+         views.CreteViewForFAQBoard.as_view()),
 
     path('<int:study_note_pk>/content/create-sub-title-for-page',
          views.CreateViewForSubTitleForNote.as_view()),
@@ -118,5 +120,14 @@ urlpatterns = [
     # post
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
+
+
+    # update
+    # faq/${pk}/update
+    path('faq/<int:faq_pk>/update', views.UpdateViewForFaq.as_view()),
+
+    # delete
+    # faq/${pk}/delete
+    path('faq/<int:faq_pk>/delete', views.DeleteViewForNoteFaq.as_view())
 
 ]

@@ -49,6 +49,53 @@ from django.utils import timezone
 
 # 1122
 # search view
+# class DeleteViewForNoteFaq(APIView):
+#     def dekete(self, reqyetm faq_pk):
+#     # todo faq_pk 에 해당하는 QnABoard 삭제
+#     # 삭제하려는 사람이 request.user 아닐 경우 작성자만 삭제할수 있습니다 메세지 응답
+#     # 응답으로 faq 삭제 성공 메세지 응답
+class DeleteViewForNoteFaq(APIView):
+    def delete(self, request, faq_pk):
+        try:
+            faq = FAQBoard.objects.get(pk=faq_pk)
+        except FAQBoard.DoesNotExist:
+            return Response({"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != faq.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        faq.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+# UpdateViewForFaq
+from rest_framework import status
+from rest_framework.response import Response
+from .models import FAQBoard
+
+class UpdateViewForFaq(APIView):
+    def put(self, request, faq_pk):
+        try:
+            faq = FAQBoard.objects.get(pk=faq_pk)
+        except FAQBoard.DoesNotExist:
+            return Response({"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != faq.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        title = request.data.get("title")
+        content = request.data.get("content")
+
+        if title is None or content is None:
+            return Response({"message": "Title and content are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        faq.title = title
+        faq.content = content
+        faq.save()
+
+        return Response({"message": "FAQ update success"}, status=status.HTTP_200_OK)
+
+
 class SearchViewForStudyNoteFaqList(APIView):
     faqList = []
 
