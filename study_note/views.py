@@ -1,3 +1,4 @@
+from .models import FAQBoard
 from django.db import transaction
 from users.models import User
 from rest_framework.views import APIView
@@ -54,6 +55,8 @@ from django.utils import timezone
 #     # todo faq_pk 에 해당하는 QnABoard 삭제
 #     # 삭제하려는 사람이 request.user 아닐 경우 작성자만 삭제할수 있습니다 메세지 응답
 #     # 응답으로 faq 삭제 성공 메세지 응답
+
+
 class DeleteViewForNoteFaq(APIView):
     def delete(self, request, faq_pk):
         try:
@@ -68,10 +71,9 @@ class DeleteViewForNoteFaq(APIView):
 
         return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
 # UpdateViewForFaq
-from rest_framework import status
-from rest_framework.response import Response
-from .models import FAQBoard
+
 
 class UpdateViewForFaq(APIView):
     def put(self, request, faq_pk):
@@ -105,29 +107,30 @@ class SearchViewForStudyNoteFaqList(APIView):
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
-    
+
         search_words = request.query_params.get("searchWords", "")
-        
+
         qa_list = study_note.faq_list.all()
-        self.faqList = qa_list;
-        
+        self.faqList = qa_list
+
         if search_words:
             print("search_words : ", search_words)
-            qa_list = qa_list.filter(title__icontains=search_words)         
+            qa_list = qa_list.filter(title__icontains=search_words)
             print("qa_list : ", qa_list)
 
-        self.faqList = qa_list;
-        
+        self.faqList = qa_list
+
         result_count = self.faqList.count()  # Count the number of search results
 
         serializer = FAQBoardSerializer(self.faqList, many=True)
-        
+
         # Create a custom response data dictionary
         response_data = {
-            "message": f"{result_count}개의 데이터가 검색되었습니다.",  # Include the result count in the message
+            # Include the result count in the message
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
             "data": serializer.data  # Include the serialized data
         }
-        
+
         return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -237,13 +240,54 @@ class CreateViewForErrorRecordForNote(APIView):
 
 
 class ErrorReportForStudyNoteView(APIView):
+    # pagination 관련 전역 변수 선언
+    totalErrorReportCount = 0
+    perPage = 3
+    errorReportList = []
+
     def get(self, request, study_note_pk):
+
+        # page 번호 받기
         try:
+            pageNum = request.query_params.get("pageNum", 1)
+            pageNum = int(pageNum)
+        except ValueError:
+            pageNum = 1
+
+        print("pageNum : ", pageNum)
+
+        try:
+            # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
-            error_reports = study_note.error_reports.all()
+            error_report_list = study_note.error_reports.all()
+
+            # 클래스 변수 초기화 하기
+            self.errorReportList = error_report_list
+            self.totalErrorReportCount = error_report_list.count()
+            
+            # faq 목록 범위 지정 하기
+            start = (pageNum - 1) * self.perPage
+            end = start + self.perPage
+            self.errorReportList = self.errorReportList[start:end]
+            # print("start, end : ", start, end)
+            # print("faqList : ", self.errorReportList)
+
+
+            # 시리얼라이징 하기
             serializer = ErrorReportForStudyNoteSerializer(
-                error_reports, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                self.errorReportList, many=True)
+
+            # 응답할 딕셔너리 만들기
+            response_data = {
+                "errorReportList": serializer.data,
+                "totalErrorReportCount": self.totalErrorReportCount,
+                "perPage": self.perPage,
+            }            
+
+            # 응답은 요렇게
+            return Response(response_data, status=HTTP_200_OK)
+
+
         except StudyNote.DoesNotExist:
             return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -253,6 +297,9 @@ class ErrorReportForPageForStudyNoteView(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
             error_reports = study_note.error_reports.filter(page=page)
+
+            print("error_reports : ", error_reports)
+
             serializer = ErrorReportForStudyNoteSerializer(
                 error_reports, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -392,12 +439,15 @@ class CreateViewForQnABoard(APIView):
             print("Errors:", serializer.errors)
 
 # faq list
+
+
 class FAQBoardView(APIView):
     totalFaqCount = 0
     perPage = 3
     faqList = []
 
     def get(self, request, study_note_pk):
+
         # page 번호 받기
         try:
             pageNum = request.query_params.get("pageNum", 1)
@@ -411,18 +461,18 @@ class FAQBoardView(APIView):
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
-    
+
         # 검색어 가져오기
         search_words = request.query_params.get("searchWords", "")
-        # 해당 노트에 대한 faq 목록 가져오기 
-        
+        # 해당 노트에 대한 faq 목록 가져오기
+
         qa_list = study_note.faq_list.all()
-        
+
         if search_words:
             # print("search_words : ", search_words)
-            qa_list = qa_list.filter(title__icontains=search_words) 
+            qa_list = qa_list.filter(title__icontains=search_words)
 
-        self.faqList = qa_list;        
+        self.faqList = qa_list
 
         # 총 개수 초기화 하기
         self.totalFaqCount = qa_list.count()
@@ -446,7 +496,6 @@ class FAQBoardView(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
-
 
 
 class QnABoardView(APIView):
@@ -970,8 +1019,6 @@ class StudyNoteAPIViewForCheckedRows(APIView):
         return Response(response_data, status=HTTP_200_OK)
 
 
-from django.db import transaction
-
 class UpdateNoteContentsPageForSelectedView(APIView):
     def get_object(self, pk):
         try:
@@ -981,8 +1028,8 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
     def put(self, request, study_note_pk):
         direction = request.data.get('direction')
-        pageNumbersToEdit = request.data.get('pageNumbersToEdit') # 초록색
-        pageNumbersToMove = request.data.get('pageNumbersToMove') # 주황색
+        pageNumbersToEdit = request.data.get('pageNumbersToEdit')  # 초록색
+        pageNumbersToMove = request.data.get('pageNumbersToMove')  # 주황색
 
         try:
             with transaction.atomic():
@@ -992,7 +1039,8 @@ class UpdateNoteContentsPageForSelectedView(APIView):
                 if direction == 'forward':
                     for content in study_note_contents:
                         if content.page in pageNumbersToEdit:
-                            new_page = pageNumbersToMove[pageNumbersToEdit.index(content.page)]
+                            new_page = pageNumbersToMove[pageNumbersToEdit.index(
+                                content.page)]
                             content.page = new_page
                             content.created_at = timezone.now()
                             content.save()
@@ -1000,14 +1048,17 @@ class UpdateNoteContentsPageForSelectedView(APIView):
                 elif direction == 'backward':
                     for content in study_note_contents:
                         if content.page in pageNumbersToMove:
-                            new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                            new_page = pageNumbersToEdit[pageNumbersToMove.index(
+                                content.page)]
                             content.page = new_page
                             content.save()
 
                 elif direction == 'switch':
                     for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
-                        edit_contents = study_note_contents.filter(page=edit_page)
-                        move_contents = study_note_contents.filter(page=move_page)
+                        edit_contents = study_note_contents.filter(
+                            page=edit_page)
+                        move_contents = study_note_contents.filter(
+                            page=move_page)
 
                         if edit_contents.count() == move_contents.count() == 1:
                             edit_content = edit_contents.first()
@@ -1032,7 +1083,8 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
                     # pageNumbersToEdit의 페이지도 a만큼 증가시킴
                     for page_num in pageNumbersToEdit:
-                        contents_to_update = study_note_contents.filter(page=page_num)
+                        contents_to_update = study_note_contents.filter(
+                            page=page_num)
                         for content in contents_to_update:
                             content.page += a
                             content.save()
@@ -1052,20 +1104,21 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
                     # pageNumbersToEdit의 페이지도 a만큼 증가시킴
                     for page_num in pageNumbersToEdit:
-                        contents_to_update = study_note_contents.filter(page=page_num)
+                        contents_to_update = study_note_contents.filter(
+                            page=page_num)
                         for content in contents_to_update:
                             content.page += a
                             content.save()
 
                     # pageNumbersToMove 의 모든 요소들을 a 만큼 더함
-                    pageNumbersToMove = [x + a for x in pageNumbersToMove] 
+                    pageNumbersToMove = [x + a for x in pageNumbersToMove]
 
                     for content in study_note_contents:
                         if content.page in pageNumbersToMove:
-                            new_page = pageNumbersToEdit[pageNumbersToMove.index(content.page)]
+                            new_page = pageNumbersToEdit[pageNumbersToMove.index(
+                                content.page)]
                             content.page = new_page
-                            content.save()                    
-
+                            content.save()
 
                 if direction == "forward":
                     message = f"{pageNumbersToEdit}를 pageNumbersToMove로 이동 성공"
@@ -1264,6 +1317,7 @@ class StudyNoteContentView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+
 class StudyNoteContentsView(APIView):
     def post(self, request, study_note_pk):
         study_note_pk = int(study_note_pk)
@@ -1292,6 +1346,7 @@ class StudyNoteContentsView(APIView):
         print("note_content : ", note_content)
 
         return Response(status=status.HTTP_201_CREATED)
+
 
 class CreteViewForFAQBoard(APIView):
     def post(self, request, study_note_pk):
