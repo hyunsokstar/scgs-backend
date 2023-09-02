@@ -264,14 +264,13 @@ class ErrorReportForStudyNoteView(APIView):
             # 클래스 변수 초기화 하기
             self.errorReportList = error_report_list
             self.totalErrorReportCount = error_report_list.count()
-            
+
             # faq 목록 범위 지정 하기
             start = (pageNum - 1) * self.perPage
             end = start + self.perPage
             self.errorReportList = self.errorReportList[start:end]
             # print("start, end : ", start, end)
             # print("faqList : ", self.errorReportList)
-
 
             # 시리얼라이징 하기
             serializer = ErrorReportForStudyNoteSerializer(
@@ -282,11 +281,10 @@ class ErrorReportForStudyNoteView(APIView):
                 "errorReportList": serializer.data,
                 "totalErrorReportCount": self.totalErrorReportCount,
                 "perPage": self.perPage,
-            }            
+            }
 
             # 응답은 요렇게
             return Response(response_data, status=HTTP_200_OK)
-
 
         except StudyNote.DoesNotExist:
             return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -499,28 +497,53 @@ class FAQBoardView(APIView):
 
 
 class QnABoardView(APIView):
-    def get(self, request, study_note_pk):
-        print("study_note_pk:", study_note_pk)
-        note_page_num = request.query_params.get("note_page_num", None)
+    # pagination 관련 변수 선언
+    totalQaCount = 0
+    perPage = 3
+    qaList = []
 
-        print("note_page_num ::::::::::::::::???????", note_page_num)
+    def get(self, request, study_note_pk):
+        # page 번호 받기
+        try:
+            pageNum = request.query_params.get("pageNum", 1)
+            pageNum = int(pageNum)
+            print(pageNum)
+        except ValueError:
+            pageNum = 1
+
+        print("pageNum ::::::::::::::::???????", pageNum)
 
         try:
+            # 해당 노트 가져 오기
             study_note = StudyNote.objects.get(pk=study_note_pk)
+
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
-        if note_page_num is not None:
-            qa_list = QnABoard.objects.filter(
-                Q(study_note=study_note) & Q(
-                    page=note_page_num)
-            )
-        else:
-            qa_list = QnABoard.objects.filter(
-                study_note=study_note)
+        # 해당 노트에 대한 qa list 가져 오기
+        qa_list = QnABoard.objects.filter(study_note=study_note)
 
-        serializer = QnABoardSerializer(qa_list, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # 전역 변수 초기화
+        self.qaList = qa_list
+        self.totalQaCount = qa_list.count()
+
+        # qa list 범위 설정
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.qaList = self.qaList[start:end]
+
+        serializer = QnABoardSerializer(self.qaList, many=True)
+
+        # 응답 딕셔너리 선언 for pagination
+        response_data = {
+            "qaList": serializer.data,
+            "totalQaCount": self.totalQaCount,
+            "perPage": self.perPage,
+        }
+
+        # response 수정 
+        # from return Response(serializer.data, status=status.HTTP_200_OK) 
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class GetSavedPageForCurrentNote(APIView):
