@@ -1092,6 +1092,7 @@ class CopyCopySelectedNotesToMyNoteView(APIView):
                             title=original_note_content.title,
                             file_name=original_note_content.file_name,
                             content=original_note_content.content,
+                            content_option = original_note_content.content_option,
                             writer=user,
                             order=original_note_content.order,
                             created_at=original_note_content.created_at,
