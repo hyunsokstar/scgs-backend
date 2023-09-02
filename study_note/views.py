@@ -49,12 +49,106 @@ from .models import (
 from django.utils import timezone
 
 # 1122
-# search view
-# class DeleteViewForNoteFaq(APIView):
-#     def dekete(self, reqyetm faq_pk):
-#     # todo faq_pk 에 해당하는 QnABoard 삭제
-#     # 삭제하려는 사람이 request.user 아닐 경우 작성자만 삭제할수 있습니다 메세지 응답
-#     # 응답으로 faq 삭제 성공 메세지 응답
+# SearchViewForStudyNoteCardList
+class SearchViewForStudyNoteCardList(APIView):
+    studyNoteList = []
+
+    def get(self, request):
+        try:
+            study_note_list = StudyNote.objects.all()
+            print("study_note_list : ", study_note_list)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        search_words = request.query_params.get("searchWords", "")
+
+        if search_words:
+            study_note_list = study_note_list.filter(title__icontains=search_words)
+
+        self.studyNoteList = study_note_list
+
+        result_count = self.studyNoteList.count()
+
+        serializer = StudyNoteSerializer(self.studyNoteList, many=True)
+
+        response_data = {
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
+            "data": serializer.data 
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class SearchViewForStudyNoteErrorReportList(APIView):
+    errorReportList = []
+
+    def get(self, request, study_note_pk):
+        # print("search 요청 check !! ")
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+            print("study_note check : ", study_note)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        search_words = request.query_params.get("searchWords", "")
+
+        study_note_list = study_note.error_reports.all()
+        self.errorReportList = study_note_list
+
+        if search_words:
+            study_note_list = study_note_list.filter(content__icontains=search_words)
+
+        self.errorReportList = study_note_list
+
+        result_count = self.errorReportList.count()  # Count the number of search results
+
+        serializer = ErrorReportForStudyNoteSerializer(self.errorReportList, many=True)
+
+        # Create a custom response data dictionary
+        response_data = {
+            # Include the result count in the message
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
+            "data": serializer.data  # Include the serialized data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+
+class SearchViewForStudyNoteQnaList(APIView):
+    errorReportList = []
+
+    def get(self, request, study_note_pk):
+        # print("search 요청 check !! ")
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+            print("study_note check : ", study_note)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        search_words = request.query_params.get("searchWords", "")
+
+        study_note_list = study_note.question_list.all()
+        self.errorReportList = study_note_list
+
+        if search_words:
+            print("search_words : ", search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
+            print("study_note_list : ", study_note_list)
+
+        self.errorReportList = study_note_list
+
+        result_count = self.errorReportList.count()  # Count the number of search results
+
+        serializer = FAQBoardSerializer(self.errorReportList, many=True)
+
+        # Create a custom response data dictionary
+        response_data = {
+            # Include the result count in the message
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
+            "data": serializer.data  # Include the serialized data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class DeleteViewForNoteFaq(APIView):
@@ -110,15 +204,15 @@ class SearchViewForStudyNoteFaqList(APIView):
 
         search_words = request.query_params.get("searchWords", "")
 
-        qa_list = study_note.faq_list.all()
-        self.faqList = qa_list
+        study_note_list = study_note.faq_list.all()
+        self.faqList = study_note_list
 
         if search_words:
             print("search_words : ", search_words)
-            qa_list = qa_list.filter(title__icontains=search_words)
-            print("qa_list : ", qa_list)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
+            print("study_note_list : ", study_note_list)
 
-        self.faqList = qa_list
+        self.faqList = study_note_list
 
         result_count = self.faqList.count()  # Count the number of search results
 
@@ -259,11 +353,11 @@ class ErrorReportForStudyNoteView(APIView):
         try:
             # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
-            error_report_list = study_note.error_reports.all()
+            study_note_list = study_note.error_reports.all()
 
             # 클래스 변수 초기화 하기
-            self.errorReportList = error_report_list
-            self.totalErrorReportCount = error_report_list.count()
+            self.errorReportList = study_note_list
+            self.totalErrorReportCount = study_note_list.count()
 
             # faq 목록 범위 지정 하기
             start = (pageNum - 1) * self.perPage
@@ -464,16 +558,16 @@ class FAQBoardView(APIView):
         search_words = request.query_params.get("searchWords", "")
         # 해당 노트에 대한 faq 목록 가져오기
 
-        qa_list = study_note.faq_list.all()
+        study_note_list = study_note.faq_list.all()
 
         if search_words:
             # print("search_words : ", search_words)
-            qa_list = qa_list.filter(title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
 
-        self.faqList = qa_list
+        self.faqList = study_note_list
 
         # 총 개수 초기화 하기
-        self.totalFaqCount = qa_list.count()
+        self.totalFaqCount = study_note_list.count()
         # print("totalFaqCount : ", self.totalFaqCount)
 
         # faq 목록 범위 지정 하기
@@ -521,11 +615,11 @@ class QnABoardView(APIView):
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
         # 해당 노트에 대한 qa list 가져 오기
-        qa_list = QnABoard.objects.filter(study_note=study_note)
+        study_note_list = QnABoard.objects.filter(study_note=study_note)
 
         # 전역 변수 초기화
-        self.qaList = qa_list
-        self.totalQaCount = qa_list.count()
+        self.qaList = study_note_list
+        self.totalQaCount = study_note_list.count()
 
         # qa list 범위 설정
         start = (pageNum - 1) * self.perPage
