@@ -50,6 +50,8 @@ from django.utils import timezone
 
 # 1122
 # SearchViewForStudyNoteCardList
+
+
 class SearchViewForStudyNoteCardList(APIView):
     studyNoteList = []
 
@@ -63,7 +65,8 @@ class SearchViewForStudyNoteCardList(APIView):
         search_words = request.query_params.get("searchWords", "")
 
         if search_words:
-            study_note_list = study_note_list.filter(title__icontains=search_words)
+            study_note_list = study_note_list.filter(
+                title__icontains=search_words)
 
         self.studyNoteList = study_note_list
 
@@ -73,10 +76,11 @@ class SearchViewForStudyNoteCardList(APIView):
 
         response_data = {
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data 
+            "data": serializer.data
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
 
 class SearchViewForStudyNoteErrorReportList(APIView):
     errorReportList = []
@@ -95,13 +99,16 @@ class SearchViewForStudyNoteErrorReportList(APIView):
         self.errorReportList = study_note_list
 
         if search_words:
-            study_note_list = study_note_list.filter(content__icontains=search_words)
+            study_note_list = study_note_list.filter(
+                content__icontains=search_words)
 
         self.errorReportList = study_note_list
 
-        result_count = self.errorReportList.count()  # Count the number of search results
+        # Count the number of search results
+        result_count = self.errorReportList.count()
 
-        serializer = ErrorReportForStudyNoteSerializer(self.errorReportList, many=True)
+        serializer = ErrorReportForStudyNoteSerializer(
+            self.errorReportList, many=True)
 
         # Create a custom response data dictionary
         response_data = {
@@ -111,7 +118,6 @@ class SearchViewForStudyNoteErrorReportList(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
-
 
 
 class SearchViewForStudyNoteQnaList(APIView):
@@ -132,12 +138,14 @@ class SearchViewForStudyNoteQnaList(APIView):
 
         if search_words:
             print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(title__icontains=search_words)
+            study_note_list = study_note_list.filter(
+                title__icontains=search_words)
             print("study_note_list : ", study_note_list)
 
         self.errorReportList = study_note_list
 
-        result_count = self.errorReportList.count()  # Count the number of search results
+        # Count the number of search results
+        result_count = self.errorReportList.count()
 
         serializer = FAQBoardSerializer(self.errorReportList, many=True)
 
@@ -209,7 +217,8 @@ class SearchViewForStudyNoteFaqList(APIView):
 
         if search_words:
             print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(title__icontains=search_words)
+            study_note_list = study_note_list.filter(
+                title__icontains=search_words)
             print("study_note_list : ", study_note_list)
 
         self.faqList = study_note_list
@@ -353,11 +362,11 @@ class ErrorReportForStudyNoteView(APIView):
         try:
             # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
-            study_note_list = study_note.error_reports.all()
+            error_report_list = study_note.error_reports.all()
 
             # 클래스 변수 초기화 하기
-            self.errorReportList = study_note_list
-            self.totalErrorReportCount = study_note_list.count()
+            self.errorReportList = error_report_list
+            self.totalErrorReportCount = error_report_list.count()
 
             # faq 목록 범위 지정 하기
             start = (pageNum - 1) * self.perPage
@@ -376,6 +385,8 @@ class ErrorReportForStudyNoteView(APIView):
                 "totalErrorReportCount": self.totalErrorReportCount,
                 "perPage": self.perPage,
             }
+
+            print("response_data : ", response_data)
 
             # 응답은 요렇게
             return Response(response_data, status=HTTP_200_OK)
@@ -562,7 +573,8 @@ class FAQBoardView(APIView):
 
         if search_words:
             # print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(title__icontains=search_words)
+            study_note_list = study_note_list.filter(
+                title__icontains=search_words)
 
         self.faqList = study_note_list
 
@@ -635,8 +647,8 @@ class QnABoardView(APIView):
             "perPage": self.perPage,
         }
 
-        # response 수정 
-        # from return Response(serializer.data, status=status.HTTP_200_OK) 
+        # response 수정
+        # from return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(response_data, status=HTTP_200_OK)
 
 
@@ -679,14 +691,19 @@ class ClasssRoomView(APIView):
             raise NotFound
 
     def get(self, request, study_note_pk):
+
+        print("로그인 여부 확인 : ", request.user.is_authenticated)
+
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
         class_list = study_note.class_list.all()
-        serializer = ClassRoomForStudyNoteSerializer(
-            class_list, many=True)
+        # serializer = ClassRoomForStudyNoteSerializer(
+        #     class_list, many=True)
+        serializer = ClassRoomForStudyNoteSerializer(class_list, many=True, context={'request': request})
+
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1092,7 +1109,7 @@ class CopyCopySelectedNotesToMyNoteView(APIView):
                             title=original_note_content.title,
                             file_name=original_note_content.file_name,
                             content=original_note_content.content,
-                            content_option = original_note_content.content_option,
+                            content_option=original_note_content.content_option,
                             writer=user,
                             order=original_note_content.order,
                             created_at=original_note_content.created_at,

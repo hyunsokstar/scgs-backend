@@ -20,7 +20,8 @@ class FAQBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FAQBoard
-        fields = ['pk', 'study_note', 'title', 'content' , 'writer', 'created_at_formatted', 'updated_at']
+        fields = ['pk', 'study_note', 'title', 'content',
+                  'writer', 'created_at_formatted', 'updated_at']
 
     def get_created_at_formatted(self, obj):
         local_created_at = timezone.localtime(obj.created_at)
@@ -67,14 +68,27 @@ class CreateCommentSerializerForNote(serializers.ModelSerializer):
 class ClassRoomForStudyNoteSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
     writer = UserProfileImageSerializer(read_only=True)
+    # is_logged_in = serializers.SerializerMethodField()  # 새로운 필드 추가
 
     class Meta:
         model = ClassRoomForStudyNote
-        fields = ['id', 'current_note', 'current_page',
-                  'writer', 'is_approved', 'created_at_formatted']
+        fields = ['id',
+                  'current_note',
+                  'current_page',
+                  'writer',
+                  #   'is_logged_in',
+                  'is_approved',
+                  'created_at_formatted']
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
+
+    # def get_is_logged_in(self, obj):
+    #     writer = obj.writer
+    #     if writer and writer.is_authenticated:
+    #         # 작성자(writer)의 ID와 현재 요청된 사용자의 ID를 비교하여 로그인 여부 확인
+    #         return writer.id == self.context['request'].user.id
+    #     return False
 
 
 class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
@@ -144,9 +158,9 @@ class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ErrorReportForStudyNote
-        fields = ['pk','study_note', 'writer', 'page', 'content',
+        fields = ['pk', 'study_note', 'writer', 'page', 'content',
                   'is_resolved', 'created_at_formatted', 'updated_at']
-        
+
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
@@ -183,6 +197,7 @@ class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
             "page"
         )
 
+
 class SerializerForCreateErrorReportForNote(serializers.ModelSerializer):
     class Meta:
         model = ErrorReportForStudyNote
@@ -190,4 +205,4 @@ class SerializerForCreateErrorReportForNote(serializers.ModelSerializer):
             "study_note",
             "page",
             "content",
-        )        
+        )
