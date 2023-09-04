@@ -54,6 +54,8 @@ urlpatterns = [
          views.CreateViewForQnABoard.as_view()),
     path('<int:study_note_pk>/create-error-report',
          views.CreateViewForErrorRecordForNote.as_view()),
+
+    #  리스트뷰
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
 
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
@@ -117,14 +119,14 @@ urlpatterns = [
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
 
-     # comment
-     # error-report/${error_report_pk}/comment/add
+    # comment
+    # error-report/${error_report_pk}/comment/add
     path('error-report/<int:error_report_pk>/comment/add',
-         views.CreateViewForErrorReportComment.as_view()),     
+         views.CreateViewForErrorReportComment.as_view()),
 
     # search
-        path('search',
-             views.SearchViewForStudyNoteCardList.as_view()),
+    path('search',
+         views.SearchViewForStudyNoteCardList.as_view()),
     path('<int:study_note_pk>/faq/search',
          views.SearchViewForStudyNoteFaqList.as_view()),
     path('<int:study_note_pk>/qna/search',
@@ -136,10 +138,14 @@ urlpatterns = [
     # faq/${pk}/update
     path('faq/<int:faq_pk>/update', views.UpdateViewForFaq.as_view()),
 
-    # delete
-    # faq/${pk}/delete
+    # deleteview
+    path('<int:study_note_pk>/classroom/withdraw', views.DeleteViewForWithDrawClassRoom.as_view()),
     path('faq/<int:faq_pk>/delete', views.DeleteViewForNoteFaq.as_view()),
     # study-note/error-report/comment/${commentPk}/delete
-    path('error-report/comment/<int:commentPk>/delete', views.DeleteViewForCommentForErrorReport.as_view())
+    path('error-report/comment/<int:commentPk>/delete',
+         views.DeleteViewForCommentForErrorReport.as_view()),
+    # classroom/${classRoomId}/delete
+    path('classroom/<int:classRoomId>/delete',
+         views.DeleteViewForClassRoomForNote.as_view())
 
 ]

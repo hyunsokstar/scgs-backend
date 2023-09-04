@@ -52,6 +52,19 @@ from django.utils import timezone
 
 # 1122
 # CreateViewForErrorReportComment
+class DeleteViewForWithDrawClassRoom(APIView):
+    def delete(self, request, study_note_pk):
+        try:
+            classroom = ClassRoomForStudyNote.objects.get(current_note_id = study_note_pk, writer=request.user)
+        except ClassRoomForStudyNote.DoesNotExist:
+            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != classroom.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        classroom.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class CreateViewForErrorReportComment(APIView):
     def post(self, request, error_report_pk):
@@ -220,6 +233,20 @@ class DeleteViewForCommentForErrorReport(APIView):
             return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         comment.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+class DeleteViewForClassRoomForNote(APIView):
+    def delete(self, request, classRoomId):
+        try:
+            classroom = ClassRoomForStudyNote.objects.get(pk=classRoomId)
+        except ClassRoomForStudyNote.DoesNotExist:
+            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != classroom.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        classroom.delete()
 
         return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
@@ -741,24 +768,33 @@ class ClasssRoomView(APIView):
             raise NotFound
 
     def get(self, request, study_note_pk):
-
         print("로그인 여부 확인 : ", request.user.is_authenticated)
-
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
 
         class_list = study_note.class_list.all()
-        # serializer = ClassRoomForStudyNoteSerializer(
-        #     class_list, many=True)
+
+        # todo class_list 에 writer 가 request.user인게 하나 이상 있는 경우 is_registered true 를  response_data 에 담은뒤 Response 로 응답
+
+        is_registered = False  # 기본적으로 False로 설정
+
+        for class_room in class_list:
+            if class_room.writer == request.user:
+                is_registered = True
+                break
+            
         serializer = ClassRoomForStudyNoteSerializer(class_list, many=True, context={'request': request})
 
+        response_data = {
+            "is_registered": is_registered,
+            "class_room_list": serializer.data
+        }
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def post(self, request, study_note_pk):
-        # print("실행 check !!!!!!!!!!!!!!!!!!!!!!!!!!")
         try:
             study_note = self.get_object(study_note_pk)
         except StudyNote.DoesNotExist:
@@ -776,11 +812,6 @@ class ClasssRoomView(APIView):
             current_note=study_note,
             writer=request.user
         ).exists()
-
-        # todo
-        # existing_class_room 이 true 이지만 existing_class_room.current_page 와 current_page 가 다를 경우
-        # existing_class_room.current_page = current_page 로 업데이트 후
-        # return Response("current page num is update to current_page(전달 받은값)", status=status.HTTP_409_CONFLICT)
 
         if existing_class_room:
             existing_class_room = ClassRoomForStudyNote.objects.filter(
@@ -816,11 +847,7 @@ class ClasssRoomView(APIView):
             'save_page_num': current_page
         }
 
-        # serializer = ClassRoomForStudyNoteSerializer(class_room)
         return Response(response_data, status=status.HTTP_201_CREATED)
-
-# UpdateViewForStudyNoteComment
-
 
 class UpdateViewForStudyNoteComment(APIView):
     def get_object(self, pk):
