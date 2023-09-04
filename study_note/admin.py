@@ -8,7 +8,8 @@ from .models import (
     QnABoard,
     AnswerForQaBoard,
     ErrorReportForStudyNote,
-    FAQBoard
+    FAQBoard,
+    CommentForErrorReport
 )
 
 
@@ -112,3 +113,10 @@ class FAQBoardAdmin(admin.ModelAdmin):
 
 admin.site.site_header = "FAQBoard 관리"
 admin.site.site_title = "FAQBoard 관리"
+
+@admin.register(CommentForErrorReport)
+class CommentForErrorReportAdmin(admin.ModelAdmin):
+    list_display = ('error_report', 'writer', 'created_at')
+    list_filter = ('error_report', 'created_at')
+    search_fields = ('error_report__study_note__title', 'writer__username', 'content')
+    date_hierarchy = 'created_at'

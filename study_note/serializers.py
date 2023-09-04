@@ -9,7 +9,8 @@ from .models import (
     AnswerForQaBoard,
     ErrorReportForStudyNote,
     QnABoard,
-    FAQBoard
+    FAQBoard,
+    CommentForErrorReport
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
@@ -151,15 +152,27 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     def get_count_for_class_list(self, obj):
         return obj.class_list.count()
 
+class CommentForErrorReportSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)  # UserProfileImageSerializer는 작성자 정보를 시리얼라이즈하는데 사용한 것으로 가정합니다.
+
+    class Meta:
+        model = CommentForErrorReport
+        fields = ['pk', 'error_report', 'writer', 'content', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_at_formatted'] = instance.created_at_formatted()
+        return data
 
 class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
+    comments = CommentForErrorReportSerializer(many=True)  # 댓글 정보를 시리얼라이즈
 
     class Meta:
         model = ErrorReportForStudyNote
         fields = ['pk', 'study_note', 'writer', 'page', 'content',
-                  'is_resolved', 'created_at_formatted', 'updated_at']
+                  'is_resolved', 'created_at_formatted', 'updated_at','comments']
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()

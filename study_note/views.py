@@ -14,7 +14,8 @@ from .serializers import (
     QnABoardSerializer,
     ErrorReportForStudyNoteSerializer,
     SerializerForCreateErrorReportForNote,
-    FAQBoardSerializer
+    FAQBoardSerializer,
+    CommentForErrorReportSerializer
 )
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
@@ -49,8 +50,42 @@ from .models import (
 from django.utils import timezone
 
 # 1122
-# SearchViewForStudyNoteCardList
+# CreateViewForErrorReportComment
 
+class CreateViewForErrorReportComment(APIView):
+    def post(self, request, error_report_pk):
+        try:
+            print("error_report_pk :::::::::::: ", error_report_pk)
+            # Check if the error_report with the provided error_report_pk exists
+            error_report = ErrorReportForStudyNote.objects.get(id=error_report_pk)
+
+            print("error_report ::::::::::::: ", error_report)
+
+        except ErrorReportForStudyNote.DoesNotExist:
+            return Response(
+                {"message": "Error report not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        print("request.data : ", request.data)
+
+        request.data["error_report"] = error_report.id        
+        serializer = CommentForErrorReportSerializer(data=request.data)
+
+        if serializer.is_valid():
+            print("시리얼 라이저는 유효")
+            serializer.save(error_report=error_report, writer=request.user)
+
+            return Response(
+                {"message": "Comment created successfully"},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            # Return detailed error messages
+            return Response(
+                {"message": "Invalid data", "errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class SearchViewForStudyNoteCardList(APIView):
     studyNoteList = []

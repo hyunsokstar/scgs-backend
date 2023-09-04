@@ -46,6 +46,7 @@ class StudyNote(models.Model):
     class Meta:
         ordering = ['-id']
 
+# todo ErrorReportForStudyNote의 댓글용 모델 필요 컬럼은?  error_report:ErrorReportForStudyNote, writer, content , created_at
 class ErrorReportForStudyNote(models.Model):
     study_note = models.ForeignKey(
         "study_note.StudyNote",
@@ -70,11 +71,37 @@ class ErrorReportForStudyNote(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"{self.study_note.title} <=> 의 에러 리포트"
+        return f"{self.content} for {self.study_note.title}"
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
+class CommentForErrorReport(models.Model):
+    error_report = models.ForeignKey(
+        "ErrorReportForStudyNote",
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    content = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"댓글 - {self.error_report.study_note.title}"
+
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class QnABoard(models.Model):
     study_note = models.ForeignKey(

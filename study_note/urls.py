@@ -117,6 +117,11 @@ urlpatterns = [
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
 
+     # comment
+     # error-report/${error_report_pk}/comment/add
+    path('error-report/<int:error_report_pk>/comment/add',
+         views.CreateViewForErrorReportComment.as_view()),     
+
     # search
         path('search',
              views.SearchViewForStudyNoteCardList.as_view()),
