@@ -138,6 +138,8 @@ urlpatterns = [
 
     # delete
     # faq/${pk}/delete
-    path('faq/<int:faq_pk>/delete', views.DeleteViewForNoteFaq.as_view())
+    path('faq/<int:faq_pk>/delete', views.DeleteViewForNoteFaq.as_view()),
+    # study-note/error-report/comment/${commentPk}/delete
+    path('error-report/comment/<int:commentPk>/delete', views.DeleteViewForCommentForErrorReport.as_view())
 
 ]

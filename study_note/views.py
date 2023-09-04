@@ -41,6 +41,7 @@ from django.db import models
 from .models import (
     StudyNoteContent,
     ClassRoomForStudyNote,
+    CommentForErrorReport,
     StudyNoteBriefingBoard,
     AnswerForQaBoard,
     ErrorReportForStudyNote,
@@ -205,6 +206,20 @@ class DeleteViewForNoteFaq(APIView):
             return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         faq.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+class DeleteViewForCommentForErrorReport(APIView):
+    def delete(self, request, commentPk):
+        try:
+            comment = CommentForErrorReport.objects.get(pk=commentPk)
+        except CommentForErrorReport.DoesNotExist:
+            return Response({"message": "comment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != comment.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.delete()
 
         return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
