@@ -15,7 +15,9 @@ from .serializers import (
     ErrorReportForStudyNoteSerializer,
     SerializerForCreateErrorReportForNote,
     FAQBoardSerializer,
-    CommentForErrorReportSerializer
+    CommentForErrorReportSerializer,
+    SuggestionSerializer,
+    SuggestionSerializerForCreate
 )
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
@@ -34,7 +36,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Min
 from django.db import models
@@ -47,31 +48,67 @@ from .models import (
     ErrorReportForStudyNote,
     QnABoard,
     FAQBoard,
+    Suggestion
 )
 from django.utils import timezone
 
 # 1122
-# CreateViewForErrorReportComment
-class DeleteViewForWithDrawClassRoom(APIView):
-    def delete(self, request, study_note_pk):
+# CreteViewForFAQBoard
+# class CreateViewForSuggestionForNote(APIView):
+#     def post(self, request, study_note_pk):
+#         try:
+#             study_note_pk = int(study_note_pk)
+#             title = request.data["title"]
+#             content = request.data["content"]
+
+#             suggestion = Suggestion.objects.create(
+#                 study_note_id=study_note_pk,
+#                 title=title,
+#                 content=content,
+#                 writer=request.user
+#             )
+
+#             return Response({"message": "건의 사항이 추가되었습니다.", "suggestion_id": suggestion.id}, status=status.HTTP_201_CREATED)
+
+#         except Exception as e:
+#             return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CreateViewForSuggestionForNote(APIView):
+    def post(self, request, study_note_pk):
         try:
-            classroom = ClassRoomForStudyNote.objects.get(current_note_id = study_note_pk, writer=request.user)
-        except ClassRoomForStudyNote.DoesNotExist:
-            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+            print("건의 사항 추가 요청 check !!")
+            study_note_pk = int(study_note_pk)
 
-        if request.user != classroom.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            # 필요한 필드 직접 추출
+            title = request.data.get("title")
+            content = request.data.get("content")
 
-        classroom.delete()
+            # SuggestionSerializerForCreate 사용
+            serializer = SuggestionSerializerForCreate(data={
+                "study_note": study_note_pk,
+                "title": title,
+                "content": content,
+                "writer": request.user.id  # 또는 원하는 작성자 정보
+            })
 
-        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+            if serializer.is_valid():
+                suggestion = serializer.save()  # create 메서드를 사용하여 저장
+
+                return Response({"message": "건의 사항이 추가되었습니다.", "suggestion_id": suggestion.id}, status=status.HTTP_201_CREATED)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print("에러 발생:", str(e))
+            return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CreateViewForErrorReportComment(APIView):
     def post(self, request, error_report_pk):
         try:
             print("error_report_pk :::::::::::: ", error_report_pk)
             # Check if the error_report with the provided error_report_pk exists
-            error_report = ErrorReportForStudyNote.objects.get(id=error_report_pk)
+            error_report = ErrorReportForStudyNote.objects.get(
+                id=error_report_pk)
 
             print("error_report ::::::::::::: ", error_report)
 
@@ -83,11 +120,12 @@ class CreateViewForErrorReportComment(APIView):
 
         print("request.data : ", request.data)
 
-        request.data["error_report"] = error_report.id        
+        request.data["error_report"] = error_report.id
         serializer = CommentForErrorReportSerializer(data=request.data)
 
         if serializer.is_valid():
             print("시리얼 라이저는 유효")
+            print("댓글 추가 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             serializer.save(error_report=error_report, writer=request.user)
 
             return Response(
@@ -100,6 +138,53 @@ class CreateViewForErrorReportComment(APIView):
                 {"message": "Invalid data", "errors": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class CreteViewForFAQBoard(APIView):
+    def post(self, request, study_note_pk):
+        study_note_pk = int(study_note_pk)
+        title = request.data["title"]
+        content = request.data["content"]
+
+        note_content = FAQBoard.objects.create(
+            study_note_id=study_note_pk,
+            title=title,
+            content=content,
+            writer=request.user
+        )
+        print("note_content : ", note_content)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+# class CreteViewForSuggestionForNote(APIView):
+#     def post(self, request, study_note_pk):
+#         study_note_pk = int(study_note_pk)
+#         title = request.data["title"]
+#         content = request.data["content"]
+
+#         note_content = Suggestion.objects.create(
+#             study_note_id=study_note_pk,
+#             title=title,
+#             content=content,
+#             writer=request.user
+#         )
+#         print("note_content : ", note_content)
+#         return Response(status=status.HTTP_201_CREATED)
+
+class DeleteViewForWithDrawClassRoom(APIView):
+    def delete(self, request, study_note_pk):
+        try:
+            classroom = ClassRoomForStudyNote.objects.get(
+                current_note_id=study_note_pk, writer=request.user)
+        except ClassRoomForStudyNote.DoesNotExist:
+            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != classroom.writer:
+            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        classroom.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class SearchViewForStudyNoteCardList(APIView):
     studyNoteList = []
@@ -222,6 +307,7 @@ class DeleteViewForNoteFaq(APIView):
 
         return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
 class DeleteViewForCommentForErrorReport(APIView):
     def delete(self, request, commentPk):
         try:
@@ -235,6 +321,7 @@ class DeleteViewForCommentForErrorReport(APIView):
         comment.delete()
 
         return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class DeleteViewForClassRoomForNote(APIView):
     def delete(self, request, classRoomId):
@@ -618,7 +705,67 @@ class CreateViewForQnABoard(APIView):
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
 
-# faq list
+# list view:
+# SuggestionView
+
+
+class SuggestionView(APIView):
+    totalSuggestionCount = 0
+    perPage = 5
+    suggestionList = []
+
+    def get(self, request, study_note_pk):
+        # page 번호 받기
+        try:
+            pageNum = request.query_params.get("pageNum", 1)
+            pageNum = int(pageNum)
+            print(pageNum)
+        except ValueError:
+            pageNum = 1
+
+        try:
+            # 해당 노트 찾기
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        # 검색어 가져오기
+        search_words = request.query_params.get("searchWords", "")
+        # 해당 노트에 대한 faq 목록 가져오기
+
+        suggestion_list = study_note.suggestion_list.all()
+
+        if search_words:
+            # print("search_words : ", search_words)
+            suggestion_list = suggestion_list.filter(
+                title__icontains=search_words)
+
+        self.suggestionList = suggestion_list
+
+        # 총 개수 초기화 하기
+        self.totalSuggestionCount = suggestion_list.count()
+        # print("totalSuggestionCount : ", self.totalSuggestionCount)
+
+        # faq 목록 범위 지정 하기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.suggestionList = self.suggestionList[start:end]
+        # print("start, end : ", start, end)
+        # print("suggestionList : ", self.suggestionList)
+
+        # 시리얼라이징 하기
+        serializer = SuggestionSerializer(self.suggestionList, many=True)
+
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+        response_data = {
+            "suggestionList": serializer.data,
+            "totalSuggestionCount": self.totalSuggestionCount,
+            "perPage": self.perPage,
+        }
+
+        print("response_data for suggestion ::::::::::::::::", response_data)
+
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class FAQBoardView(APIView):
@@ -784,8 +931,9 @@ class ClasssRoomView(APIView):
             if class_room.writer == request.user:
                 is_registered = True
                 break
-            
-        serializer = ClassRoomForStudyNoteSerializer(class_list, many=True, context={'request': request})
+
+        serializer = ClassRoomForStudyNoteSerializer(
+            class_list, many=True, context={'request': request})
 
         response_data = {
             "is_registered": is_registered,
@@ -848,6 +996,7 @@ class ClasssRoomView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
 
 class UpdateViewForStudyNoteComment(APIView):
     def get_object(self, pk):
@@ -1554,23 +1703,6 @@ class StudyNoteContentsView(APIView):
             writer=request.user,  # 작성자는 현재 요청한 유저로 설정
             page=current_page_number,
             order=max_order + 1,  # 이전 order 값 중 최대값에 1을 더하여 설정
-        )
-        print("note_content : ", note_content)
-
-        return Response(status=status.HTTP_201_CREATED)
-
-
-class CreteViewForFAQBoard(APIView):
-    def post(self, request, study_note_pk):
-        study_note_pk = int(study_note_pk)
-        title = request.data["title"]
-        content = request.data["content"]
-
-        note_content = FAQBoard.objects.create(
-            study_note_id=study_note_pk,
-            title=title,
-            content=content,
-            writer=request.user
         )
         print("note_content : ", note_content)
 

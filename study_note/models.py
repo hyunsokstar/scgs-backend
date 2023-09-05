@@ -295,3 +295,30 @@ class StudyNoteBriefingBoard(models.Model):
             return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
         else:
             return "준비"
+
+class Suggestion(models.Model):
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="suggestion_list"
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )    
+    created_at = models.DateTimeField(default=timezone.now)    
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.pk} - {self.title}"
+    
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m%d%H%M')
+

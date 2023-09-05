@@ -10,10 +10,29 @@ from .models import (
     ErrorReportForStudyNote,
     QnABoard,
     FAQBoard,
-    CommentForErrorReport
+    CommentForErrorReport,
+    Suggestion
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
+# 1122
+class SuggestionSerializerForCreate(serializers.ModelSerializer):
+    class Meta:
+        model = Suggestion
+        fields = ['study_note', 'title', 'content', 'writer']  # 필요한 모든 필드를 포함합니다.
+
+class SuggestionSerializer(serializers.ModelSerializer):
+    created_at_formatted = serializers.SerializerMethodField()
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = FAQBoard
+        fields = ['pk', 'study_note', 'title', 'content',
+                  'writer', 'created_at_formatted', 'updated_at']
+
+    def get_created_at_formatted(self, obj):
+        local_created_at = timezone.localtime(obj.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
 class FAQBoardSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()

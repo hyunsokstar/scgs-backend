@@ -9,9 +9,13 @@ from .models import (
     AnswerForQaBoard,
     ErrorReportForStudyNote,
     FAQBoard,
-    CommentForErrorReport
+    CommentForErrorReport,
+    Suggestion
 )
 
+@admin.register(Suggestion)
+class SuggestionAdmin(admin.ModelAdmin):
+    list_display = ('title', 'writer', 'created_at')
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):

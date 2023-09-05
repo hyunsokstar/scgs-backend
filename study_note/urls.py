@@ -54,13 +54,6 @@ urlpatterns = [
          views.CreateViewForQnABoard.as_view()),
     path('<int:study_note_pk>/create-error-report',
          views.CreateViewForErrorRecordForNote.as_view()),
-
-    #  리스트뷰
-    path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
-
-    path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
-    path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
-
     path('<int:study_note_pk>/error-report-list',
          views.ErrorReportForStudyNoteView.as_view()),
     path('<int:study_note_pk>/error-report/<int:page>',
@@ -72,11 +65,6 @@ urlpatterns = [
          views.DeleteViewForErrorReport.as_view()),
     path('error-report/<int:error_report_pk>/update',
          views.UpdateViewForErrorReport.as_view()),
-
-    # 추가 뷰
-    path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
-    path('<int:study_note_pk>/FAQBoard/add',
-         views.CreteViewForFAQBoard.as_view()),
 
     path('<int:study_note_pk>/content/create-sub-title-for-page',
          views.CreateViewForSubTitleForNote.as_view()),
@@ -114,6 +102,20 @@ urlpatterns = [
     path('create-dummy-content', views.StudyNoteContentDummyAPI.as_view(),
          name='AddDummyDataForStudyNote'),
     path('content/search', views.SearchContentListView.as_view()),
+    path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
+
+    # create view
+    path('<int:study_note_pk>/FAQBoard/add',
+         views.CreteViewForFAQBoard.as_view()),
+    path('<int:study_note_pk>/suggestion/add',
+         views.CreateViewForSuggestionForNote.as_view()),
+
+    # list view
+    path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
+    path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
+    path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
+    #  study-note/${study_note_pk}/suggestion
+    path('<int:study_note_pk>/suggestion', views.SuggestionView.as_view()),
 
     # post
     path('copy-selected-notes-to-my-note',
@@ -139,7 +141,8 @@ urlpatterns = [
     path('faq/<int:faq_pk>/update', views.UpdateViewForFaq.as_view()),
 
     # deleteview
-    path('<int:study_note_pk>/classroom/withdraw', views.DeleteViewForWithDrawClassRoom.as_view()),
+    path('<int:study_note_pk>/classroom/withdraw',
+         views.DeleteViewForWithDrawClassRoom.as_view()),
     path('faq/<int:faq_pk>/delete', views.DeleteViewForNoteFaq.as_view()),
     # study-note/error-report/comment/${commentPk}/delete
     path('error-report/comment/<int:commentPk>/delete',
