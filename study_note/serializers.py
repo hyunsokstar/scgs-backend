@@ -11,28 +11,64 @@ from .models import (
     QnABoard,
     FAQBoard,
     CommentForErrorReport,
-    Suggestion
+    Suggestion,
+    CommentForSuggestion
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
 # 1122
+class SerializerForCreateCommentForSuggestion(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForSuggestion
+        fields = ['id', 'suggestion', 'writer', 'content', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_at_formatted'] = instance.created_at_formatted()
+        return data
+
+class CommentForSuggestionSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForSuggestion
+        fields = ['writer', 'content', 'created_at']
+
+
 class SuggestionSerializerForCreate(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
-        fields = ['study_note', 'title', 'content', 'writer']  # 필요한 모든 필드를 포함합니다.
+        fields = ['study_note', 'title', 'content', 'writer']
+
 
 class SuggestionSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
     writer = UserProfileImageSerializer(read_only=True)
+    comments = serializers.SerializerMethodField()  # 댓글 데이터를 가져올 필드
 
     class Meta:
         model = FAQBoard
-        fields = ['pk', 'study_note', 'title', 'content',
-                  'writer', 'created_at_formatted', 'updated_at']
+        fields = [
+            'pk',
+            'study_note',
+            'title',
+            'content',
+            'writer',
+            'created_at_formatted',
+            'updated_at',
+            'comments'
+        ]
 
     def get_created_at_formatted(self, obj):
         local_created_at = timezone.localtime(obj.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
+    def get_comments(self, suggestion):
+        comments = CommentForSuggestion.objects.filter(suggestion=suggestion)
+        return CommentForSuggestionSerializer(comments, many=True).data
+
 
 class FAQBoardSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
@@ -171,8 +207,9 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     def get_count_for_class_list(self, obj):
         return obj.class_list.count()
 
+
 class CommentForErrorReportSerializer(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)  # UserProfileImageSerializer는 작성자 정보를 시리얼라이즈하는데 사용한 것으로 가정합니다.
+    writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = CommentForErrorReport
@@ -183,6 +220,7 @@ class CommentForErrorReportSerializer(serializers.ModelSerializer):
         data['created_at_formatted'] = instance.created_at_formatted()
         return data
 
+
 class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
@@ -191,7 +229,7 @@ class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ErrorReportForStudyNote
         fields = ['pk', 'study_note', 'writer', 'page', 'content',
-                  'is_resolved', 'created_at_formatted', 'updated_at','comments']
+                  'is_resolved', 'created_at_formatted', 'updated_at', 'comments']
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()

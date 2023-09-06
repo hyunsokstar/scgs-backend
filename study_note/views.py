@@ -17,7 +17,9 @@ from .serializers import (
     FAQBoardSerializer,
     CommentForErrorReportSerializer,
     SuggestionSerializer,
-    SuggestionSerializerForCreate
+    SuggestionSerializerForCreate,
+    SerializerForCreateCommentForSuggestion,
+    CommentForSuggestionSerializer
 )
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
@@ -48,30 +50,104 @@ from .models import (
     ErrorReportForStudyNote,
     QnABoard,
     FAQBoard,
-    Suggestion
+    Suggestion,
+    CommentForSuggestion
 )
 from django.utils import timezone
 
 # 1122
-# CreteViewForFAQBoard
-# class CreateViewForSuggestionForNote(APIView):
-#     def post(self, request, study_note_pk):
-#         try:
-#             study_note_pk = int(study_note_pk)
-#             title = request.data["title"]
-#             content = request.data["content"]
+class ListViewForCommentForSuggestion(APIView):
+    def get(self, request, suggestionPk):
+        print("댓글 데이터 요청 확인 for 건의 사항")
+        try:
+            # suggestionPk 해당하는 CommentForSuggestion 정보 가져오기
+            comments = CommentForSuggestion.objects.filter(suggestion_id=suggestionPk)
+            
+            # Serializer를 사용하여 데이터 직렬화
+            serializer = CommentForSuggestionSerializer(comments, many=True)
+            
+            # 응답 데이터 구성
+            response_data = {
+                'comments': serializer.data,
+            }
 
-#             suggestion = Suggestion.objects.create(
-#                 study_note_id=study_note_pk,
-#                 title=title,
-#                 content=content,
-#                 writer=request.user
-#             )
+            return Response(response_data, status=status.HTTP_200_OK)
+        except CommentForSuggestion.DoesNotExist:
+            return Response({'detail': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
 
-#             return Response({"message": "건의 사항이 추가되었습니다.", "suggestion_id": suggestion.id}, status=status.HTTP_201_CREATED)
+            
+class CreateViewForCommentForSuggestionForNote(APIView):
+    def post(self, request, suggestionPk):
+        print("suggest 댓글 추가 요청 check !!!!!!!!!")
+        try:
+            print("suggestionPk :::::::::::: ", suggestionPk)
+            # Check if the error_report with the provided error_report_pk exists
+            suggestion = Suggestion.objects.get(
+                id=suggestionPk)
 
-#         except Exception as e:
-#             return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print("suggestion ::::::::::::: ", suggestion)
+
+        except Suggestion.DoesNotExist:
+            return Response(
+                {"message": "Error report not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        print("request.data : ", request.data)
+
+        request.data["suggestion"] = suggestion.id
+        serializer = SerializerForCreateCommentForSuggestion(data=request.data)
+
+        if serializer.is_valid():
+            print("시리얼 라이저는 유효")
+            print("댓글 추가 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            serializer.save(writer=request.user)
+
+            return Response(
+                {"message": "Comment created successfully"},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            # Return detailed error messages
+            return Response(
+                {"message": "Invalid data", "errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SearchViewForStudyNoteSuggestionList(APIView):
+    suggestionList = []
+
+    def get(self, request, study_note_pk):
+        print("search 요청 check !! ")
+        try:
+            study_note = StudyNote.objects.get(pk=study_note_pk)
+        except StudyNote.DoesNotExist:
+            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        search_words = request.query_params.get("searchWords", "")
+
+        study_note_list = study_note.suggestion_list.all()
+        self.suggestionList = study_note_list
+
+        if search_words:
+            print("search_words : ", search_words)
+            study_note_list = study_note_list.filter(
+                title__icontains=search_words)
+            print("study_note_list : ", study_note_list)
+
+        self.suggestionList = study_note_list
+
+        result_count = self.suggestionList.count()  # Count the number of search results
+
+        serializer = SuggestionSerializer(self.suggestionList, many=True)
+
+        response_data = {
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
+            "data": serializer.data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class CreateViewForSuggestionForNote(APIView):
     def post(self, request, study_note_pk):
@@ -363,7 +439,7 @@ class UpdateViewForFaq(APIView):
 
         return Response({"message": "FAQ update success"}, status=status.HTTP_200_OK)
 
-
+# SearchViewForStudyNoteSuggestionList
 class SearchViewForStudyNoteFaqList(APIView):
     faqList = []
 
@@ -707,9 +783,7 @@ class CreateViewForQnABoard(APIView):
 
 # list view:
 # SuggestionView
-
-
-class SuggestionView(APIView):
+class ListViewForSuggestion(APIView):
     totalSuggestionCount = 0
     perPage = 5
     suggestionList = []
@@ -753,6 +827,7 @@ class SuggestionView(APIView):
         # print("start, end : ", start, end)
         # print("suggestionList : ", self.suggestionList)
 
+        print("건의 사항 리스트 요청 확인 왜 댓글이 안보여??")
         # 시리얼라이징 하기
         serializer = SuggestionSerializer(self.suggestionList, many=True)
 

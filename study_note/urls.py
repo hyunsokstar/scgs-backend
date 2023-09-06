@@ -112,25 +112,37 @@ urlpatterns = [
 
     # list view
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
+    path('suggestion/<int:suggestionPk>/comment', views.ListViewForCommentForSuggestion.as_view()),
+    
+
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
     path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
     #  study-note/${study_note_pk}/suggestion
-    path('<int:study_note_pk>/suggestion', views.SuggestionView.as_view()),
+    path('<int:study_note_pk>/suggestion',
+         views.ListViewForSuggestion.as_view()),
 
     # post
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
 
-    # comment
+    # comment view
     # error-report/${error_report_pk}/comment/add
     path('error-report/<int:error_report_pk>/comment/add',
          views.CreateViewForErrorReportComment.as_view()),
+    #     suggestion/${suggestionPk}/comment/add
+    path('suggestion/<int:suggestionPk>/comment/add',
+         views.CreateViewForCommentForSuggestionForNote.as_view()),
 
     # search
     path('search',
          views.SearchViewForStudyNoteCardList.as_view()),
     path('<int:study_note_pk>/faq/search',
          views.SearchViewForStudyNoteFaqList.as_view()),
+
+    path('<int:study_note_pk>/suggestion/search',
+         views.SearchViewForStudyNoteSuggestionList.as_view()),
+
+
     path('<int:study_note_pk>/qna/search',
          views.SearchViewForStudyNoteQnaList.as_view()),
     path('<int:study_note_pk>/error-report/search',

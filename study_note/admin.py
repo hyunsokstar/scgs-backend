@@ -10,12 +10,20 @@ from .models import (
     ErrorReportForStudyNote,
     FAQBoard,
     CommentForErrorReport,
-    Suggestion
+    Suggestion,
+    CommentForSuggestion
 )
+
+
+@admin.register(CommentForSuggestion)
+class CommentForSuggestionAdmin(admin.ModelAdmin):
+    list_display = ('writer', 'content', 'created_at')
+
 
 @admin.register(Suggestion)
 class SuggestionAdmin(admin.ModelAdmin):
     list_display = ('title', 'writer', 'created_at')
+
 
 @admin.register(StudyNote)
 class StudyNoteAdmin(admin.ModelAdmin):
@@ -25,10 +33,12 @@ class StudyNoteAdmin(admin.ModelAdmin):
 
 @admin.register(ErrorReportForStudyNote)
 class ErrorReportForStudyNoteAdmin(admin.ModelAdmin):
-    list_display = ['study_note', 'writer', 'page', 'is_resolved', 'created_at']
+    list_display = ['study_note', 'writer',
+                    'page', 'is_resolved', 'created_at']
     list_filter = ['is_resolved', 'created_at']
     search_fields = ['study_note__title', 'writer__username']
     readonly_fields = ['created_at', 'updated_at']
+
 
 @admin.register(StudyNoteContent)
 class StudyNoteContentAdmin(admin.ModelAdmin):
@@ -86,12 +96,12 @@ class QnABoardAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
 
 
-
 @admin.register(AnswerForQaBoard)
 class AnswerForQaBoardAdmin(admin.ModelAdmin):
     list_display = ['id', 'question', 'writer', 'created_at']
     list_filter = ['created_at']
-    search_fields = ['question__title', 'writer__username']    
+    search_fields = ['question__title', 'writer__username']
+
 
 @admin.register(FAQBoard)
 class FAQBoardAdmin(admin.ModelAdmin):
@@ -110,17 +120,20 @@ class FAQBoardAdmin(admin.ModelAdmin):
             "classes": ("collapse",)
         }),
     )
-    
+
     def created_at_formatted(self, obj):
         return obj.created_at_formatted()
     created_at_formatted.short_description = "작성일시"
 
+
 admin.site.site_header = "FAQBoard 관리"
 admin.site.site_title = "FAQBoard 관리"
+
 
 @admin.register(CommentForErrorReport)
 class CommentForErrorReportAdmin(admin.ModelAdmin):
     list_display = ('error_report', 'writer', 'created_at')
     list_filter = ('error_report', 'created_at')
-    search_fields = ('error_report__study_note__title', 'writer__username', 'content')
+    search_fields = ('error_report__study_note__title',
+                     'writer__username', 'content')
     date_hierarchy = 'created_at'
