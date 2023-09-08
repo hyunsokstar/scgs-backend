@@ -11,9 +11,13 @@ from .models import (
     FAQBoard,
     CommentForErrorReport,
     Suggestion,
-    CommentForSuggestion
+    CommentForSuggestion,
+    CommentForFaqBoard
 )
 
+@admin.register(CommentForFaqBoard)
+class CommentForFaqBoardAdmin(admin.ModelAdmin):
+    list_display = ('writer', 'content', 'created_at')
 
 @admin.register(CommentForSuggestion)
 class CommentForSuggestionAdmin(admin.ModelAdmin):

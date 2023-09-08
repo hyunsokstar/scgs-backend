@@ -12,11 +12,35 @@ from .models import (
     FAQBoard,
     CommentForErrorReport,
     Suggestion,
-    CommentForSuggestion
+    CommentForSuggestion,
+    CommentForFaqBoard
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
 # 1122
+
+
+class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForFaqBoard
+        fields = ['id', 'faq_board', 'writer', 'content', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_at_formatted'] = instance.created_at_formatted()
+        return data
+
+
+class CommentForFaqBoardSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForFaqBoard
+        fields = ['id', 'writer', 'content', 'created_at']
+
+
 class SerializerForCreateCommentForSuggestion(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
@@ -29,12 +53,13 @@ class SerializerForCreateCommentForSuggestion(serializers.ModelSerializer):
         data['created_at_formatted'] = instance.created_at_formatted()
         return data
 
+
 class CommentForSuggestionSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = CommentForSuggestion
-        fields = ['writer', 'content', 'created_at']
+        fields = ['id', 'writer', 'content', 'created_at']
 
 
 class SuggestionSerializerForCreate(serializers.ModelSerializer):

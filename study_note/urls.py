@@ -112,8 +112,6 @@ urlpatterns = [
 
     # list view
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
-    path('suggestion/<int:suggestionPk>/comment', views.ListViewForCommentForSuggestion.as_view()),
-    
 
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
     path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
@@ -125,13 +123,24 @@ urlpatterns = [
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
 
-    # comment view
+    # comment create view
     # error-report/${error_report_pk}/comment/add
     path('error-report/<int:error_report_pk>/comment/add',
          views.CreateViewForErrorReportComment.as_view()),
-    #     suggestion/${suggestionPk}/comment/add
+    path('faq-board/<int:faqPk>/comment/add',
+         views.CreateViewForCommentForFaqBoard.as_view()),
+
     path('suggestion/<int:suggestionPk>/comment/add',
          views.CreateViewForCommentForSuggestionForNote.as_view()),
+
+    #     path('suggestion/<int:suggestionPk>/comment', views.ListViewForCommentForSuggestion.as_view()),
+    # comment list view
+
+    path('suggestion/<int:suggestionPk>/comment',
+         views.ListViewForCommentForSuggestion.as_view()),
+
+    path('faq-board/<int:faqPk>/comment',
+         views.ListViewForCommentForFaqBoard.as_view()),
 
     # search
     path('search',
@@ -147,10 +156,10 @@ urlpatterns = [
          views.SearchViewForStudyNoteQnaList.as_view()),
     path('<int:study_note_pk>/error-report/search',
          views.SearchViewForStudyNoteErrorReportList.as_view()),
-
-    # update
-    # faq/${pk}/update
     path('faq/<int:faq_pk>/update', views.UpdateViewForFaq.as_view()),
+    path('suggestion/<int:suggestionPk>/update', views.UpdateViewForSuggestion.as_view()),
+
+
 
     # deleteview
     path('<int:study_note_pk>/classroom/withdraw',
@@ -161,6 +170,24 @@ urlpatterns = [
          views.DeleteViewForCommentForErrorReport.as_view()),
     # classroom/${classRoomId}/delete
     path('classroom/<int:classRoomId>/delete',
-         views.DeleteViewForClassRoomForNote.as_view())
+         views.DeleteViewForClassRoomForNote.as_view()),
+    # faq-baord/comment/${commentPk}/update
+    path('faq-board/comment/<int:commentPk>/update',
+         views.UpdateViewForFaqComment.as_view()),
+
+    path('suggestion/comment/<int:commentPk>/delete',
+         views.DeleteViewForCommentForSuggestion.as_view()),
+
+    path('suggestion/<int:suggestionPk>/delete',
+         views.DeleteViewForSuggestion.as_view()),
+         
+     # study-note/suggestion/comment/${commentPk}/update
+    path('suggestion/comment/<int:commentPk>/update',
+         views.UpdateViewForSuggestionComment.as_view()),
+
+    # comment delete view
+    # faq-baord/${commentPk}/delete
+    path('faq-board/comment/<int:commentPk>/delete',
+         views.DeleteViewForFaqComment.as_view())
 
 ]

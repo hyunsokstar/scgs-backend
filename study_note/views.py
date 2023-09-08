@@ -4,24 +4,6 @@ from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
-from .serializers import (
-    SerializerForCreateQuestionForNote,
-    StudyNoteContentSerializer,
-    StudyNoteSerializer,
-    StudyNoteBriefingBoardSerializer,
-    CreateCommentSerializerForNote,
-    ClassRoomForStudyNoteSerializer,
-    QnABoardSerializer,
-    ErrorReportForStudyNoteSerializer,
-    SerializerForCreateErrorReportForNote,
-    FAQBoardSerializer,
-    CommentForErrorReportSerializer,
-    SuggestionSerializer,
-    SuggestionSerializerForCreate,
-    SerializerForCreateCommentForSuggestion,
-    CommentForSuggestionSerializer
-)
-
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 import random
@@ -41,6 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Min
 from django.db import models
+from django.utils import timezone
 from .models import (
     StudyNoteContent,
     ClassRoomForStudyNote,
@@ -51,11 +34,228 @@ from .models import (
     QnABoard,
     FAQBoard,
     Suggestion,
-    CommentForSuggestion
+    CommentForSuggestion,
+    CommentForFaqBoard
 )
-from django.utils import timezone
+from .serializers import (
+    SerializerForCreateQuestionForNote,
+    StudyNoteContentSerializer,
+    StudyNoteSerializer,
+    StudyNoteBriefingBoardSerializer,
+    CreateCommentSerializerForNote,
+    ClassRoomForStudyNoteSerializer,
+    QnABoardSerializer,
+    ErrorReportForStudyNoteSerializer,
+    SerializerForCreateErrorReportForNote,
+    FAQBoardSerializer,
+    CommentForErrorReportSerializer,
+    SuggestionSerializer,
+    SuggestionSerializerForCreate,
+    SerializerForCreateCommentForSuggestion,
+    CommentForSuggestionSerializer,
+    CommentForFaqBoardSerializer,
+    SerializerForCreateCommentForFaqBoard
+)
 
 # 1122
+# UpdateViewForSuggestion
+class UpdateViewForSuggestion(APIView):
+    def put(self, request, suggestionPk):
+
+        print("update 요청 받았습니다")
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            suggestion = Suggestion.objects.get(pk=suggestionPk)
+
+            # 요청에서 수정된 내용 가져오기
+            editedtitle = request.data.get('title')
+            editedContent = request.data.get('content')
+
+            # 댓글 업데이트
+            suggestion.title = editedtitle
+            suggestion.content = editedContent
+            suggestion.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq suggestion update success !!'}, status=status.HTTP_200_OK)
+
+        except Suggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'suggestion not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+# DeleteViewForSuggestion
+class DeleteViewForSuggestion(APIView):
+    def delete(self, request, suggestionPk):
+        print("삭제 요청 확인 ", suggestionPk)
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            suggestion = Suggestion.objects.get(pk=suggestionPk)
+
+            # 댓글 삭제
+            suggestion.delete()
+
+            # 성공적인 응답
+            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+
+        except Suggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# DeleteViewForSuggestion
+class DeleteViewForCommentForSuggestion(APIView):
+    def delete(self, request, commentPk):
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            comment = CommentForSuggestion.objects.get(pk=commentPk)
+
+            # 댓글 삭제
+            comment.delete()
+
+            # 성공적인 응답
+            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+
+        except CommentForSuggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class UpdateViewForSuggestionComment(APIView):
+    def put(self, request, commentPk):
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            comment = CommentForSuggestion.objects.get(pk=commentPk)
+
+            # 요청에서 수정된 내용 가져오기
+            editedContent = request.data.get('editedContent')
+
+            # 댓글 업데이트
+            comment.content = editedContent
+            comment.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq comment update success !!'}, status=status.HTTP_200_OK)
+
+        except CommentForSuggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DeleteViewForFaqComment(APIView):
+    def delete(self, request, commentPk):
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            comment = CommentForFaqBoard.objects.get(pk=commentPk)
+
+            # 댓글 삭제
+            comment.delete()
+
+            # 성공적인 응답
+            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+
+        except CommentForFaqBoard.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# UpdateViewForSuggestion
+class UpdateViewForFaqComment(APIView):
+    def put(self, request, commentPk):
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            comment = CommentForFaqBoard.objects.get(pk=commentPk)
+
+            # 요청에서 수정된 내용 가져오기
+            editedContent = request.data.get('editedContent')
+
+            # 댓글 업데이트
+            comment.content = editedContent
+            comment.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq comment update success !!'}, status=status.HTTP_200_OK)
+
+        except CommentForFaqBoard.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CreateViewForCommentForFaqBoard(APIView):
+    def post(self, request, faqPk):
+        try:
+            print("faqPk :::::::::::: ", faqPk)
+            faq_board = FAQBoard.objects.get(
+                id=faqPk)
+
+            print("faq_board ::::::::::::: ", faq_board)
+
+        except CommentForFaqBoard.DoesNotExist:
+            return Response(
+                {"message": "Error report not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        print("request.data : ", request.data)
+        request.data["faq_board"] = faq_board.id
+        serializer = SerializerForCreateCommentForFaqBoard(data=request.data)
+
+        if serializer.is_valid():
+            print("시리얼 라이저는 유효")
+            print("댓글 추가 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            serializer.save(writer=request.user)
+
+            return Response(
+                {"message": "Comment created successfully"},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            # Return detailed error messages
+            return Response(
+                {"message": "Invalid data", "errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class ListViewForCommentForFaqBoard(APIView):
+    def get(self, request, faqPk):
+        print("댓글 데이터 요청 확인 for 건의 사항")
+        # faqId 해당하는 CommentForSuggestion 정보 가져오기
+        comments = CommentForFaqBoard.objects.filter(faq_board_id=faqPk)
+        print("comments : ", comments)
+        
+        if not comments:
+            raise NotFound("Comments not found")
+        
+        # Serializer를 사용하여 데이터 직렬화
+        serializer = CommentForFaqBoardSerializer(comments, many=True)
+        
+        # 응답 데이터 구성
+        response_data = {
+            'comments': serializer.data,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
 class ListViewForCommentForSuggestion(APIView):
     def get(self, request, suggestionPk):
         print("댓글 데이터 요청 확인 for 건의 사항")
