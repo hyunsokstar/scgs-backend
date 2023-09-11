@@ -5,11 +5,63 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
     HTTP_200_OK,
     HTTP_500_INTERNAL_SERVER_ERROR
 )
 from .models import Suggestion
 from .serializers import SerializerForCreateSuggestionForBoard, SuggestionSerializer
+
+# 1122
+# DeleteViewForSuggestionForBoard
+class DeleteViewForSuggestionForBoard(APIView):
+    def delete(self, request, suggestionPk):
+        print("삭제 요청 확인 ", suggestionPk)
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            suggestion = Suggestion.objects.get(pk=suggestionPk)
+
+            # 댓글 삭제
+            suggestion.delete()
+
+            # 성공적인 응답
+            return Response({'message': 'delete comment for faq success'}, status=HTTP_204_NO_CONTENT)
+
+        except Suggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UpdateViewForSuggestionForBoard(APIView):
+    def put(self, request, suggestionPk):
+
+        print("update 요청 받았습니다")
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            suggestion = Suggestion.objects.get(pk=suggestionPk)
+
+            # 요청에서 수정된 내용 가져오기
+            editedtitle = request.data.get('title')
+            editedContent = request.data.get('content')
+
+            # 댓글 업데이트
+            suggestion.title = editedtitle
+            suggestion.content = editedContent
+            suggestion.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq suggestion update success !!'}, status=HTTP_200_OK)
+
+        except Suggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'suggestion not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # Create Suggestion
 class CreateViewForSuggestionForBoard(APIView):
