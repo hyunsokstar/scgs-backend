@@ -3,25 +3,16 @@ from django.db import transaction
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import CoWriterForStudyNote, StudyNote, StudyNoteContent
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework import status
 import random
-from django.db.models import Count
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import StudyNoteContent
+from django.db.models import Count, Max
 from django.db.models import Max
-from django.shortcuts import get_object_or_404
 from django.db.models import Q, F
+from django.shortcuts import get_object_or_404
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework import status
-from django.db.models import Min
+
 from django.db import models
 from django.utils import timezone
 from .models import (
@@ -35,7 +26,10 @@ from .models import (
     FAQBoard,
     Suggestion,
     CommentForSuggestion,
-    CommentForFaqBoard
+    CommentForFaqBoard,
+    CoWriterForStudyNote, 
+    StudyNote, 
+    StudyNoteContent
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -349,6 +343,7 @@ class SearchViewForStudyNoteSuggestionList(APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
+# CreateViewForSuggestionForBoard
 class CreateViewForSuggestionForNote(APIView):
     def post(self, request, study_note_pk):
         try:
@@ -998,7 +993,6 @@ class ListViewForSuggestion(APIView):
             pageNum = 1
 
         try:
-            # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
             return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
@@ -1020,25 +1014,23 @@ class ListViewForSuggestion(APIView):
         self.totalSuggestionCount = suggestion_list.count()
         # print("totalSuggestionCount : ", self.totalSuggestionCount)
 
-        # faq 목록 범위 지정 하기
+        # list 범위 지정 하기
         start = (pageNum - 1) * self.perPage
         end = start + self.perPage
         self.suggestionList = self.suggestionList[start:end]
         # print("start, end : ", start, end)
         # print("suggestionList : ", self.suggestionList)
 
-        print("건의 사항 리스트 요청 확인 왜 댓글이 안보여??")
         # 시리얼라이징 하기
         serializer = SuggestionSerializer(self.suggestionList, many=True)
 
-        # return Response(serializer.data, status=status.HTTP_200_OK)
+        # 응답용 딕셔너리 선언
         response_data = {
             "suggestionList": serializer.data,
             "totalSuggestionCount": self.totalSuggestionCount,
             "perPage": self.perPage,
         }
-
-        print("response_data for suggestion ::::::::::::::::", response_data)
+        # print("response_data for suggestion ::::::::::::::::", response_data)
 
         return Response(response_data, status=HTTP_200_OK)
 

@@ -18,8 +18,6 @@ from .models import (
 from django.utils import timezone  # timezone 모듈 임포트
 
 # 1122
-
-
 class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
