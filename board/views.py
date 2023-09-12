@@ -18,10 +18,51 @@ from .serializers import (
     SerializerForCreateSuggestionForBoard,
     SuggestionSerializer,
     SerializerForCommentListForSuggestionForBoard,
+    SerializerForCreateCommentForSuggestionForBoard
 )
 
 # 1122
 
+class CreateViewForCommentForSuggestionForBoard(APIView):
+    def post(self, request, suggestionId):
+        print("suggest 댓글 추가 요청 check !!!!!!!!!")
+        try:
+            print("suggestionId :::::::::::: ", suggestionId)
+            # Check if the error_report with the provided error_report_pk exists
+            suggestion = Suggestion.objects.get(
+                id=suggestionId)
+
+            print("suggestion ::::::::::::: ", suggestion)
+
+        except Suggestion.DoesNotExist:
+            return Response(
+                {"message": "Error report not found"},
+                status=HTTP_404_NOT_FOUND
+            )
+
+        print("request.data : ", request.data)
+
+        request.data["suggestion"] = suggestion.id
+        serializer = SerializerForCreateCommentForSuggestionForBoard(data=request.data)
+
+        if serializer.is_valid():
+            print("시리얼 라이저는 유효")
+            print("댓글 추가 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            serializer.save(writer=request.user)
+
+            return Response(
+                {"message": "Comment created successfully"},
+                status=HTTP_201_CREATED
+            )
+        else:
+            # Return detailed error messages
+            return Response(
+                {"message": "Invalid data", "errors": serializer.errors},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+
+# CreateViewForCommentForSuggestionForBoard
 # class DeleteViewForCommentForSuggestionForBoard(APIView):
 #     def delete(self, request, commentPk):
 #         try:

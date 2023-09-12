@@ -7,6 +7,18 @@ from .models import (
 )
 from users.serializers import UserProfileImageSerializer
 
+class SerializerForCreateCommentForSuggestionForBoard(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForSuggestion
+        fields = ['id', 'suggestion', 'writer', 'content', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_at_formatted'] = instance.created_at_formatted()
+        return data
+
 # SerializerForCreateSuggestionForBoard
 class SerializerForCommentListForSuggestionForBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
