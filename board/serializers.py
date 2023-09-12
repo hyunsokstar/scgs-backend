@@ -1,9 +1,21 @@
 from rest_framework import serializers
-from .models import Suggestion
 from django.utils import timezone
+
+from .models import (
+    Suggestion,
+    CommentForSuggestion,
+)
 from users.serializers import UserProfileImageSerializer
 
 # SerializerForCreateSuggestionForBoard
+class SerializerForCommentListForSuggestionForBoard(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForSuggestion
+        fields = ['id', 'writer', 'content', 'created_at']
+
+
 class SerializerForCreateSuggestionForBoard(serializers.ModelSerializer):
     class Meta:
         model = Suggestion

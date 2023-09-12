@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Suggestion
+from .models import (
+    Suggestion,
+    CommentForSuggestion
+)
+
 
 @admin.register(Suggestion)
 class SuggestionAdmin(admin.ModelAdmin):
@@ -7,3 +11,8 @@ class SuggestionAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at')
     search_fields = ('title', 'content', 'writer__username')
     list_per_page = 20
+
+
+@admin.register(CommentForSuggestion)
+class CommentForSuggestionAdmin(admin.ModelAdmin):
+    list_display = ('writer', 'content', 'created_at')

@@ -7,6 +7,9 @@ urlpatterns = [
     # list view
     path('suggestion', views.ListViewForSuggestion.as_view()),
 
+    # comment list view
+    path('suggestion/<int:suggestionId>/comment', views.ListViewForCommentForSuggestionForBoard.as_view()),
+
     # create view
     path('suggestion/add', views.CreateViewForSuggestionForBoard.as_view()),
 
@@ -17,5 +20,11 @@ urlpatterns = [
     # delete view
     path('suggestion/<int:suggestionPk>/delete',
          views.DeleteViewForSuggestionForBoard.as_view()),
+    path('suggestion/comment/<int:commentPk>/delete',
+         views.DeleteViewForCommentForSuggestionForBoard.as_view()),
+
+    # update view
+    path('suggestion/comment/<int:commentPk>/update',
+         views.UpdateViewForFaqComment.as_view()),
 
 ]

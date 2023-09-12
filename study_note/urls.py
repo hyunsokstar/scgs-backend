@@ -178,8 +178,7 @@ urlpatterns = [
     path('suggestion/comment/<int:commentPk>/delete',
          views.DeleteViewForCommentForSuggestion.as_view()),
 
-    path('suggestion/<int:suggestionPk>/delete',
-         views.DeleteViewForSuggestion.as_view()),
+
          
      # study-note/suggestion/comment/${commentPk}/update
     path('suggestion/comment/<int:commentPk>/update',

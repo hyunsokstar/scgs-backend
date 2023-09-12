@@ -7,12 +7,97 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_200_OK,
-    HTTP_500_INTERNAL_SERVER_ERROR
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_403_FORBIDDEN
 )
-from .models import Suggestion
-from .serializers import SerializerForCreateSuggestionForBoard, SuggestionSerializer
+from .models import (
+    Suggestion,
+    CommentForSuggestion,
+)
+from .serializers import (
+    SerializerForCreateSuggestionForBoard,
+    SuggestionSerializer,
+    SerializerForCommentListForSuggestionForBoard,
+)
 
 # 1122
+
+# class DeleteViewForCommentForSuggestionForBoard(APIView):
+#     def delete(self, request, commentPk):
+#         try:
+#             comment = CommentForSuggestion.objects.get(pk=commentPk)
+#         except CommentForSuggestion.DoesNotExist:
+#             return Response({"message": "comment not found"}, status=HTTP_404_NOT_FOUND)
+
+#         if request.user != comment.writer:
+#             return Response({"message": "Permission denied"}, status=HTTP_403_FORBIDDEN)
+
+#         comment.delete()
+
+#         return Response({"message": "FAQ deleted successfully"}, status=HTTP_204_NO_CONTENT)
+
+class DeleteViewForCommentForSuggestionForBoard(APIView):
+    def delete(self, request, commentPk):
+        try:
+            comment = CommentForSuggestion.objects.get(pk=commentPk)
+        except CommentForSuggestion.DoesNotExist:
+            return Response({"message": "comment not found"}, status=HTTP_404_NOT_FOUND)
+
+        if request.user != comment.writer:
+            return Response({"message": f"삭제 권한은 {comment.writer.username} 에게 있습니다"}, status=HTTP_403_FORBIDDEN)
+
+        comment.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=HTTP_204_NO_CONTENT)
+
+class UpdateViewForFaqComment(APIView):
+    def put(self, request, commentPk):
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            comment = CommentForSuggestion.objects.get(pk=commentPk)
+
+            # 요청에서 수정된 내용 가져오기
+            editedContent = request.data.get('editedContent')
+
+            # 댓글 업데이트
+            comment.content = editedContent
+            comment.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq comment update success !!'}, status=HTTP_200_OK)
+
+        except CommentForSuggestion.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'Comment not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+class ListViewForCommentForSuggestionForBoard(APIView):
+    def get(self, request, suggestionId):
+        print("댓글 데이터 요청 확인 for 건의 사항")
+        try:
+            # suggestionPk 해당하는 CommentForSuggestion 정보 가져오기
+            comments = CommentForSuggestion.objects.filter(
+                suggestion_id=suggestionId)
+
+            # Serializer를 사용하여 데이터 직렬화
+            serializer = SerializerForCommentListForSuggestionForBoard(comments, many=True)
+
+            # 응답 데이터 구성
+            response_data = {
+                'comments': serializer.data,
+            }
+
+            return Response(response_data, status=HTTP_200_OK)
+        except CommentForSuggestion.DoesNotExist:
+            return Response({'detail': 'Comments not found'}, status=HTTP_404_NOT_FOUND)
+
+
+# ListViewForCommentForSuggestionForBoard
 # DeleteViewForSuggestionForBoard
 class DeleteViewForSuggestionForBoard(APIView):
     def delete(self, request, suggestionPk):
