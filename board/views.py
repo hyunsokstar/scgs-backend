@@ -23,10 +23,39 @@ from .serializers import (
     SerializerForCreateCommentForSuggestionForBoard,
     SerializerForFaqBoard,
     SerializerForCommentListForFaqForBoard,
-    SerializerForCreateCommentForFaqForBoard
+    SerializerForCreateCommentForFaqForBoard,
+    SerializerForCreateFaqForBoard
 )
 
 # 1122
+# CreateViewForFaqForBoard
+class CreateViewForFaqForBoard(APIView):
+    def post(self, request):
+        try:
+            print("Faq For Board 추가 요청 check for board !!")
+
+            # 필요한 필드 직접 추출
+            title = request.data.get("title")
+            content = request.data.get("content")
+
+            # 직렬화
+            serializer = SerializerForCreateFaqForBoard(data={
+                "title": title,
+                "content": content,
+                "writer": request.user.id  # 또는 원하는 작성자 정보
+            })
+
+            if serializer.is_valid():
+                suggestion = serializer.save()  # create 메서드를 사용하여 저장
+
+                return Response({"message": "faq가 추가되었습니다.", "suggestion_id": suggestion.id}, status=HTTP_201_CREATED)
+
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print("에러 발생:", str(e))
+            return Response({"message": "faq 추가 중에 오류가 발생했습니다."}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class DeleteViewForCommentForFaqForBoard(APIView):
     def delete(self, request, commentPk):
@@ -383,7 +412,7 @@ class UpdateViewForSuggestionForBoard(APIView):
             return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Create Suggestion
+# CreateViewForFaqForBoard
 class CreateViewForSuggestionForBoard(APIView):
     def post(self, request):
         try:

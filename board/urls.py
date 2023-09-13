@@ -18,6 +18,7 @@ urlpatterns = [
 
     # create view
     path('suggestion/add', views.CreateViewForSuggestionForBoard.as_view()),
+    path('faq-bard/create', views.CreateViewForFaqForBoard.as_view()),
     path('suggestion/<int:suggestionId>/comment/create',
          views.CreateViewForCommentForSuggestionForBoard.as_view()),
      # board/faq/${faqId}/comment/create

@@ -9,6 +9,13 @@ from .models import (
 )
 from users.serializers import UserProfileImageSerializer
 
+# 1122
+
+class SerializerForCreateFaqForBoard(serializers.ModelSerializer):
+    class Meta:
+        model = FAQBoard
+        fields = ['title', 'content', 'writer']
+
 class SerializerForCreateCommentForFaqForBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
