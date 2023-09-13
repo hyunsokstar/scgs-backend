@@ -2,9 +2,13 @@ from django.contrib import admin
 from .models import (
     Suggestion,
     CommentForSuggestion,
-    FAQBoard
+    FAQBoard,
+    CommentForFaqBoard
 )
 
+@admin.register(CommentForFaqBoard)
+class CommentForFaqBoardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'content')
 
 @admin.register(Suggestion)
 class SuggestionAdmin(admin.ModelAdmin):
@@ -22,5 +26,4 @@ class CommentForSuggestionAdmin(admin.ModelAdmin):
 @admin.register(FAQBoard)
 class FAQBoardAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'content', 'writer')
-
     # 나머지 필드 설정 (필요한 경우)

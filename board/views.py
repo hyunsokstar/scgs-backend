@@ -13,18 +13,40 @@ from rest_framework.status import (
 from .models import (
     Suggestion,
     CommentForSuggestion,
-    FAQBoard
+    FAQBoard,
+    CommentForFaqBoard
 )
 from .serializers import (
     SerializerForCreateSuggestionForBoard,
     SuggestionSerializer,
     SerializerForCommentListForSuggestionForBoard,
     SerializerForCreateCommentForSuggestionForBoard,
-    SerializerForFaqBoard
+    SerializerForFaqBoard,
+    SerializerForCommentListForFaqForBoard
 )
 
 # 1122
+# ListViewForCommentForFaqForBoard
+class ListViewForCommentForFaqForBoard(APIView):
+    def get(self, request, faqId):
+        print("댓글 데이터 요청 확인 for faq for board")
+        try:
+            # suggestionPk 해당하는 CommentForSuggestion 정보 가져오기
+            comments = CommentForFaqBoard.objects.filter(
+                faq_board_id=faqId)
 
+            # Serializer를 사용하여 데이터 직렬화
+            serializer = SerializerForCommentListForFaqForBoard(
+                comments, many=True)
+
+            # 응답 데이터 구성
+            response_data = {
+                'comments': serializer.data,
+            }
+
+            return Response(response_data, status=HTTP_200_OK)
+        except CommentForFaqBoard.DoesNotExist:
+            return Response({'detail': 'Comments not found'}, status=HTTP_404_NOT_FOUND)
 
 class DeleteViewForFaqForBoard(APIView):
     def delete(self, request, faqId):
@@ -201,7 +223,7 @@ class UpdateViewForFaqComment(APIView):
             # 다른 예외 처리
             return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+# ListViewForCommentForFaqForBoard
 class ListViewForCommentForSuggestionForBoard(APIView):
     def get(self, request, suggestionId):
         print("댓글 데이터 요청 확인 for 건의 사항")

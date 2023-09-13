@@ -11,6 +11,8 @@ urlpatterns = [
     # comment list view
     path('suggestion/<int:suggestionId>/comment',
          views.ListViewForCommentForSuggestionForBoard.as_view()),
+    path('faq-board/<int:faqId>/comment',
+         views.ListViewForCommentForFaqForBoard.as_view()),     
 
     # create view
     path('suggestion/add', views.CreateViewForSuggestionForBoard.as_view()),

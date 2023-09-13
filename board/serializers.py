@@ -8,6 +8,14 @@ from .models import (
 )
 from users.serializers import UserProfileImageSerializer
 
+# SerializerForCommentListForFaqForBoard
+class SerializerForCommentListForFaqForBoard(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForSuggestion
+        fields = ['id', 'writer', 'content', 'created_at']
+
 class SerializerForFaqBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
@@ -47,7 +55,7 @@ class SerializerForCreateCommentForSuggestionForBoard(serializers.ModelSerialize
         data['created_at_formatted'] = instance.created_at_formatted()
         return data
 
-# SerializerForCreateSuggestionForBoard
+# SerializerForCommentListForFaqForBoard
 class SerializerForCommentListForSuggestionForBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
