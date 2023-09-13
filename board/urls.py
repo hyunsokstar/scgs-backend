@@ -13,22 +13,28 @@ urlpatterns = [
          views.ListViewForCommentForSuggestionForBoard.as_view()),
     path('faq-board/<int:faqId>/comment',
          views.ListViewForCommentForFaqForBoard.as_view()),     
+         
+     
 
     # create view
     path('suggestion/add', views.CreateViewForSuggestionForBoard.as_view()),
-    # board/suggestion/${suggestionId}/comment/create
     path('suggestion/<int:suggestionId>/comment/create',
          views.CreateViewForCommentForSuggestionForBoard.as_view()),
+     # board/faq/${faqId}/comment/create
+    path('faq-board/<int:faqId>/comment/create',
+         views.CreateViewForCommentForFaqForBoard.as_view()),
 
     # update view
     path('suggestion/<int:suggestionPk>/update',
          views.UpdateViewForSuggestionForBoard.as_view()),
 
-    path('faq-board/<int:faqId>/update',
-         views.UpdateViewForFaqForBoard.as_view()),         
+    path('faq-board/comment/<int:commentId>/update',
+         views.UpdateViewForCommentForFaqForBoard.as_view()), 
+
+    path('suggestion/comment/<int:commentPk>/update',
+         views.UpdateViewForFaqComment.as_view()),
 
     # delete view
-    # .delete(`board/faq/${faqId}/delete`
     path('faq-board/<int:faqId>/delete',
          views.DeleteViewForFaqForBoard.as_view()),
 
@@ -38,8 +44,8 @@ urlpatterns = [
     path('suggestion/comment/<int:commentPk>/delete',
          views.DeleteViewForCommentForSuggestionForBoard.as_view()),
 
-    # update view
-    path('suggestion/comment/<int:commentPk>/update',
-         views.UpdateViewForFaqComment.as_view()),
+    path('faq-board/comment/<int:commentPk>/delete',
+         views.DeleteViewForCommentForFaqForBoard.as_view()),
+
 
 ]

@@ -171,7 +171,6 @@ urlpatterns = [
     # classroom/${classRoomId}/delete
     path('classroom/<int:classRoomId>/delete',
          views.DeleteViewForClassRoomForNote.as_view()),
-    # faq-baord/comment/${commentPk}/update
     path('faq-board/comment/<int:commentPk>/update',
          views.UpdateViewForFaqComment.as_view()),
 

@@ -2,11 +2,24 @@ from rest_framework import serializers
 from django.utils import timezone
 
 from .models import (
+    CommentForFaqBoard,
     Suggestion,
     CommentForSuggestion,
     FAQBoard
 )
 from users.serializers import UserProfileImageSerializer
+
+class SerializerForCreateCommentForFaqForBoard(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CommentForFaqBoard
+        fields = ['id', 'faq_board', 'writer', 'content', 'created_at']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_at_formatted'] = instance.created_at_formatted()
+        return data
 
 # SerializerForCommentListForFaqForBoard
 class SerializerForCommentListForFaqForBoard(serializers.ModelSerializer):

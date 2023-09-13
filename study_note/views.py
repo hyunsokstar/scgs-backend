@@ -125,7 +125,7 @@ class DeleteViewForCommentForSuggestion(APIView):
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
+# UpdateViewForCommentForFaqForBoard
 class UpdateViewForSuggestionComment(APIView):
     def put(self, request, commentPk):
         try:
