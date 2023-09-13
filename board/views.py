@@ -19,10 +19,57 @@ from .serializers import (
     SerializerForCreateSuggestionForBoard,
     SuggestionSerializer,
     SerializerForCommentListForSuggestionForBoard,
-    SerializerForCreateCommentForSuggestionForBoard
+    SerializerForCreateCommentForSuggestionForBoard,
+    SerializerForFaqBoard
 )
 
 # 1122
+
+
+class DeleteViewForFaqForBoard(APIView):
+    def delete(self, request, faqId):
+        try:
+            faq = FAQBoard.objects.get(id=faqId)
+        except FAQBoard.DoesNotExist:
+            return Response({"message": "FAQ not found"}, status=HTTP_404_NOT_FOUND)
+
+        if request.user != faq.writer:
+            return Response({"message": f"{faq.writer.username}님 만 삭제할 수 있습니다"}, status=HTTP_403_FORBIDDEN)
+
+        faq.delete()
+
+        return Response({"message": "FAQ deleted successfully"}, status=HTTP_204_NO_CONTENT)
+
+# UpdateViewForFaqForBoard
+
+
+class UpdateViewForFaqForBoard(APIView):
+    def put(self, request, faqId):
+
+        print("update 요청 받았습니다")
+        try:
+            # commentPk에 해당하는 댓글 찾기
+            faqObj = FAQBoard.objects.get(pk=faqId)
+
+            # 요청에서 수정된 내용 가져오기
+            editedtitle = request.data.get('title')
+            editedContent = request.data.get('content')
+
+            # 댓글 업데이트
+            faqObj.title = editedtitle
+            faqObj.content = editedContent
+            faqObj.save()
+
+            # 성공적인 응답
+            return Response({'message': 'faq for board update success !!'}, status=HTTP_200_OK)
+
+        except FAQBoard.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'faq not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ListViewForFaqBoard(APIView):
     # pagination 관련 변수 선언
@@ -36,7 +83,7 @@ class ListViewForFaqBoard(APIView):
         pageNum = int(pageNum)
 
         # suggestion list data 가져 오기
-        list_for_suggestion = Suggestion.objects.all()
+        list_for_suggestion = FAQBoard.objects.all()
         self.listForFaqBoard = list_for_suggestion
 
         # 총 개수 초기화
@@ -48,7 +95,7 @@ class ListViewForFaqBoard(APIView):
         self.listForFaqBoard = self.listForFaqBoard[start:end]
 
         # 해당 범위에 대해 listForFaqBoardList 직렬화
-        serializer = SuggestionSerializer(self.listForFaqBoard, many=True)
+        serializer = SerializerForFaqBoard(self.listForFaqBoard, many=True)
 
         # 응답용 딕셔너리 선언
         response_data = {
@@ -59,6 +106,7 @@ class ListViewForFaqBoard(APIView):
 
         # Response 로 응답용 딕셔너리 와 Http code 전달
         return Response(response_data, status=HTTP_200_OK)
+
 
 class CreateViewForCommentForSuggestionForBoard(APIView):
     def post(self, request, suggestionId):
@@ -80,7 +128,8 @@ class CreateViewForCommentForSuggestionForBoard(APIView):
         print("request.data : ", request.data)
 
         request.data["suggestion"] = suggestion.id
-        serializer = SerializerForCreateCommentForSuggestionForBoard(data=request.data)
+        serializer = SerializerForCreateCommentForSuggestionForBoard(
+            data=request.data)
 
         if serializer.is_valid():
             print("시리얼 라이저는 유효")
@@ -128,6 +177,7 @@ class DeleteViewForCommentForSuggestionForBoard(APIView):
 
         return Response({"message": "FAQ deleted successfully"}, status=HTTP_204_NO_CONTENT)
 
+
 class UpdateViewForFaqComment(APIView):
     def put(self, request, commentPk):
         try:
@@ -152,8 +202,6 @@ class UpdateViewForFaqComment(APIView):
             return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
 class ListViewForCommentForSuggestionForBoard(APIView):
     def get(self, request, suggestionId):
         print("댓글 데이터 요청 확인 for 건의 사항")
@@ -163,7 +211,8 @@ class ListViewForCommentForSuggestionForBoard(APIView):
                 suggestion_id=suggestionId)
 
             # Serializer를 사용하여 데이터 직렬화
-            serializer = SerializerForCommentListForSuggestionForBoard(comments, many=True)
+            serializer = SerializerForCommentListForSuggestionForBoard(
+                comments, many=True)
 
             # 응답 데이터 구성
             response_data = {
@@ -196,6 +245,8 @@ class DeleteViewForSuggestionForBoard(APIView):
         except Exception as e:
             # 다른 예외 처리
             return Response({'message': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+# UpdateViewForFaqForBoard
 
 
 class UpdateViewForSuggestionForBoard(APIView):
@@ -268,7 +319,7 @@ class ListViewForSuggestion(APIView):
         pageNum = int(pageNum)
 
         # suggestion list data 가져 오기
-        list_for_suggestion = Suggestion.objects.all()
+        list_for_suggestion = Suggestion.objects.all().order_by('-created_at')
         self.listForSuggestion = list_for_suggestion
 
         # 총 개수 초기화

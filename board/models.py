@@ -72,3 +72,30 @@ class FAQBoard(models.Model):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')  
     
+class CommentForFaqBoard(models.Model):
+    faq_board = models.ForeignKey(
+        "board.FaqBoard",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="comments_list"
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="comment_list_for_faq_for_board"
+    )
+
+    content = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"내용: {self.content}"
+
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')

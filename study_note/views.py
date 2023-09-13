@@ -572,7 +572,7 @@ class DeleteViewForNoteFaq(APIView):
             return Response({"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND)
 
         if request.user != faq.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": f"{faq.writer.username}만 삭제할 수 있습니다"}, status=status.HTTP_403_FORBIDDEN)
 
         faq.delete()
 

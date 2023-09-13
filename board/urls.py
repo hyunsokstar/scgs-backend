@@ -22,7 +22,14 @@ urlpatterns = [
     path('suggestion/<int:suggestionPk>/update',
          views.UpdateViewForSuggestionForBoard.as_view()),
 
+    path('faq-board/<int:faqId>/update',
+         views.UpdateViewForFaqForBoard.as_view()),         
+
     # delete view
+    # .delete(`board/faq/${faqId}/delete`
+    path('faq-board/<int:faqId>/delete',
+         views.DeleteViewForFaqForBoard.as_view()),
+
     path('suggestion/<int:suggestionPk>/delete',
          views.DeleteViewForSuggestionForBoard.as_view()),
 
