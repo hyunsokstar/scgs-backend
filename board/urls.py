@@ -6,6 +6,7 @@ urlpatterns = [
 
     # list view
     path('suggestion', views.ListViewForSuggestion.as_view()),
+    path('faq-board', views.ListViewForFaqBoard.as_view()),
 
     # comment list view
     path('suggestion/<int:suggestionId>/comment',

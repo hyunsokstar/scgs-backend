@@ -13,6 +13,7 @@ from rest_framework.status import (
 from .models import (
     Suggestion,
     CommentForSuggestion,
+    FAQBoard
 )
 from .serializers import (
     SerializerForCreateSuggestionForBoard,
@@ -22,6 +23,42 @@ from .serializers import (
 )
 
 # 1122
+
+class ListViewForFaqBoard(APIView):
+    # pagination 관련 변수 선언
+    listForFaqBoard = []
+    perPage = 5
+    totalCountForFaqBoard = 0
+
+    def get(self, request):
+        # pageNum 받아와서 초기화
+        pageNum = request.query_params.get("pageNum", 1)
+        pageNum = int(pageNum)
+
+        # suggestion list data 가져 오기
+        list_for_suggestion = Suggestion.objects.all()
+        self.listForFaqBoard = list_for_suggestion
+
+        # 총 개수 초기화
+        self.totalCountForFaqBoard = list_for_suggestion.count()
+
+        # 범위 지정 하기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.listForFaqBoard = self.listForFaqBoard[start:end]
+
+        # 해당 범위에 대해 listForFaqBoardList 직렬화
+        serializer = SuggestionSerializer(self.listForFaqBoard, many=True)
+
+        # 응답용 딕셔너리 선언
+        response_data = {
+            "listForFaqBoard": serializer.data,
+            "totalCountForFaqBoard": self.totalCountForFaqBoard,
+            "perPage": self.perPage,
+        }
+
+        # Response 로 응답용 딕셔너리 와 Http code 전달
+        return Response(response_data, status=HTTP_200_OK)
 
 class CreateViewForCommentForSuggestionForBoard(APIView):
     def post(self, request, suggestionId):
@@ -218,10 +255,11 @@ class CreateViewForSuggestionForBoard(APIView):
             return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ListViewForFaqBoard
 class ListViewForSuggestion(APIView):
     # pagination 관련 변수 선언
     listForSuggestion = []
-    perPage = 5
+    perPage = 10
     totalCountForSuggestionList = 0
 
     def get(self, request):

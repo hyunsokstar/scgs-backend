@@ -130,10 +130,6 @@ class FAQBoardAdmin(admin.ModelAdmin):
     created_at_formatted.short_description = "작성일시"
 
 
-admin.site.site_header = "FAQBoard 관리"
-admin.site.site_title = "FAQBoard 관리"
-
-
 @admin.register(CommentForErrorReport)
 class CommentForErrorReportAdmin(admin.ModelAdmin):
     list_display = ('error_report', 'writer', 'created_at')

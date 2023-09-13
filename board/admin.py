@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Suggestion,
-    CommentForSuggestion
+    CommentForSuggestion,
+    FAQBoard
 )
 
 
@@ -16,3 +17,10 @@ class SuggestionAdmin(admin.ModelAdmin):
 @admin.register(CommentForSuggestion)
 class CommentForSuggestionAdmin(admin.ModelAdmin):
     list_display = ('writer', 'content', 'created_at')
+
+
+@admin.register(FAQBoard)
+class FAQBoardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'content', 'writer')
+
+    # 나머지 필드 설정 (필요한 경우)

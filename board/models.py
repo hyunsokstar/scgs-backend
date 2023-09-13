@@ -50,4 +50,25 @@ class CommentForSuggestion(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')        
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
+class FAQBoard(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="faq_list"
+    )    
+    created_at = models.DateTimeField(default=timezone.now)    
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.id} - {self.title}"
+    
+    def created_at_formatted(self):
+        local_created_at = timezone.localtime(self.created_at)
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')  
+    
