@@ -5,7 +5,7 @@ class Challenge(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    category = models.CharField(max_length=50)  # 새로운 category 필드 추가
+    subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
 
     writer = models.ForeignKey(
         "users.User",

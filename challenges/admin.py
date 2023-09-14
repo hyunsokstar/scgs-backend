@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import Challenge
 
-# Register your models here.
+
+@admin.register(Challenge)
+class ChallengeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'subtitle',
+                    'created_at_formatted', 'writer')
