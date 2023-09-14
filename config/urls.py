@@ -22,4 +22,5 @@ urlpatterns = [
     path("api/v1/study-note/", include("study_note.urls")),
     path("api/v1/plan-maker/", include("plan_maker.urls")),
     path("api/v1/board/", include("board.urls")),
+    path("api/v1/challenges/", include("challenges.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

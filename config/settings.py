@@ -63,7 +63,8 @@ CUSTOM_APPS = [
     "plankeeper.apps.PlankeeperConfig",
     "study_note.apps.StudyNoteConfig",
     "plan_maker.apps.PlanMakerConfig",
-    "board.apps.BoardConfig"
+    "board.apps.BoardConfig",
+    "challenges.apps.ChallengesConfig"
 ]
 
 SYSTEM_APPS = [
