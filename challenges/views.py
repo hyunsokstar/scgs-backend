@@ -10,7 +10,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
     HTTP_200_OK,
     HTTP_500_INTERNAL_SERVER_ERROR,
-    HTTP_403_FORBIDDEN
+    HTTP_403_FORBIDDEN,
+    HTTP_401_UNAUTHORIZED
 )
 
 from .models import (
@@ -19,11 +20,33 @@ from .models import (
 
 from .serializers import (
     SerializerForChallenges,
+    SerializerForCreateChallenge
 )
 
 # 1122 Create your views here.
+class CreateViewForChallenge(APIView):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 challenge 생성 못해요 !"},
+                status=HTTP_401_UNAUTHORIZED
+            )
 
-# UpdateViewForChallengeMainImage
+        serializer = SerializerForCreateChallenge(data=request.data)
+
+        if serializer.is_valid():
+            # 데이터베이스에 새로운 Challenge 생성
+            challenge = serializer.save(writer=request.user)
+
+            return Response(
+                {"message": "Challenge 생성 성공", "challenge_id": challenge.id},
+                status=HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                {"errors": serializer.errors},
+                status=HTTP_400_BAD_REQUEST
+            )
 
 
 class UpdateViewForChallengeMainImage(APIView):

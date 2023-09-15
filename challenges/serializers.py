@@ -2,8 +2,16 @@ from rest_framework import serializers
 from .models import Challenge
 from users.serializers import UserProfileImageSerializer
 
+
+class SerializerForCreateChallenge(serializers.ModelSerializer):
+    class Meta:
+        model = Challenge
+        fields = ['title', 'subtitle', 'description', 'main_image', 'writer']
+
+
 class SerializerForChallenges(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)  # UserProfileImageSerializer는 다른 곳에서 정의되어 있어야 합니다.
+    # UserProfileImageSerializer는 다른 곳에서 정의되어 있어야 합니다.
+    writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:

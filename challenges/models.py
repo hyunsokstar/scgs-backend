@@ -3,10 +3,10 @@ from django.db import models
 # 도전 정보를 담을 모델
 class Challenge(models.Model):
     title = models.CharField(max_length=100)
-    description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
     subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
+    description = models.TextField()
     main_image = models.URLField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     writer = models.ForeignKey(
         "users.User",
