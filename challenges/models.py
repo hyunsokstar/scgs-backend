@@ -6,6 +6,7 @@ class Challenge(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
+    main_image = models.URLField(null=True, blank=True)
 
     writer = models.ForeignKey(
         "users.User",

@@ -484,7 +484,9 @@ class UserProfile(APIView):
         print("/users/:pk 에 대해 클라이언트로 넘너가는 데이터 serializer.data: ", serializer.data)
         return Response(serializer.data)
 
+# 유저 이미지 업데이트
 
+# UpdateViewForChallengeMainImage
 class UserPhotos(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -509,22 +511,6 @@ class UserPhotos(APIView):
         else:
             return Response(serializer.errors)
 
-        # serializer = ProfilePhotoSerializer(data=request.data)
-
-        # if serializer.is_valid():
-
-        #     exist_photo = PhotoForProfile.objects.filter(user=user)
-        #     if (exist_photo):
-        #         result = exist_photo.delete()
-        #         print("result : ", result)
-
-        #     photo = serializer.save(user=user)
-        #     print("photo : ", photo)
-        #     serializer = ProfilePhotoSerializer(photo)
-        #     print("serializer : ", serializer.data)
-        #     return Response(serializer.data)
-        # else:
-        #     return Response(serializer.errors)
 
 
 class Me(APIView):

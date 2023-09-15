@@ -13,6 +13,7 @@ class SerializerForChallenges(serializers.ModelSerializer):
             'title',
             'subtitle',
             'description',
+            'main_image',
             'writer',
             'created_at',
             'created_at_formatted',

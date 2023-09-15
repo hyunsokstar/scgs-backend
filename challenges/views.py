@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
 from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_201_CREATED,
@@ -10,6 +12,7 @@ from rest_framework.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_403_FORBIDDEN
 )
+
 from .models import (
     Challenge
 )
@@ -18,7 +21,42 @@ from .serializers import (
     SerializerForChallenges,
 )
 
-# Create your views here.
+# 1122 Create your views here.
+
+# UpdateViewForChallengeMainImage
+
+
+class UpdateViewForChallengeMainImage(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, challengeId):
+        try:
+            return Challenge.objects.get(id=challengeId)
+        except Challenge.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, challengeId):
+        challenge = self.get_object(challengeId)  # 개별 유저 가져 오기
+
+        if request.user != challenge.writer:
+            print("403 ??????????")
+            message = f"{challenge.writer.username} 님만 이미지를 업데이트 할 수 있습니다."
+            return Response({"message": message}, status=HTTP_403_FORBIDDEN)
+
+        # 요청 데이터에서 이미지 가져오기
+        image_to_update = request.data.get("image_to_update")
+
+        if image_to_update:
+            # 이미지 업데이트
+            challenge.main_image = image_to_update
+            challenge.save()
+
+            # 업데이트 성공 응답
+            return Response({"message": "Challenge main image updated successfully!"}, status=HTTP_200_OK)
+        else:
+            return Response({"message": "No image provided for update."}, status=HTTP_400_BAD_REQUEST)
+
+
 # ListViewForChallenges
 class ListViewForChallenge(APIView):
     # pagination 관련 변수 선언
