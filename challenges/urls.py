@@ -5,7 +5,11 @@ urlpatterns = [
     path('', views.ListViewForChallenge.as_view()),
     path('<int:challengeId>/update/main_image', views.UpdateViewForChallengeMainImage.as_view()),
     path('create', views.CreateViewForChallenge.as_view()),
-    # save view for grid table
+
+    # save view (create or update)
     path('<int:challengeId>/evaluation-criteria/save', views.SaveViewForEvaluationCriteriaForChallenge.as_view()),
 
+    # detail view
+    # 작업중
+    path('<int:challengeId>/detail', views.DetailViewForChallenge.as_view()),    
 ]

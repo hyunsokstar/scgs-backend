@@ -14,7 +14,6 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED
 )
 
-
 from .models import (
     Challenge,
     EvaluationCriteria
@@ -24,9 +23,25 @@ from .serializers import (
     SerializerForChallenges,
     SerializerForCreateChallenge
 )
-import uuid
 
-# 1122 Create your views here.
+class DetailViewForChallenge(APIView):
+    def get(self, request, challengeId):
+        try:
+            # challengeId에 해당하는 Challenge 모델 인스턴스 조회
+            challenge = Challenge.objects.get(id=challengeId)
+            
+            # Challenge 모델 인스턴스를 Serializer를 통해 직렬화
+            serializer = SerializerForChallenges(challenge)
+            
+            # 직렬화된 데이터를 JSON 응답으로 반환
+            return Response(serializer.data, status=HTTP_200_OK)
+        
+        except Challenge.DoesNotExist:
+            # Challenge 모델 인스턴스가 존재하지 않는 경우 404 응답 반환
+            return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
+
+
+
 # class SaveViewForEvaluationCriteriaForChallenge(APIView):
 
 #     def get_challenge_object(self, pk):
@@ -166,7 +181,7 @@ class UpdateViewForChallengeMainImage(APIView):
             return Response({"message": "No image provided for update."}, status=HTTP_400_BAD_REQUEST)
 
 
-# ListViewForChallenges
+# DetailViewForChallenge
 class ListViewForChallenge(APIView):
     # pagination 관련 변수 선언
     listForChallenge = []
