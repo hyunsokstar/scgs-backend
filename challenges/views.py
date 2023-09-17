@@ -14,16 +14,102 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED
 )
 
+
 from .models import (
-    Challenge
+    Challenge,
+    EvaluationCriteria
 )
 
 from .serializers import (
     SerializerForChallenges,
     SerializerForCreateChallenge
 )
+import uuid
 
 # 1122 Create your views here.
+# class SaveViewForEvaluationCriteriaForChallenge(APIView):
+
+#     def get_challenge_object(self, pk):
+#         try:
+#             return Challenge.objects.get(pk=pk)
+#         except Challenge.DoesNotExist:
+#             raise NotFound
+
+#     def post(self, request, challengeId):
+#         # challengeId는 URL에서 가져올 수 있습니다.
+#         print(challengeId)
+
+#         # 요청에서 데이터를 가져옵니다.
+#         RowsDataForSave = request.data.get('RowsDataForSave', [])
+
+#         # 받은 데이터를 처리하고 원하는 작업을 수행합니다.
+#         # 여기서는 데이터를 출력하기만 합니다. 원하는 로직을 추가하세요.
+#         print("Received data for challengeId:", challengeId)
+#         print("Received RowsDataForSave:", RowsDataForSave)
+
+#         # todo
+#         # Challenge obj 가져 오기 by challengeId
+#         challenge_obj = self.get_challenge_object(challengeId)
+
+#         # 적절한 응답과 메시지를 반환합니다.
+#         response_data = {
+#             'message': '데이터가 성공적으로 받아들여졌습니다.',  # 원하는 메시지로 변경하세요.
+#             'data': {
+#                 'challengeId': challengeId,
+#                 'RowsDataForSave': RowsDataForSave,
+#             }
+#         }
+
+#         return Response(response_data, status=HTTP_201_CREATED)
+
+
+class SaveViewForEvaluationCriteriaForChallenge(APIView):
+    def post(self, request, challengeId):
+        # challengeId는 URL에서 가져올 수 있습니다.
+        print(challengeId)
+
+        # 요청에서 데이터를 가져옵니다.
+        RowsDataForSave = request.data.get('RowsDataForSave', [])
+
+        # 받은 데이터를 처리합니다.
+        updated_count = 0
+        added_count = 0
+
+        for row_data in RowsDataForSave:
+            item_id = row_data.get('id')
+            item_description = row_data.get('item_description')
+
+            if item_id == "new_id":
+                # UUID가 있는 경우 새로운 항목 생성
+                challenge = Challenge.objects.get(id=challengeId)
+                criteria = EvaluationCriteria(
+                    challenge=challenge,
+                    item_description=item_description
+                )
+                criteria.save()
+                added_count += 1
+            else:
+                # UUID가 아닌 경우 해당 ID를 사용하여 기존 항목 업데이트
+                try:
+                    criteria = EvaluationCriteria.objects.get(id=item_id)
+                    criteria.item_description = item_description
+                    criteria.save()
+                    updated_count += 1
+                except EvaluationCriteria.DoesNotExist:
+                    pass
+
+        # 적절한 응답과 메시지를 반환합니다.
+        response_data = {
+            'message': f'평가 기준에 대해 {updated_count}개 업데이트 {added_count}개 추가 했습니다.',
+            'data': {
+                'updated_count': updated_count,
+                'added_count': added_count,
+            }
+        }
+
+        return Response(response_data, status=HTTP_201_CREATED)
+
+
 class CreateViewForChallenge(APIView):
     def post(self, request):
         if not request.user.is_authenticated:

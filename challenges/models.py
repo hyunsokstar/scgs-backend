@@ -1,8 +1,6 @@
 from django.db import models
 
 # 도전 정보를 담을 모델
-
-
 class Challenge(models.Model):
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
