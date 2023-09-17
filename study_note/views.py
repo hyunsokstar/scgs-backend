@@ -7,8 +7,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_2
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from rest_framework import status
 import random
-from django.db.models import Count, Max
-from django.db.models import Max
+from django.db.models import Count, Max, Min
 from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 
