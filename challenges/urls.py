@@ -14,5 +14,10 @@ urlpatterns = [
 
     # detail view
     # 작업중
-    path('<int:challengeId>/detail', views.DetailViewForChallenge.as_view()),    
+    path('<int:challengeId>/detail', views.DetailViewForChallenge.as_view()),
+
+    # delete view
+    # 삭제
+    path('<int:challengeId>/withdrawl',
+         views.WithDrawlViewForChallenge.as_view()),   
 ]

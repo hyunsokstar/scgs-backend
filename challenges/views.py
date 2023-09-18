@@ -30,6 +30,16 @@ from .serializers import (
 )
 
 # 1122
+class WithDrawlViewForChallenge(APIView):
+    def delete(self, request, challengeId):
+        try:
+            evaluate_result = EvaluationResult.objects.filter(challenge_id=challengeId)
+            evaluate_result.delete()
+            return Response(status=HTTP_204_NO_CONTENT)
+        except EvaluationResult.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+        
+
 # class ReigsterViewForChallenge(APIView):
 #     def post(self, request, challengeId):
 #         if not request.user.is_authenticated:
@@ -85,7 +95,9 @@ class DetailViewForChallenge(APIView):
             challenge = Challenge.objects.get(id=challengeId)
 
             # Challenge 모델 인스턴스를 Serializer를 통해 직렬화
-            serializer = SerializerForChallengeDetail(challenge)
+            # serializer = SerializerForChallengeDetail(challenge)
+            serializer = SerializerForChallengeDetail(challenge, context={'request': request})
+
 
             # 직렬화된 데이터를 JSON 응답으로 반환
             return Response(serializer.data, status=HTTP_200_OK)

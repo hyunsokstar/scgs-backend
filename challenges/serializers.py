@@ -71,6 +71,9 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
     evaluation_results = EvaluationResultSerializer(
         source='evaluations', many=True, read_only=True)
 
+    # 추가: is_exist_for_evaluation_result 필드
+    is_exist_for_evaluation_result = serializers.SerializerMethodField()
+
     class Meta:
         model = Challenge
         fields = (
@@ -84,6 +87,7 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
             'created_at_formatted',
             'evaluation_criterials',
             'evaluation_results',  # EvaluationResult 정보 추가
+            'is_exist_for_evaluation_result',  # 추가: is_exist_for_evaluation_result 필드
         )
 
     def get_created_at_formatted(self, obj):
@@ -108,3 +112,18 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
         representation['evaluation_results'] = evaluation_data
 
         return representation
+
+    # 추가: is_exist_for_evaluation_result 필드의 값을 설정하는 메서드
+    def get_is_exist_for_evaluation_result(self, obj):
+        # 현재 유저 (request.user)의 평가 결과가 있는지 여부를 확인
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        if user:
+            evaluation_results = obj.evaluations.filter(challenger=user)
+            print("evaluation_results.exists() : ", evaluation_results.exists())
+            return evaluation_results.exists()
+        else:
+            print("로그인 상태 아님")
+
+        return False
