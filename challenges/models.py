@@ -73,3 +73,4 @@ class EvaluationResult(models.Model):
     def __str__(self):
         return f"{self.challenger}'s evaluation result: {self.get_result_display()}"
 
+

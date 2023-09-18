@@ -30,15 +30,56 @@ from .serializers import (
 )
 
 # 1122
+# UpdateViewForEvaluateResultForChallenge
+# def put(self, request, commentPk):
+class UpdateViewForEvaluateResultForChallenge(APIView):
+    def put(self, request, challengeId):
+        try:
+            
+            # challengeId, userName, criteria에 해당하는 EvaluationResult 조회
+            evaluation_result = EvaluationResult.objects.get(
+                challenge_id=challengeId,
+                challenger__username=request.data.get("userName"),
+                evaluate_criteria_description=request.data.get("criteria"),
+            )
+
+            print("evaluation_result for check : ", evaluation_result)
+            print("result for check : ", evaluation_result.result)
+            
+            # 결과를 업데이트하고 저장합니다.
+            if evaluation_result.result == "fail" or evaluation_result.result == "undecided":
+                print("pass 로 업데이트")
+                evaluation_result.result = "pass"
+            else:
+                print("fail 로 update")
+                evaluation_result.result = "fail"
+            
+            # 업데이트된 결과를 저장
+            evaluation_result.save()
+            
+            # 업데이트된 결과를 응답으로 반환
+            return Response({"message": "업데이트가 성공적으로 수행되었습니다."}, status=HTTP_200_OK)
+        
+        except EvaluationResult.DoesNotExist:
+            # EvaluationResult가 존재하지 않을 때의 처리
+            return Response({"message": "해당 EvaluationResult를 찾을 수 없습니다."}, status=HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            # 기타 예외 처리
+            return Response({"message": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+    
+
 class WithDrawlViewForChallenge(APIView):
     def delete(self, request, challengeId):
         try:
-            evaluate_result = EvaluationResult.objects.filter(challenge_id=challengeId)
+            evaluate_result = EvaluationResult.objects.filter(
+                challenge_id=challengeId, challenger=request.user)
             evaluate_result.delete()
             return Response(status=HTTP_204_NO_CONTENT)
         except EvaluationResult.DoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND)
-        
+
 
 # class ReigsterViewForChallenge(APIView):
 #     def post(self, request, challengeId):
@@ -96,8 +137,8 @@ class DetailViewForChallenge(APIView):
 
             # Challenge 모델 인스턴스를 Serializer를 통해 직렬화
             # serializer = SerializerForChallengeDetail(challenge)
-            serializer = SerializerForChallengeDetail(challenge, context={'request': request})
-
+            serializer = SerializerForChallengeDetail(
+                challenge, context={'request': request})
 
             # 직렬화된 데이터를 JSON 응답으로 반환
             return Response(serializer.data, status=HTTP_200_OK)
