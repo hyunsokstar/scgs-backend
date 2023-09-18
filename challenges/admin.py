@@ -1,10 +1,36 @@
 from django.contrib import admin
 from .models import (
     Challenge,
-    EvaluationCriteria
+    EvaluationCriteria,
+    EvaluationResult
 )
 
-# 127.0.0.1:8000/admin
+# 1122
+
+
+@admin.register(EvaluationResult)
+class EvaluationResultAdmin(admin.ModelAdmin):
+    list_display = ('challenge', 'challenger',
+                    'evaluate_criteria_description', 'result')
+    list_filter = ('result', 'challenge')
+    search_fields = ('user__username', 'evaluate_criteria_description')
+    actions = ['mark_pass', 'mark_fail', 'mark_undecided']
+
+    def mark_pass(self, request, queryset):
+        queryset.update(result='pass')
+
+    mark_pass.short_description = "Mark selected as Pass"
+
+    def mark_fail(self, request, queryset):
+        queryset.update(result='fail')
+
+    mark_fail.short_description = "Mark selected as Fail"
+
+    def mark_undecided(self, request, queryset):
+        queryset.update(result='undecided')
+
+    mark_undecided.short_description = "Mark selected as Undecided"
+
 
 @admin.register(Challenge)
 class ChallengeAdmin(admin.ModelAdmin):

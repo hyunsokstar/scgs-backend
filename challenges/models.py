@@ -1,6 +1,6 @@
 from django.db import models
 
-# 도전 정보를 담을 모델
+# 챌린지
 class Challenge(models.Model):
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
@@ -23,14 +23,14 @@ class Challenge(models.Model):
     def created_at_formatted(self):
         return self.created_at.strftime('%y년 %m월 %d일')
 
-
+# 챌린지에 대한 평가 기준 (예를 들어 item_description 이 얼굴, 몸매, 성격)
 class EvaluationCriteria(models.Model):
     challenge = models.ForeignKey(
         Challenge,  # Challenge 모델 가르킴
         on_delete=models.CASCADE,
         related_name="evaluation_criterials"
     )
-    item_description = models.TextField(
+    item_description = models.CharField(
         max_length=100)  # "Item Description" 칼럼 추가
 
     # 다른 필드들도 추가 가능
@@ -38,21 +38,30 @@ class EvaluationCriteria(models.Model):
     def __str__(self):
         return self.item_description
 
-
+# 챌린지와 평가 기준 특정 유저에 대해 평가 결과를 저장할 모델
 class EvaluationResult(models.Model):
-    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
     challenger = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, related_name="+")
-    evaluator = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE)
-    criteria = models.ForeignKey(
-        EvaluationCriteria, on_delete=models.CASCADE, related_name="+")
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+    challenge = models.ForeignKey(
+        Challenge,
+        on_delete=models.CASCADE,
+        related_name='evaluations'
+    )    
+    evaluate_criteria_description = models.CharField(
+        max_length=100,
+        default="",  # 빈 문자열을 기본값으로 설정
+    )
 
     # 선택 옵션 정의
     RESULT_CHOICES = [
-        ('Pass', 'Pass'),
-        ('Fail', 'Fail'),
-        ('Undecided', 'Undecided'),
+        ('pass', 'Pass'),
+        ('fail', 'Fail'),
+        ('undecided', 'Undecided'),
     ]
 
     result = models.CharField(
@@ -62,13 +71,5 @@ class EvaluationResult(models.Model):
     )
 
     def __str__(self):
-        return f"{self.participant}'s evaluation result: {self.get_result_display()}"
+        return f"{self.challenger}'s evaluation result: {self.get_result_display()}"
 
-
-class Challenger(models.Model):
-    challenge = models.ManyToManyField(Challenge, related_name='challengers')
-    challenger = models.OneToOneField(
-        "users.User", on_delete=models.CASCADE)
-    evaluation_results = models.ManyToManyField(
-        EvaluationResult, related_name='challenger_results'
-    )

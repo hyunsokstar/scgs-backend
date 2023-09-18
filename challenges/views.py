@@ -1,45 +1,98 @@
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
+from django.http import Http404
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
 from rest_framework.status import (
-    HTTP_204_NO_CONTENT,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_200_OK,
-    HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_403_FORBIDDEN,
-    HTTP_401_UNAUTHORIZED
+    HTTP_401_UNAUTHORIZED,
+    HTTP_409_CONFLICT,
+    HTTP_204_NO_CONTENT,
+    HTTP_500_INTERNAL_SERVER_ERROR
 )
 
 from .models import (
     Challenge,
-    EvaluationCriteria
+    EvaluationCriteria,
+    EvaluationResult
 )
 
 from .serializers import (
     SerializerForChallenges,
-    SerializerForCreateChallenge
+    SerializerForCreateChallenge,
+    SerializerForChallengeDetail,
+    EvaluationResultSerializer
 )
+
+# 1122
+# class ReigsterViewForChallenge(APIView):
+#     def post(self, request, challengeId):
+#         if not request.user.is_authenticated:
+#             return Response(
+#                 {"message": "로그인 안한 유저는 challenge 에 register 불가 !"},
+#                 status=HTTP_401_UNAUTHORIZED
+#             )
+
+#         # todo
+#         # EvaluationCriteria 데이터를 필터링한 데이터 (by challengeId)의 개수만큼
+#         # EvaluationResult 데이터를 생성
+#         # 단, EvaluationResult.evaluate_criteria_description = EvaluationCriteria.item_description
+#         # 적절한 Response 응답 with message: challenge 에 대한 등록 완료
+
+
+class ReigsterViewForChallenge(APIView):
+    def post(self, request, challengeId):
+
+        # 이미 등록한 경우 처리
+        existing_evaluation = EvaluationResult.objects.filter(
+            challenge=challengeId, challenger=request.user)
+        if existing_evaluation.exists():
+            return Response({"message": "이미 등록했습니다."}, status=HTTP_409_CONFLICT)
+
+        if not request.user.is_authenticated:
+            return Response({"message": "로그인 안한 유저는 challenge 에 register 불가 !"}, status=HTTP_401_UNAUTHORIZED)
+
+        try:
+            challenge = Challenge.objects.get(pk=challengeId)
+        except Challenge.DoesNotExist:
+            raise Http404("Challenge does not exist")
+
+        evaluation_criteria_list = EvaluationCriteria.objects.filter(
+            challenge=challenge)
+
+        for evaluation_criteria in evaluation_criteria_list:
+            EvaluationResult.objects.create(
+                challenger=request.user,
+                challenge=challenge,
+                evaluate_criteria_description=evaluation_criteria.item_description,
+                result="undecided"
+            )
+
+        return Response({"message": f"{challenge.title}에 대한 등록 완료"}, status=HTTP_201_CREATED)
+
+# http://127.0.0.1:8000/api/v1/challenges/5/detail
+
 
 class DetailViewForChallenge(APIView):
     def get(self, request, challengeId):
         try:
             # challengeId에 해당하는 Challenge 모델 인스턴스 조회
             challenge = Challenge.objects.get(id=challengeId)
-            
+
             # Challenge 모델 인스턴스를 Serializer를 통해 직렬화
-            serializer = SerializerForChallenges(challenge)
-            
+            serializer = SerializerForChallengeDetail(challenge)
+
             # 직렬화된 데이터를 JSON 응답으로 반환
             return Response(serializer.data, status=HTTP_200_OK)
-        
+
         except Challenge.DoesNotExist:
             # Challenge 모델 인스턴스가 존재하지 않는 경우 404 응답 반환
             return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
-
 
 
 # class SaveViewForEvaluationCriteriaForChallenge(APIView):
@@ -123,6 +176,8 @@ class SaveViewForEvaluationCriteriaForChallenge(APIView):
         }
 
         return Response(response_data, status=HTTP_201_CREATED)
+
+# ReigsterViewForChallenge
 
 
 class CreateViewForChallenge(APIView):

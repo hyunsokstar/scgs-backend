@@ -6,6 +6,9 @@ urlpatterns = [
     path('<int:challengeId>/update/main_image', views.UpdateViewForChallengeMainImage.as_view()),
     path('create', views.CreateViewForChallenge.as_view()),
 
+    # register view
+    path('<int:challengeId>/register', views.ReigsterViewForChallenge.as_view()),
+
     # save view (create or update)
     path('<int:challengeId>/evaluation-criteria/save', views.SaveViewForEvaluationCriteriaForChallenge.as_view()),
 
