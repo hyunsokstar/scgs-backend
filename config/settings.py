@@ -23,7 +23,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -64,7 +63,8 @@ CUSTOM_APPS = [
     "study_note.apps.StudyNoteConfig",
     "plan_maker.apps.PlanMakerConfig",
     "board.apps.BoardConfig",
-    "challenges.apps.ChallengesConfig"
+    "challenges.apps.ChallengesConfig",
+    "survey.apps.SurveyConfig"
 ]
 
 SYSTEM_APPS = [

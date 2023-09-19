@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/v1/plan-maker/", include("plan_maker.urls")),
     path("api/v1/board/", include("board.urls")),
     path("api/v1/challenges/", include("challenges.urls")),
+    path("api/v1/survey/", include("survey.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
