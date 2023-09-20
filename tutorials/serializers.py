@@ -5,7 +5,6 @@ from requests import Response
 
 
 class TutorialListSerializer(serializers.ModelSerializer):
-
     author = TinyUserSerializer(read_only=True)
 
     class Meta:

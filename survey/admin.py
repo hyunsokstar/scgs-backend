@@ -13,8 +13,10 @@ class SurveyOptionAdmin(admin.ModelAdmin):
     list_filter = ('survey',)
     search_fields = ('content',)
 
+
+# Selected option 이 survey 에 속하는것들만 선택 할수 있게
 @admin.register(SurveyAnswer)
 class SurveyAnswerAdmin(admin.ModelAdmin):
-    list_display = ('writer', 'survey', 'selected_option')
-    list_filter = ('writer', 'survey')
-    search_fields = ('writer__username', 'survey__title')
+    list_display = ('participant', 'survey', 'selected_option')
+    list_filter = ('participant', 'survey')
+    search_fields = ('participant__username', 'survey__title')
