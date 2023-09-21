@@ -8,6 +8,12 @@ urlpatterns = [
     # create view
     path('<int:surveyId>/survey-option/create',
          views.CreateViewForSurveyOptionForSurvey.as_view()),
+
+    path('survey-answer/create',
+         views.CreateViewForSurveyAnswerForSurvey.as_view()),
+
+
+         
     # detail view
     path('<int:surveyId>', views.DetailViewForSurvey.as_view()),
 ]

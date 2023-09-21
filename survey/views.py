@@ -5,7 +5,50 @@ from users.models import User
 from .models import Survey, SurveyOption, SurveyAnswer
 from .serializers import SurveySerializer, SurveyDetailSerializer
 
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 # 1122
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from .models import Survey, SurveyOption, SurveyAnswer
+
+class CreateViewForSurveyAnswerForSurvey(APIView):
+    @method_decorator(login_required)  # 로그인이 필요한 경우만 허용
+    def post(self, request):
+        # POST 요청에서 surveyId와 surveyOptionId 가져오기
+        survey_id = request.data.get('surveyId')
+        survey_option_id = request.data.get('surveyOptionId')
+
+        # Survey 모델에서 해당 survey_id와 surveyOptionId에 해당하는 객체 가져오기
+        try:
+            survey = Survey.objects.get(id=survey_id)
+            survey_option = SurveyOption.objects.get(id=survey_option_id)
+        except Survey.DoesNotExist:
+            return Response({"message": "설문조사가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+        except SurveyOption.DoesNotExist:
+            return Response({"message": "설문 옵션을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # SurveyAnswer 모델에 데이터 추가
+        participant = request.user  # 현재 로그인한 사용자
+
+        # 이미 SurveyAnswer에 survey=survey, participant=participant에 해당하는 데이터가 있는 경우에는 create하지 말고
+        # "이미 응답하였습니다"라는 메시지로 응답합니다.
+        existing_answer = SurveyAnswer.objects.filter(survey=survey, participant=participant).exists()
+        if existing_answer:
+            return Response({"message": "이미 응답하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        survey_answer = SurveyAnswer.objects.create(
+            survey=survey,
+            selected_option=survey_option,
+            participant=participant
+        )
+
+        return Response({"message": "답변 선택 성공"}, status=status.HTTP_201_CREATED)
 
 
 class CreateViewForSurveyOptionForSurvey(APIView):
@@ -31,6 +74,7 @@ class CreateViewForSurveyOptionForSurvey(APIView):
 
         # SurveyOption을 생성하고 저장합니다.
         survey_option = SurveyOption(survey=survey, content=newOption)
+
         survey_option.save()
 
         # 적절한 응답을 반환합니다.

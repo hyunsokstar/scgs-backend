@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Survey, SurveyOption
 from users.serializers import UserProfileImageSerializer
 
+
 class SurveyOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyOption
@@ -11,43 +12,38 @@ class SurveyOptionSerializer(serializers.ModelSerializer):
 class SurveyDetailSerializer(serializers.ModelSerializer):
     survey_options = SurveyOptionSerializer(many=True, read_only=True)
     writer = UserProfileImageSerializer(read_only=True)
-    
-    # 추가된 필드
-    count_for_1th_option = serializers.SerializerMethodField()
-    count_for_2th_option = serializers.SerializerMethodField()
-    count_for_3th_option = serializers.SerializerMethodField()
-    count_for_4th_option = serializers.SerializerMethodField()
-    count_for_5th_option = serializers.SerializerMethodField()
+
+    # 수정된 필드
+    count_for_options = serializers.SerializerMethodField()
 
     class Meta:
         model = Survey
-        fields = ('id', 'writer', 'title', 'survey_options', 'created_at',
-                  'count_for_1th_option', 'count_for_2th_option',
-                  'count_for_3th_option', 'count_for_4th_option',
-                  'count_for_5th_option')
+        fields = ('id', 'writer', 'title', 'survey_options', 'created_at', 'count_for_options')
 
     # 각 옵션별 응답 개수 계산 메서드
-    def get_count_for_1th_option(self, obj):
-        return obj.survey_answers.filter(selected_option__id=1).count()
+    def get_count_for_options(self, obj):
+        options = obj.survey_options.all()
+        option_counts = []
 
-    def get_count_for_2th_option(self, obj):
-        return obj.survey_answers.filter(selected_option__id=2).count()
+        # 각 옵션에 대한 응답 개수 가져오기
+        for option in options:
+            count = obj.survey_answers.filter(selected_option=option).count()
+            option_counts.append({
+                'option_content': option.content,
+                'count': count
+            })  # 옵션 제목과 응답 개수를 딕셔너리로 추가
 
-    def get_count_for_3th_option(self, obj):
-        return obj.survey_answers.filter(selected_option__id=3).count()
+        return option_counts
 
-    def get_count_for_4th_option(self, obj):
-        return obj.survey_answers.filter(selected_option__id=4).count()
 
-    def get_count_for_5th_option(self, obj):
-        return obj.survey_answers.filter(selected_option__id=5).count()
+
 
 
 class SurveySerializer(serializers.ModelSerializer):
     survey_options = SurveyOptionSerializer(many=True, read_only=True)
     writer = UserProfileImageSerializer(read_only=True)
 
-
     class Meta:
         model = Survey
-        fields = ('id', 'title', 'description', 'writer', 'survey_options', 'created_at')
+        fields = ('id', 'title', 'description', 'writer',
+                  'survey_options', 'created_at')
