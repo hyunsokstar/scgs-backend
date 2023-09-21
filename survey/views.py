@@ -3,19 +3,28 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.models import User
 from .models import Survey, SurveyOption, SurveyAnswer
-from .serializers import SurveySerializer, SurveyDetailSerializer
+from .serializers import (
+    SurveySerializer,
+    SurveyDetailSerializer,
+    SerializerForCreateSurvey
+)
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
 # 1122
+# CreateViewForSurvey
+class CreateViewForSurvey(APIView):
+    @method_decorator(login_required)
+    def post(self, request):
+        # Serializer를 사용하여 데이터 유효성 검사 및 저장
+        serializer = SerializerForCreateSurvey(data=request.data)
+        if serializer.is_valid():
+            # 현재 로그인한 사용자를 작성자로 설정
+            serializer.save(writer=request.user)
+            return Response({"message": "설문 등록이 성공했습니다"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "시리얼라이저 오류: " + str(serializer.errors)}, status=status.HTTP_400_BAD_REQUEST)
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from .models import Survey, SurveyOption, SurveyAnswer
 
 class CreateViewForSurveyAnswerForSurvey(APIView):
     @method_decorator(login_required)  # 로그인이 필요한 경우만 허용
@@ -38,7 +47,8 @@ class CreateViewForSurveyAnswerForSurvey(APIView):
 
         # 이미 SurveyAnswer에 survey=survey, participant=participant에 해당하는 데이터가 있는 경우에는 create하지 말고
         # "이미 응답하였습니다"라는 메시지로 응답합니다.
-        existing_answer = SurveyAnswer.objects.filter(survey=survey, participant=participant).exists()
+        existing_answer = SurveyAnswer.objects.filter(
+            survey=survey, participant=participant).exists()
         if existing_answer:
             return Response({"message": "이미 응답하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -49,6 +59,8 @@ class CreateViewForSurveyAnswerForSurvey(APIView):
         )
 
         return Response({"message": "답변 선택 성공"}, status=status.HTTP_201_CREATED)
+
+# CreateViewForSurvey
 
 
 class CreateViewForSurveyOptionForSurvey(APIView):
@@ -85,6 +97,8 @@ class CreateViewForSurveyOptionForSurvey(APIView):
         )
 
 # http://127.0.0.1:8000/api/v1/survey/1
+
+
 class DetailViewForSurvey(APIView):
     def get(self, request, surveyId):
         try:
@@ -130,6 +144,6 @@ class CreateDataForTest(APIView):
 
 class ListViewForSurvey(APIView):
     def get(self, request):
-        surveys = Survey.objects.all()
+        surveys = Survey.objects.all().order_by("-id")
         serializer = SurveySerializer(surveys, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

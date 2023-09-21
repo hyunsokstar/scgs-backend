@@ -2,6 +2,10 @@ from rest_framework import serializers
 from .models import Survey, SurveyOption
 from users.serializers import UserProfileImageSerializer
 
+class SerializerForCreateSurvey(serializers.ModelSerializer):
+    class Meta:
+        model = Survey
+        fields = ['title', 'description']
 
 class SurveyOptionSerializer(serializers.ModelSerializer):
     class Meta:
