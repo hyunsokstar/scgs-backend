@@ -13,7 +13,52 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
 # 1122
+
+
+class SearchViewForSurveyList(APIView):
+    surveyList = []
+
+    def get(self, request):
+        print("search 요청 check !! ")
+        try:
+            self.surveyList = Survey.objects.all()
+        except Survey.DoesNotExist:
+            return Response("Survey does not exist", status=status.HTTP_404_NOT_FOUND)
+
+        search_words = request.query_params.get("searchWords", "")
+
+        if search_words:
+            print("search_words : ", search_words)
+            self.surveyList = self.surveyList.filter(
+                title__icontains=search_words)
+            print("self.surveyList : ", self.surveyList)
+
+        result_count = self.surveyList.count()  # Count the number of search results
+
+        serializer = SurveySerializer(self.surveyList, many=True)
+
+        response_data = {
+            "message": f"{result_count}개의 데이터가 검색되었습니다.",
+            "data": serializer.data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+# DeleteViewForSurvey
+class DeleteViewForSurvey(APIView):
+    def delete(self, request, surveyId):
+        try:
+            survey = Survey.objects.get(id=surveyId)
+            # Delete the survey if it exists
+            survey.delete()
+            return Response({"message": "The survey has been successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+        except Survey.DoesNotExist:
+            # Return an error response if the survey does not exist
+            return Response({"message": "The survey does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
 # CreateViewForSurvey
+
+
 class CreateViewForSurvey(APIView):
     @method_decorator(login_required)
     def post(self, request):
@@ -98,6 +143,8 @@ class CreateViewForSurveyOptionForSurvey(APIView):
 
 # http://127.0.0.1:8000/api/v1/survey/1
 
+# DeleteViewForSurvey
+
 
 class DetailViewForSurvey(APIView):
     def get(self, request, surveyId):
@@ -142,8 +189,46 @@ class CreateDataForTest(APIView):
         return Response("Test data created successfully", status=status.HTTP_201_CREATED)
 
 
+# class ListViewForSurvey(APIView):
+#     def get(self, request):
+#         surveys = Survey.objects.all().order_by("-id")
+#         serializer = SurveySerializer(surveys, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+# to
+
 class ListViewForSurvey(APIView):
+    # pagination 관련 변수 선언
+    listForSurvey = []
+    perPage = 10
+    totalCountForSurveyList = 0
+
     def get(self, request):
-        surveys = Survey.objects.all().order_by("-id")
-        serializer = SurveySerializer(surveys, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # pageNum 받아와서 초기화
+        pageNum = request.query_params.get("pageNum", 1)
+        pageNum = int(pageNum)
+
+        # Survey list data 가져 오기
+        list_for_survey = Survey.objects.all().order_by('-id')
+        self.listForSurvey = list_for_survey
+
+        # 총 개수 초기화
+        self.totalCountForSurveyList = list_for_survey.count()
+
+        # 범위 지정 하기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.listForSurvey = self.listForSurvey[start:end]
+
+        # 해당 범위에 대해 listForSurveyList 직렬화
+        serializer = SurveySerializer(self.listForSurvey, many=True)
+
+        # 응답용 딕셔너리 선언
+        response_data = {
+            "listForSurvey": serializer.data,
+            "totalCountForSurveyList": self.totalCountForSurveyList,
+            "perPage": self.perPage,
+        }
+
+        # Response 로 응답용 딕셔너리 와 Http code 전달
+        return Response(response_data, status=status.HTTP_200_OK)
