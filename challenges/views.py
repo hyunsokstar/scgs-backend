@@ -148,41 +148,6 @@ class DetailViewForChallenge(APIView):
             return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
 
 
-# class SaveViewForEvaluationCriteriaForChallenge(APIView):
-
-#     def get_challenge_object(self, pk):
-#         try:
-#             return Challenge.objects.get(pk=pk)
-#         except Challenge.DoesNotExist:
-#             raise NotFound
-
-#     def post(self, request, challengeId):
-#         # challengeId는 URL에서 가져올 수 있습니다.
-#         print(challengeId)
-
-#         # 요청에서 데이터를 가져옵니다.
-#         RowsDataForSave = request.data.get('RowsDataForSave', [])
-
-#         # 받은 데이터를 처리하고 원하는 작업을 수행합니다.
-#         # 여기서는 데이터를 출력하기만 합니다. 원하는 로직을 추가하세요.
-#         print("Received data for challengeId:", challengeId)
-#         print("Received RowsDataForSave:", RowsDataForSave)
-
-#         # todo
-#         # Challenge obj 가져 오기 by challengeId
-#         challenge_obj = self.get_challenge_object(challengeId)
-
-#         # 적절한 응답과 메시지를 반환합니다.
-#         response_data = {
-#             'message': '데이터가 성공적으로 받아들여졌습니다.',  # 원하는 메시지로 변경하세요.
-#             'data': {
-#                 'challengeId': challengeId,
-#                 'RowsDataForSave': RowsDataForSave,
-#             }
-#         }
-
-#         return Response(response_data, status=HTTP_201_CREATED)
-
 
 class SaveViewForEvaluationCriteriaForChallenge(APIView):
     def post(self, request, challengeId):

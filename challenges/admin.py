@@ -2,12 +2,11 @@ from django.contrib import admin
 from .models import (
     Challenge,
     EvaluationCriteria,
-    EvaluationResult
+    EvaluationResult,
+    ChallengeResult
 )
 
 # 1122
-
-
 @admin.register(EvaluationResult)
 class EvaluationResultAdmin(admin.ModelAdmin):
     list_display = ('challenge', 'challenger',
@@ -42,3 +41,10 @@ class ChallengeAdmin(admin.ModelAdmin):
 class EvaluationCriteriaAdmin(admin.ModelAdmin):
     list_display = ('item_description', 'challenge')
     list_filter = ('challenge',)
+
+
+@admin.register(ChallengeResult)
+class ChallengeResultAdmin(admin.ModelAdmin):
+    list_display = ('challenge', 'pass_status', 'created_at_formatted')
+    list_filter = ('pass_status',)
+    search_fields = ('challenge__title',)

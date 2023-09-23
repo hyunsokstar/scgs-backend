@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     Challenge,
     EvaluationCriteria,
-    EvaluationResult
+    EvaluationResult,
+    ChallengeResult
 )
 from users.serializers import UserProfileImageSerializer
 
@@ -22,8 +23,29 @@ class EvaluationCriteriaSerializer(serializers.ModelSerializer):
             # 다른 EvaluationCriteria 모델의 필드들을 여기에 추가하세요
         )
 
+
+class ChallengeResultSerializer(serializers.ModelSerializer):
+    challenger = UserProfileImageSerializer(read_only=True)    
+    created_at_formatted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChallengeResult
+        fields = (
+            'id',
+            'challenger',
+            'challenge',
+            'pass_status',
+            'comment',
+            'created_at',
+            'created_at_formatted',
+        )
+
+    def get_created_at_formatted(self, obj):
+        return obj.created_at.strftime('%y년 %m월 %d일')
+
 class SerializerForChallenges(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
+    challenge_results = ChallengeResultSerializer(many=True)
     created_at_formatted = serializers.SerializerMethodField()
     evaluation_criterials = EvaluationCriteriaSerializer(
         many=True, read_only=True)  # 추가
@@ -37,9 +59,12 @@ class SerializerForChallenges(serializers.ModelSerializer):
             'description',
             'main_image',
             'writer',
-            'created_at',
             'created_at_formatted',
             'evaluation_criterials',  # 추가
+            'created_at',
+            'started_at',
+            'deadline',
+            'challenge_results'
         )
 
     def get_created_at_formatted(self, obj):

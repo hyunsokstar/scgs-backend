@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # 챌린지
 class Challenge(models.Model):
@@ -7,6 +8,9 @@ class Challenge(models.Model):
     description = models.TextField()
     main_image = models.URLField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    started_at = models.DateTimeField(default=timezone.now)  # 현재 날짜 및 시간을 기본값으로 설정
+    deadline = models.DateTimeField(default=timezone.now)    # 현재 날짜 및 시간을 기본값으로 설정
 
     writer = models.ForeignKey(
         "users.User",
@@ -38,7 +42,8 @@ class EvaluationCriteria(models.Model):
     def __str__(self):
         return self.item_description
 
-# 챌린지와 평가 기준 특정 유저에 대해 평가 결과를 저장할 모델
+
+# 평가 기준들에 대한 결과
 class EvaluationResult(models.Model):
     challenger = models.ForeignKey(
         "users.User",
@@ -47,11 +52,21 @@ class EvaluationResult(models.Model):
         on_delete=models.CASCADE,
         related_name="+"
     )
+    
     challenge = models.ForeignKey(
         Challenge,
         on_delete=models.CASCADE,
         related_name='evaluations'
-    )    
+    )
+
+    # challenge_result = models.OneToOneField(
+    #     "challenges.ChallengeResult",
+    #     on_delete=models.CASCADE,
+    #     related_name="challenge_result",
+    #     null=True,  
+    #     blank=True
+    # )
+
     evaluate_criteria_description = models.CharField(
         max_length=100,
         default="",  # 빈 문자열을 기본값으로 설정
@@ -73,4 +88,26 @@ class EvaluationResult(models.Model):
     def __str__(self):
         return f"{self.challenger}'s evaluation result: {self.get_result_display()}"
 
+# 최종적 평가 결과와 comment
+class ChallengeResult(models.Model):
 
+    challenger = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+
+    challenge = models.ForeignKey(
+        Challenge,  # Challenge 모델과 연결
+        on_delete=models.CASCADE,
+        related_name="challenge_results"
+    )
+    pass_status = models.BooleanField(default=False)  # 합격 여부를 나타내는 칼럼
+    comment = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def created_at_formatted(self):
+        return self.created_at.strftime('%y년 %m월 %d일')
