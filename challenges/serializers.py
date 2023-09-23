@@ -98,6 +98,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
 
     # 추가: is_exist_for_evaluation_result 필드
     is_exist_for_evaluation_result = serializers.SerializerMethodField()
+    
+    challenge_results = ChallengeResultSerializer(many=True)
 
     class Meta:
         model = Challenge
@@ -113,6 +115,7 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
             'evaluation_criterials',
             'evaluation_results',  # EvaluationResult 정보 추가
             'is_exist_for_evaluation_result',  # 추가: is_exist_for_evaluation_result 필드
+            'challenge_results'
         )
 
     def get_created_at_formatted(self, obj):
