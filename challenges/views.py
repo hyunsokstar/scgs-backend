@@ -19,7 +19,8 @@ from rest_framework.status import (
 from .models import (
     Challenge,
     EvaluationCriteria,
-    EvaluationResult
+    EvaluationResult,
+    ChallengeResult
 )
 
 from .serializers import (
@@ -30,12 +31,49 @@ from .serializers import (
 )
 
 # 1122
-# UpdateViewForEvaluateResultForChallenge
-# def put(self, request, commentPk):
+# UpdateViewForChallengeResultPassed
+
+
+class UpdateViewForChallengeResultPassed(APIView):
+    def put(self, request, challengeResultId):
+        try:
+
+            # challengeId, userName, criteria에 해당하는 EvaluationResult 조회
+            challenge_result = ChallengeResult.objects.get(
+                id=challengeResultId,
+            )
+
+            print("evaluation_result for check : ", challenge_result)
+            print("result for check : ", challenge_result.pass_status)
+
+            # 결과를 업데이트하고 저장합니다.
+            if challenge_result.pass_status:
+                challenge_result.pass_status = False
+            else:
+                challenge_result.pass_status = True
+
+            # 업데이트된 결과를 저장
+            challenge_result.save()
+
+            message = f"passed_status 를 {challenge_result.pass_status} 로 업데이트 했습니다."
+
+            # 업데이트된 결과를 응답으로 반환
+            return Response({"message": message}, status=HTTP_200_OK)
+
+        except ChallengeResult.DoesNotExist:
+            return Response({"message": "해당 EvaluationResult를 찾을 수 없습니다."}, status=HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            # 기타 예외 처리
+            return Response({"message": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+# UpdateViewForChallengeResultPassed
+
+
 class UpdateViewForEvaluateResultForChallenge(APIView):
     def put(self, request, challengeId):
         try:
-            
+
             # challengeId, userName, criteria에 해당하는 EvaluationResult 조회
             evaluation_result = EvaluationResult.objects.get(
                 challenge_id=challengeId,
@@ -45,7 +83,7 @@ class UpdateViewForEvaluateResultForChallenge(APIView):
 
             print("evaluation_result for check : ", evaluation_result)
             print("result for check : ", evaluation_result.result)
-            
+
             # 결과를 업데이트하고 저장합니다.
             if evaluation_result.result == "fail" or evaluation_result.result == "undecided":
                 print("pass 로 업데이트")
@@ -53,22 +91,21 @@ class UpdateViewForEvaluateResultForChallenge(APIView):
             else:
                 print("fail 로 update")
                 evaluation_result.result = "fail"
-            
+
             # 업데이트된 결과를 저장
             evaluation_result.save()
-            
+
             # 업데이트된 결과를 응답으로 반환
             return Response({"message": "업데이트가 성공적으로 수행되었습니다."}, status=HTTP_200_OK)
-        
+
         except EvaluationResult.DoesNotExist:
             # EvaluationResult가 존재하지 않을 때의 처리
             return Response({"message": "해당 EvaluationResult를 찾을 수 없습니다."}, status=HTTP_404_NOT_FOUND)
-        
+
         except Exception as e:
             # 기타 예외 처리
             return Response({"message": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-    
 
 class WithDrawlViewForChallenge(APIView):
     def delete(self, request, challengeId):
@@ -76,6 +113,11 @@ class WithDrawlViewForChallenge(APIView):
             evaluate_result = EvaluationResult.objects.filter(
                 challenge_id=challengeId, challenger=request.user)
             evaluate_result.delete()
+
+            challenge_result = ChallengeResult.objects.filter(
+                challenge_id=challengeId, challenger=request.user)
+            challenge_result.delete()
+
             return Response(status=HTTP_204_NO_CONTENT)
         except EvaluationResult.DoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND)
@@ -116,6 +158,10 @@ class ReigsterViewForChallenge(APIView):
         evaluation_criteria_list = EvaluationCriteria.objects.filter(
             challenge=challenge)
 
+        # evaluation_criteria_list의 검색 결과가 0개일 경우
+        if not evaluation_criteria_list.exists():
+            return Response({"message": "아직 평가 기준이 없으므로 등록 할수 없습니다."}, status=HTTP_400_BAD_REQUEST)
+
         for evaluation_criteria in evaluation_criteria_list:
             EvaluationResult.objects.create(
                 challenger=request.user,
@@ -123,6 +169,11 @@ class ReigsterViewForChallenge(APIView):
                 evaluate_criteria_description=evaluation_criteria.item_description,
                 result="undecided"
             )
+        
+        ChallengeResult.objects.create(
+            challenger = request.user,
+            challenge=challenge
+        )
 
         return Response({"message": f"{challenge.title}에 대한 등록 완료"}, status=HTTP_201_CREATED)
 
@@ -146,7 +197,6 @@ class DetailViewForChallenge(APIView):
         except Challenge.DoesNotExist:
             # Challenge 모델 인스턴스가 존재하지 않는 경우 404 응답 반환
             return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
-
 
 
 class SaveViewForEvaluationCriteriaForChallenge(APIView):
