@@ -90,7 +90,6 @@ class EvaluationResult(models.Model):
 
 # 최종적 평가 결과와 comment
 class ChallengeResult(models.Model):
-
     challenger = models.ForeignKey(
         "users.User",
         blank=True,
@@ -107,6 +106,10 @@ class ChallengeResult(models.Model):
     pass_status = models.BooleanField(default=False)  # 합격 여부를 나타내는 칼럼
     comment = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    github_url1 = models.URLField(blank=True, null=True)  # github_url1 필드
+    github_url2 = models.URLField(blank=True, null=True)  # github_url2 필드
+    note_url = models.URLField(blank=True, null=True)  # note_url 필드
 
     @property
     def created_at_formatted(self):

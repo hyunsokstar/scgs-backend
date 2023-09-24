@@ -25,7 +25,7 @@ class EvaluationCriteriaSerializer(serializers.ModelSerializer):
 
 
 class ChallengeResultSerializer(serializers.ModelSerializer):
-    challenger = UserProfileImageSerializer(read_only=True)    
+    challenger = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,10 +38,14 @@ class ChallengeResultSerializer(serializers.ModelSerializer):
             'comment',
             'created_at',
             'created_at_formatted',
+            'github_url1',
+            'github_url2',
+            'note_url',
         )
 
     def get_created_at_formatted(self, obj):
         return obj.created_at.strftime('%y년 %m월 %d일')
+
 
 class SerializerForChallenges(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
@@ -70,20 +74,23 @@ class SerializerForChallenges(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at.strftime('%y년 %m월 %d일')
 
-class EvaluationResultSerializer(serializers.ModelSerializer):
-    challenger = UserProfileImageSerializer(read_only=True)
-
-    class Meta:
-        model = EvaluationResult
-        fields = ('id', 'challenger', 'evaluate_criteria_description', 'result')
-
 
 class EvaluationResultSerializer(serializers.ModelSerializer):
     challenger = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = EvaluationResult
-        fields = ('id', 'challenger', 'evaluate_criteria_description', 'result')
+        fields = ('id', 'challenger',
+                  'evaluate_criteria_description', 'result')
+
+
+class EvaluationResultSerializer(serializers.ModelSerializer):
+    challenger = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = EvaluationResult
+        fields = ('id', 'challenger',
+                  'evaluate_criteria_description', 'result')
 
 
 class SerializerForChallengeDetail(serializers.ModelSerializer):
@@ -98,7 +105,7 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
 
     # 추가: is_exist_for_evaluation_result 필드
     is_exist_for_evaluation_result = serializers.SerializerMethodField()
-    
+
     challenge_results = ChallengeResultSerializer(many=True)
 
     class Meta:
@@ -149,7 +156,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
 
         if user:
             evaluation_results = obj.evaluations.filter(challenger=user)
-            print("evaluation_results.exists() : ", evaluation_results.exists())
+            print("evaluation_results.exists() : ",
+                  evaluation_results.exists())
             return evaluation_results.exists()
         else:
             print("로그인 상태 아님")

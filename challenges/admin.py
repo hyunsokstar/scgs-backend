@@ -46,5 +46,5 @@ class EvaluationCriteriaAdmin(admin.ModelAdmin):
 @admin.register(ChallengeResult)
 class ChallengeResultAdmin(admin.ModelAdmin):
     list_display = ('challenge', 'pass_status', 'created_at_formatted')
-    list_filter = ('pass_status',)
-    search_fields = ('challenge__title',)
+    # list_filter = ('pass_status',)
+    # search_fields = ('challenge__title',)
