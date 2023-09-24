@@ -4,6 +4,11 @@ from rest_framework.views import APIView
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated, ValidationError
+
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
@@ -31,8 +36,24 @@ from .serializers import (
 )
 
 # 1122
-# UpdateViewForChallengeResultPassed
-# DeleteViewForChallenge
+# UpdateViewForChallenge
+@method_decorator(login_required, name='dispatch')
+class UpdateViewForChallenge(APIView):
+    def put(self, request, challengeId):
+        # Challenge를 찾습니다. 존재하지 않으면 404 에러 반환
+        challenge = get_object_or_404(Challenge, pk=challengeId)
+
+        # 로그인한 유저와 Challenge의 작성자가 다를 경우 에러 응답
+        if challenge.writer != request.user:
+            return Response({"message": "로그인 유저가 아닐 경우 업데이트 할 수 없습니다."}, status=HTTP_403_FORBIDDEN)
+
+        # 요청에서 전달받은 데이터로 Challenge 업데이트
+        challenge.title = request.data.get("title", challenge.title)
+        challenge.subtitle = request.data.get("subtitle", challenge.subtitle)
+        challenge.description = request.data.get("description", challenge.description)
+        challenge.save()
+
+        return Response({"message": f"{challenge.title}에 대한 업데이트 성공"}, status=HTTP_200_OK)        
 
 
 class DeleteViewForChallenge(APIView):
@@ -83,7 +104,7 @@ class UpdateViewForChallengeResultPassed(APIView):
 
 # UpdateViewForChallengeResultPassed
 
-
+# UpdateViewForChallenge
 class UpdateViewForEvaluateResultForChallenge(APIView):
     def put(self, request, challengeId):
         try:

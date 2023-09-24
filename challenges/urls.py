@@ -27,6 +27,10 @@ urlpatterns = [
     # update view
     path('<int:challengeId>/update/evaluate-result',
          views.UpdateViewForEvaluateResultForChallenge.as_view()),
+    path('<int:challengeId>/update',
+         views.UpdateViewForChallenge.as_view()),
+
+
 #     ${challengeResultId}/passed/update
     path('<int:challengeResultId>/passed/update',
          views.UpdateViewForChallengeResultPassed.as_view())     
