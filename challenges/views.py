@@ -36,6 +36,45 @@ from .serializers import (
 )
 
 # 1122
+@method_decorator(login_required, name='dispatch')
+class UpdateViewForChallengeResultMetaInfo(APIView):
+    def put(self, request, challengeResultId):
+        try:
+            # challengeResultId에 해당하는 ChallengeResult 객체 가져오기
+            challenge_result = ChallengeResult.objects.get(id=challengeResultId)
+            
+            # 현재 사용자가 ChallengeResult의 challenger와 일치하는지 확인
+            if challenge_result.challenger.username != request.user.username:
+                return Response(
+                    {"message": "해당 ChallengeResult를 업데이트할 권한이 없습니다."},
+                    status=HTTP_403_FORBIDDEN
+                )
+            
+            # 요청에서 전달된 데이터 가져오기
+            github_url1 = request.data.get("github_url1")
+            github_url2 = request.data.get("github_url2")
+            note_url = request.data.get("note_url")
+            
+            # 받은 데이터로 필드를 업데이트
+            challenge_result.github_url1 = github_url1
+            challenge_result.github_url2 = github_url2
+            challenge_result.note_url = note_url
+            
+            # 변경사항 저장
+            challenge_result.save()
+            
+            return Response(
+                {"message": f"{challenge_result.challenge.title}에 대한 업데이트 성공"},
+                status=HTTP_200_OK
+            )
+        except ChallengeResult.DoesNotExist:
+            return Response(
+                {"message": "해당 ChallengeResult를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND
+            )
+
+
+
 # UpdateViewForChallenge
 @method_decorator(login_required, name='dispatch')
 class UpdateViewForChallenge(APIView):

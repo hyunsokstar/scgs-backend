@@ -3,14 +3,16 @@ from . import views
 
 urlpatterns = [
     path('', views.ListViewForChallenge.as_view()),
-    path('<int:challengeId>/update/main_image', views.UpdateViewForChallengeMainImage.as_view()),
+    path('<int:challengeId>/update/main_image',
+         views.UpdateViewForChallengeMainImage.as_view()),
     path('create', views.CreateViewForChallenge.as_view()),
 
     # register view
     path('<int:challengeId>/register', views.ReigsterViewForChallenge.as_view()),
 
     # save view (create or update)
-    path('<int:challengeId>/evaluation-criteria/save', views.SaveViewForEvaluationCriteriaForChallenge.as_view()),
+    path('<int:challengeId>/evaluation-criteria/save',
+         views.SaveViewForEvaluationCriteriaForChallenge.as_view()),
 
     # detail view
     # 작업중
@@ -19,10 +21,10 @@ urlpatterns = [
     # delete view
     # 삭제
     path('<int:challengeId>/withdrawl',
-         views.WithDrawlViewForChallenge.as_view()), 
+         views.WithDrawlViewForChallenge.as_view()),
 
     path('<int:challengeId>/delete',
-         views.DeleteViewForChallenge.as_view()), 
+         views.DeleteViewForChallenge.as_view()),
 
     # update view
     path('<int:challengeId>/update/evaluate-result',
@@ -30,8 +32,13 @@ urlpatterns = [
     path('<int:challengeId>/update',
          views.UpdateViewForChallenge.as_view()),
 
+    # challenge resut meta info update
+    path('challenge-result/<int:challengeResultId>/update',
+         views.UpdateViewForChallengeResultMetaInfo.as_view()),
 
-#     ${challengeResultId}/passed/update
+
+    #     ${challengeResultId}/passed/update
     path('<int:challengeResultId>/passed/update',
-         views.UpdateViewForChallengeResultPassed.as_view())     
+         views.UpdateViewForChallengeResultPassed.as_view())
+
 ]
