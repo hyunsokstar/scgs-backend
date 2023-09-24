@@ -21,6 +21,9 @@ urlpatterns = [
     path('<int:challengeId>/withdrawl',
          views.WithDrawlViewForChallenge.as_view()), 
 
+    path('<int:challengeId>/delete',
+         views.DeleteViewForChallenge.as_view()), 
+
     # update view
     path('<int:challengeId>/update/evaluate-result',
          views.UpdateViewForEvaluateResultForChallenge.as_view()),

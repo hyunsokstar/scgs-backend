@@ -32,6 +32,20 @@ from .serializers import (
 
 # 1122
 # UpdateViewForChallengeResultPassed
+# DeleteViewForChallenge
+
+
+class DeleteViewForChallenge(APIView):
+    def delete(self, request, challengeId):
+        try:
+            challenge = Challenge.objects.get(id=challengeId)
+            challenge.delete()
+
+            message = f'${challenge.title} delete success !' 
+
+            return Response({"message": message},status=HTTP_204_NO_CONTENT)
+        except EvaluationResult.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
 
 
 class UpdateViewForChallengeResultPassed(APIView):
@@ -169,9 +183,9 @@ class ReigsterViewForChallenge(APIView):
                 evaluate_criteria_description=evaluation_criteria.item_description,
                 result="undecided"
             )
-        
+
         ChallengeResult.objects.create(
-            challenger = request.user,
+            challenger=request.user,
             challenge=challenge
         )
 
