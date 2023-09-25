@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 
 # 챌린지
+
+
 class Challenge(models.Model):
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=50)  # 새로운 category 필드 추가
@@ -9,8 +11,10 @@ class Challenge(models.Model):
     main_image = models.URLField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    started_at = models.DateTimeField(default=timezone.now)  # 현재 날짜 및 시간을 기본값으로 설정
-    deadline = models.DateTimeField(default=timezone.now)    # 현재 날짜 및 시간을 기본값으로 설정
+    started_at = models.DateTimeField(
+        default=timezone.now)  # 현재 날짜 및 시간을 기본값으로 설정
+    deadline = models.DateTimeField(
+        default=timezone.now)    # 현재 날짜 및 시간을 기본값으로 설정
 
     writer = models.ForeignKey(
         "users.User",
@@ -28,6 +32,8 @@ class Challenge(models.Model):
         return self.created_at.strftime('%y년 %m월 %d일')
 
 # 챌린지에 대한 평가 기준 (예를 들어 item_description 이 얼굴, 몸매, 성격)
+
+
 class EvaluationCriteria(models.Model):
     challenge = models.ForeignKey(
         Challenge,  # Challenge 모델 가르킴
@@ -52,7 +58,7 @@ class EvaluationResult(models.Model):
         on_delete=models.CASCADE,
         related_name="+"
     )
-    
+
     challenge = models.ForeignKey(
         Challenge,
         on_delete=models.CASCADE,
@@ -63,7 +69,7 @@ class EvaluationResult(models.Model):
     #     "challenges.ChallengeResult",
     #     on_delete=models.CASCADE,
     #     related_name="challenge_result",
-    #     null=True,  
+    #     null=True,
     #     blank=True
     # )
 
@@ -89,6 +95,8 @@ class EvaluationResult(models.Model):
         return f"{self.challenger}'s evaluation result: {self.get_result_display()}"
 
 # 최종적 평가 결과와 comment
+
+
 class ChallengeResult(models.Model):
     challenger = models.ForeignKey(
         "users.User",
@@ -114,3 +122,31 @@ class ChallengeResult(models.Model):
     @property
     def created_at_formatted(self):
         return self.created_at.strftime('%y년 %m월 %d일')
+
+
+class ChallengeComment(models.Model):
+    challenge = models.ForeignKey(
+        Challenge,  # Challenge 모델과 연결
+        on_delete=models.CASCADE,
+        related_name="challenge_comments"
+    )
+
+    commenter = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+
+    COMMENTER_OPTION_CHOICES = [
+        ('commenter', 'Commenter'),
+        ('challenger', 'Challenger'),
+        ('participant', 'Participant'),
+    ]
+
+    commenter_classfication = models.CharField(
+        max_length=20, choices=COMMENTER_OPTION_CHOICES, default=commenter
+    )
+
+    comment = models.TextField()

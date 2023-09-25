@@ -3,9 +3,24 @@ from .models import (
     Challenge,
     EvaluationCriteria,
     EvaluationResult,
-    ChallengeResult
+    ChallengeResult,
+    ChallengeComment
 )
 from users.serializers import UserProfileImageSerializer
+
+
+class ChallengeCommentSerializer(serializers.ModelSerializer):
+    commenter = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = ChallengeComment
+        fields = (
+            'id',
+            'challenge',
+            'commenter',
+            'commenter_classfication',
+            'comment',
+        )
 
 
 class SerializerForCreateChallenge(serializers.ModelSerializer):
@@ -107,6 +122,7 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
     is_exist_for_evaluation_result = serializers.SerializerMethodField()
 
     challenge_results = ChallengeResultSerializer(many=True)
+    challenge_comments = ChallengeCommentSerializer(many=True)
 
     class Meta:
         model = Challenge
@@ -122,7 +138,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
             'evaluation_criterials',
             'evaluation_results',  # EvaluationResult 정보 추가
             'is_exist_for_evaluation_result',  # 추가: is_exist_for_evaluation_result 필드
-            'challenge_results'
+            'challenge_results',
+            'challenge_comments'
         )
 
     def get_created_at_formatted(self, obj):

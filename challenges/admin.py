@@ -3,7 +3,8 @@ from .models import (
     Challenge,
     EvaluationCriteria,
     EvaluationResult,
-    ChallengeResult
+    ChallengeResult,
+    ChallengeComment
 )
 
 # 1122
@@ -48,3 +49,9 @@ class ChallengeResultAdmin(admin.ModelAdmin):
     list_display = ('challenge', 'pass_status', 'created_at_formatted')
     # list_filter = ('pass_status',)
     # search_fields = ('challenge__title',)
+
+@admin.register(ChallengeComment)
+class ChallengeCommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'commenter', 'commenter_classfication', 'comment')
+    list_filter = ('commenter_classfication',)
+    search_fields = ('commenter__username', 'comment')
