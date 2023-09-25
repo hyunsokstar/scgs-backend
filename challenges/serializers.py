@@ -173,7 +173,7 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
         
         # 현재 유저 (request.user) 또는 challenge.writer와 동일한 writer를 가진 challenge_comments 필터링
         comments = obj.challenge_comments.filter(
-            Q(writer=obj.writer) & Q(challenger=user))
+            Q(writer=obj.writer) | Q(challenger=user))
         
         # 필터링된 데이터를 ChallengeCommentSerializer를 사용하여 직렬화
         serializer = ChallengeCommentSerializer(comments, many=True)

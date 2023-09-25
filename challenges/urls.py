@@ -5,7 +5,12 @@ urlpatterns = [
     path('', views.ListViewForChallenge.as_view()),
     path('<int:challengeId>/update/main_image',
          views.UpdateViewForChallengeMainImage.as_view()),
+
+    # create view
     path('create', views.CreateViewForChallenge.as_view()),
+    # ${challengeId}/challenge-comment/create
+    path('<int:challengeId>/challenge-comment/create',
+         views.CreateViewForCommentForChallenge.as_view()),
 
     # register view
     path('<int:challengeId>/register', views.ReigsterViewForChallenge.as_view()),

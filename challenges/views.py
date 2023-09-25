@@ -25,7 +25,8 @@ from .models import (
     Challenge,
     EvaluationCriteria,
     EvaluationResult,
-    ChallengeResult
+    ChallengeResult,
+    ChallengeComment
 )
 
 from .serializers import (
@@ -36,33 +37,96 @@ from .serializers import (
 )
 
 # 1122
+# CreateViewForCommentForChallenge
+# class CreateViewForCommentForChallenge(APIView):
+#     def post(self, request, challengeId):
+#         if not request.user.is_authenticated:
+#             return Response(
+#                 {"message": "로그인 안한 유저는 challenge comment 생성 못해요 !"},
+#                 status=HTTP_401_UNAUTHORIZED
+#             )
+#         # todo
+#         # challengeId 에 해당하는 Challenge 찾고 그 challenge 의 댓글 생성
+#         # writer = challenge.writer
+#         # challenger = request.user
+#         # 그리고 적절한 응답 생성
+
+
+class CreateViewForCommentForChallenge(APIView):
+    writer_classfication_option = "commenter"
+
+    def post(self, request, challengeId):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 challenge comment 생성 못해요 !"},
+                status=HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            # challengeId에 해당하는 Challenge 찾기
+            challenge = Challenge.objects.get(id=challengeId)
+
+            if request.user == challenge.writer:
+                self.writer_classfication_option = "commenter"
+            else:
+                self.writer_classfication_option = "challenger"
+
+            # 댓글 생성
+            comment_text = request.data.get("commentText")
+            if comment_text:
+                ChallengeComment.objects.create(
+                    challenge=challenge,
+                    writer=request.user,
+                    challenger = request.user,
+                    comment=comment_text,
+                    writer_classfication=self.writer_classfication_option
+                )
+
+                return Response(
+                    {"message": "댓글이 성공적으로 생성되었습니다."},
+                    status=HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {"message": "댓글 텍스트가 비어 있습니다."},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
+        except Challenge.DoesNotExist:
+            return Response(
+                {"message": "해당하는 Challenge를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND
+            )
+
+
 @method_decorator(login_required, name='dispatch')
 class UpdateViewForChallengeResultMetaInfo(APIView):
     def put(self, request, challengeResultId):
         try:
             # challengeResultId에 해당하는 ChallengeResult 객체 가져오기
-            challenge_result = ChallengeResult.objects.get(id=challengeResultId)
-            
+            challenge_result = ChallengeResult.objects.get(
+                id=challengeResultId)
+
             # 현재 사용자가 ChallengeResult의 challenger와 일치하는지 확인
             if challenge_result.challenger.username != request.user.username:
                 return Response(
                     {"message": "해당 ChallengeResult를 업데이트할 권한이 없습니다."},
                     status=HTTP_403_FORBIDDEN
                 )
-            
+
             # 요청에서 전달된 데이터 가져오기
             github_url1 = request.data.get("github_url1")
             github_url2 = request.data.get("github_url2")
             note_url = request.data.get("note_url")
-            
+
             # 받은 데이터로 필드를 업데이트
             challenge_result.github_url1 = github_url1
             challenge_result.github_url2 = github_url2
             challenge_result.note_url = note_url
-            
+
             # 변경사항 저장
             challenge_result.save()
-            
+
             return Response(
                 {"message": f"{challenge_result.challenge.title}에 대한 업데이트 성공"},
                 status=HTTP_200_OK
@@ -72,7 +136,6 @@ class UpdateViewForChallengeResultMetaInfo(APIView):
                 {"message": "해당 ChallengeResult를 찾을 수 없습니다."},
                 status=HTTP_404_NOT_FOUND
             )
-
 
 
 # UpdateViewForChallenge
@@ -89,10 +152,11 @@ class UpdateViewForChallenge(APIView):
         # 요청에서 전달받은 데이터로 Challenge 업데이트
         challenge.title = request.data.get("title", challenge.title)
         challenge.subtitle = request.data.get("subtitle", challenge.subtitle)
-        challenge.description = request.data.get("description", challenge.description)
+        challenge.description = request.data.get(
+            "description", challenge.description)
         challenge.save()
 
-        return Response({"message": f"{challenge.title}에 대한 업데이트 성공"}, status=HTTP_200_OK)        
+        return Response({"message": f"{challenge.title}에 대한 업데이트 성공"}, status=HTTP_200_OK)
 
 
 class DeleteViewForChallenge(APIView):
@@ -101,9 +165,9 @@ class DeleteViewForChallenge(APIView):
             challenge = Challenge.objects.get(id=challengeId)
             challenge.delete()
 
-            message = f'${challenge.title} delete success !' 
+            message = f'${challenge.title} delete success !'
 
-            return Response({"message": message},status=HTTP_204_NO_CONTENT)
+            return Response({"message": message}, status=HTTP_204_NO_CONTENT)
         except EvaluationResult.DoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND)
 
@@ -144,6 +208,8 @@ class UpdateViewForChallengeResultPassed(APIView):
 # UpdateViewForChallengeResultPassed
 
 # UpdateViewForChallenge
+
+
 class UpdateViewForEvaluateResultForChallenge(APIView):
     def put(self, request, challengeId):
         try:
@@ -320,6 +386,8 @@ class SaveViewForEvaluationCriteriaForChallenge(APIView):
         return Response(response_data, status=HTTP_201_CREATED)
 
 # ReigsterViewForChallenge
+
+# CreateViewForCommentForChallenge
 
 
 class CreateViewForChallenge(APIView):
