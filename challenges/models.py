@@ -139,6 +139,14 @@ class ChallengeComment(models.Model):
         related_name="+"
     )
 
+    challenger = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+
     COMMENTER_OPTION_CHOICES = [
         ('commenter', 'Commenter'),
         ('challenger', 'Challenger'),
