@@ -131,7 +131,7 @@ class ChallengeComment(models.Model):
         related_name="challenge_comments"
     )
 
-    commenter = models.ForeignKey(
+    writer = models.ForeignKey(
         "users.User",
         blank=True,
         null=True,
@@ -145,8 +145,8 @@ class ChallengeComment(models.Model):
         ('participant', 'Participant'),
     ]
 
-    commenter_classfication = models.CharField(
-        max_length=20, choices=COMMENTER_OPTION_CHOICES, default=commenter
+    writer_classfication = models.CharField(
+        max_length=20, choices=COMMENTER_OPTION_CHOICES, default="commenter"
     )
 
     comment = models.TextField()

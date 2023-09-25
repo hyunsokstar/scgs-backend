@@ -7,18 +7,18 @@ from .models import (
     ChallengeComment
 )
 from users.serializers import UserProfileImageSerializer
-
+from django.db.models import Q
 
 class ChallengeCommentSerializer(serializers.ModelSerializer):
-    commenter = UserProfileImageSerializer(read_only=True)
+    writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = ChallengeComment
         fields = (
             'id',
             'challenge',
-            'commenter',
-            'commenter_classfication',
+            'writer',
+            'writer_classfication',
             'comment',
         )
 
@@ -122,7 +122,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
     is_exist_for_evaluation_result = serializers.SerializerMethodField()
 
     challenge_results = ChallengeResultSerializer(many=True)
-    challenge_comments = ChallengeCommentSerializer(many=True)
+    # challenge_comments = ChallengeCommentSerializer(many=True)
+    challenge_comments = serializers.SerializerMethodField()  # 수정된 부분
 
     class Meta:
         model = Challenge
@@ -164,6 +165,20 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
         representation['evaluation_results'] = evaluation_data
 
         return representation
+    
+    # comment writer 가 챌린지 유저이거나 로그인 유저
+    def get_challenge_comments(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+        
+        # 현재 유저 (request.user) 또는 challenge.writer와 동일한 writer를 가진 challenge_comments 필터링
+        comments = obj.challenge_comments.filter(
+            Q(writer=user) | Q(writer=obj.writer))
+        
+        # 필터링된 데이터를 ChallengeCommentSerializer를 사용하여 직렬화
+        serializer = ChallengeCommentSerializer(comments, many=True)
+        return serializer.data
+
 
     # 추가: is_exist_for_evaluation_result 필드의 값을 설정하는 메서드
     def get_is_exist_for_evaluation_result(self, obj):

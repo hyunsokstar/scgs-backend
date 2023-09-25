@@ -52,6 +52,6 @@ class ChallengeResultAdmin(admin.ModelAdmin):
 
 @admin.register(ChallengeComment)
 class ChallengeCommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'commenter', 'commenter_classfication', 'comment')
-    list_filter = ('commenter_classfication',)
-    search_fields = ('commenter__username', 'comment')
+    list_display = ('id', 'writer', 'writer_classfication', 'comment')
+    list_filter = ('writer_classfication',)
+    search_fields = ('writer__username', 'comment')
