@@ -28,6 +28,10 @@ urlpatterns = [
     path('<int:challengeId>/withdrawl',
          views.WithDrawlViewForChallenge.as_view()),
 
+     # challenge-comment/${commentId}/delete
+    path('challenge-comment/<int:commentId>/delete',
+         views.DeleteViewForCommentForChallenge.as_view()),
+
     path('<int:challengeId>/delete',
          views.DeleteViewForChallenge.as_view()),
 
@@ -42,7 +46,7 @@ urlpatterns = [
          views.UpdateViewForChallengeResultMetaInfo.as_view()),
 
 
-    #     ${challengeResultId}/passed/update
+    # ${challengeResultId}/passed/update
     path('<int:challengeResultId>/passed/update',
          views.UpdateViewForChallengeResultPassed.as_view())
 

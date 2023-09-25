@@ -37,19 +37,34 @@ from .serializers import (
 )
 
 # 1122
-# CreateViewForCommentForChallenge
-# class CreateViewForCommentForChallenge(APIView):
-#     def post(self, request, challengeId):
-#         if not request.user.is_authenticated:
-#             return Response(
-#                 {"message": "로그인 안한 유저는 challenge comment 생성 못해요 !"},
-#                 status=HTTP_401_UNAUTHORIZED
-#             )
-#         # todo
-#         # challengeId 에 해당하는 Challenge 찾고 그 challenge 의 댓글 생성
-#         # writer = challenge.writer
-#         # challenger = request.user
-#         # 그리고 적절한 응답 생성
+# DeleteViewForCommentForChallenge
+class DeleteViewForCommentForChallenge(APIView):
+    def delete(self, request, commentId):
+        try:
+            challenge_comment = ChallengeComment.objects.get(id=commentId)
+            challenge_comment.delete()
+
+            message = f"${challenge_comment} 를 삭제 했습니다."
+
+            return Response({message: message}, status=HTTP_204_NO_CONTENT)
+        except ChallengeComment.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+
+
+class WithDrawlViewForChallenge(APIView):
+    def delete(self, request, challengeId):
+        try:
+            evaluate_result = EvaluationResult.objects.filter(
+                challenge_id=challengeId, challenger=request.user)
+            evaluate_result.delete()
+
+            challenge_result = ChallengeResult.objects.filter(
+                challenge_id=challengeId, challenger=request.user)
+            challenge_result.delete()
+
+            return Response(status=HTTP_204_NO_CONTENT)
+        except EvaluationResult.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
 
 
 class CreateViewForCommentForChallenge(APIView):
@@ -81,7 +96,7 @@ class CreateViewForCommentForChallenge(APIView):
                 ChallengeComment.objects.create(
                     challenge=challenge,
                     writer=request.user,
-                    challenger = request.user,
+                    challenger=request.user,
                     comment=comment_text,
                     writer_classfication=self.writer_classfication_option
                 )
@@ -249,6 +264,8 @@ class UpdateViewForEvaluateResultForChallenge(APIView):
         except Exception as e:
             # 기타 예외 처리
             return Response({"message": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+# DeleteViewForCommentForChallenge
 
 
 class WithDrawlViewForChallenge(APIView):
