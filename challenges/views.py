@@ -65,11 +65,15 @@ class CreateViewForCommentForChallenge(APIView):
         try:
             # challengeId에 해당하는 Challenge 찾기
             challenge = Challenge.objects.get(id=challengeId)
+            participant_username = request.data.get("participant_username")
+            print("participant_username :: ", participant_username)
 
             if request.user == challenge.writer:
                 self.writer_classfication_option = "commenter"
-            else:
+            elif request.user.username == participant_username:
                 self.writer_classfication_option = "challenger"
+            else:
+                self.writer_classfication_option = "participant"
 
             # 댓글 생성
             comment_text = request.data.get("commentText")
