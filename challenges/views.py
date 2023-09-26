@@ -173,6 +173,9 @@ class UpdateViewForChallenge(APIView):
         challenge.subtitle = request.data.get("subtitle", challenge.subtitle)
         challenge.description = request.data.get(
             "description", challenge.description)
+        challenge.started_at = request.data.get("started_at", challenge.started_at)
+        challenge.deadline = request.data.get("deadline", challenge.deadline)
+
         challenge.save()
 
         return Response({"message": f"{challenge.title}에 대한 업데이트 성공"}, status=HTTP_200_OK)
