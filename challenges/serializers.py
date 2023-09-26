@@ -68,6 +68,8 @@ class SerializerForChallenges(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField()
     evaluation_criterials = EvaluationCriteriaSerializer(
         many=True, read_only=True)  # 추가
+    count_for_challenge_results = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Challenge
@@ -83,12 +85,15 @@ class SerializerForChallenges(serializers.ModelSerializer):
             'created_at',
             'started_at',
             'deadline',
-            'challenge_results'
+            'challenge_results',
+            'count_for_challenge_results'  # 새로운 필드 추가
         )
 
     def get_created_at_formatted(self, obj):
         return obj.created_at.strftime('%y년 %m월 %d일')
 
+    def get_count_for_challenge_results(self, obj):
+        return obj.challenge_results.count()
 
 class EvaluationResultSerializer(serializers.ModelSerializer):
     challenger = UserProfileImageSerializer(read_only=True)
