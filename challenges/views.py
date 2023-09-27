@@ -51,6 +51,14 @@ class CreateViewForChallengeRef(APIView):
         try:
             challenge = Challenge.objects.get(id=challengeId)
 
+            # challenge.writer 와 request.user 즉 로그인 유저가 다르면 
+            # message challenge.writer.username 님만 ref 를 추가 가능합니다 응답
+            if challenge.writer != request.user:
+                return Response(
+                    {"message": f"{challenge.writer.username} 님만 ref 를 추가 가능합니다."},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
             # 댓글 생성
             urlText = request.data.get("urlText")
             descriptionText = request.data.get("descriptionText")
