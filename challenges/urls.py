@@ -12,6 +12,9 @@ urlpatterns = [
     # ${challengeId}/challenge-comment/create
     path('<int:challengeId>/challenge-comment/create',
          views.CreateViewForCommentForChallenge.as_view()),
+     # ${challengeId}/challenge-ref/create
+    path('<int:challengeId>/challenge-ref/create',
+         views.CreateViewForChallengeRef.as_view()),
 
     # register view
     path('<int:challengeId>/register', views.ReigsterViewForChallenge.as_view()),
@@ -21,14 +24,11 @@ urlpatterns = [
          views.SaveViewForEvaluationCriteriaForChallenge.as_view()),
 
     # detail view
-    # 작업중
     path('<int:challengeId>/detail', views.DetailViewForChallenge.as_view()),
 
     # delete view
-    # 삭제
     path('<int:challengeId>/withdrawl',
          views.WithDrawlViewForChallenge.as_view()),
-
     # challenge-comment/${commentId}/delete
     path('challenge-comment/<int:commentId>/delete',
          views.DeleteViewForCommentForChallenge.as_view()),

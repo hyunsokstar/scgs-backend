@@ -39,6 +39,44 @@ from .serializers import (
 )
 
 # 1122
+class CreateViewForChallengeRef(APIView):
+
+    def post(self, request, challengeId):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 challenge ref 생성 못해요 !"},
+                status=HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            challenge = Challenge.objects.get(id=challengeId)
+
+            # 댓글 생성
+            urlText = request.data.get("urlText")
+            descriptionText = request.data.get("descriptionText")
+
+            if urlText and descriptionText:
+                ChallengeRef.objects.create(
+                    challenge=challenge,
+                    url=urlText,
+                    description=descriptionText,
+                )
+                return Response(
+                    {"message": "ChallengeRef is Successfully Created"},
+                    status=HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {"message": "댓글 텍스트가 비어 있습니다."},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
+        except Challenge.DoesNotExist:
+            return Response(
+                {"message": "해당하는 Challenge를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND
+            )
+
 # UpdateViewForChallengeRef
 class UpdateViewForChallengeRef(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
