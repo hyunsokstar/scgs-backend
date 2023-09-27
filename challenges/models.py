@@ -29,11 +29,36 @@ class Challenge(models.Model):
 
     @property
     def created_at_formatted(self):
-        return self.created_at.strftime('%y년 %m월 %d일')
+        return self.created_at.strftime('%y년 %m월 %d일')    
+
+class ChallengeRef(models.Model):
+    challenge = models.ForeignKey(
+        Challenge,
+        on_delete=models.CASCADE,
+        related_name="challenge_refs"
+    )
+    url = models.URLField(blank=True, null=True)  # github_url1 필드
+    description = models.TextField() 
+
+class ChallengerRef(models.Model):
+    challenge = models.ForeignKey(
+        Challenge,
+        on_delete=models.CASCADE,
+        related_name="challenger_refs"
+    )
+
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+    
+    url = models.URLField(blank=True, null=True)  # github_url1 필드
+    description = models.TextField()     
 
 # 챌린지에 대한 평가 기준 (예를 들어 item_description 이 얼굴, 몸매, 성격)
-
-
 class EvaluationCriteria(models.Model):
     challenge = models.ForeignKey(
         Challenge,  # Challenge 모델 가르킴

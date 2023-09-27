@@ -4,10 +4,12 @@ from .models import (
     EvaluationCriteria,
     EvaluationResult,
     ChallengeResult,
-    ChallengeComment
+    ChallengeComment,
+    ChallengeRef
 )
 from users.serializers import UserProfileImageSerializer
 from django.db.models import Q
+
 
 class ChallengeCommentSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
@@ -70,7 +72,6 @@ class SerializerForChallenges(serializers.ModelSerializer):
         many=True, read_only=True)  # 추가
     count_for_challenge_results = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Challenge
         fields = (
@@ -95,6 +96,16 @@ class SerializerForChallenges(serializers.ModelSerializer):
     def get_count_for_challenge_results(self, obj):
         return obj.challenge_results.count()
 
+
+class EvaluationResultSerializer(serializers.ModelSerializer):
+    challenger = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = EvaluationResult
+        fields = ('id', 'challenger',
+                  'evaluate_criteria_description', 'result')
+
+
 class EvaluationResultSerializer(serializers.ModelSerializer):
     challenger = UserProfileImageSerializer(read_only=True)
 
@@ -104,13 +115,14 @@ class EvaluationResultSerializer(serializers.ModelSerializer):
                   'evaluate_criteria_description', 'result')
 
 
-class EvaluationResultSerializer(serializers.ModelSerializer):
-    challenger = UserProfileImageSerializer(read_only=True)
-
+class SerializerForChallengeRef(serializers.ModelSerializer):
     class Meta:
-        model = EvaluationResult
-        fields = ('id', 'challenger',
-                  'evaluate_criteria_description', 'result')
+        model = ChallengeRef
+        fields = (
+            'id',
+            'url',
+            'description'
+        )
 
 
 class SerializerForChallengeDetail(serializers.ModelSerializer):
@@ -130,6 +142,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
     # challenge_comments = ChallengeCommentSerializer(many=True)
     challenge_comments = serializers.SerializerMethodField()  # 수정된 부분
 
+    challenge_refs = SerializerForChallengeRef(many=True, read_only=True)
+
     class Meta:
         model = Challenge
         fields = (
@@ -145,7 +159,8 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
             'evaluation_results',  # EvaluationResult 정보 추가
             'is_exist_for_evaluation_result',  # 추가: is_exist_for_evaluation_result 필드
             'challenge_results',
-            'challenge_comments'
+            'challenge_comments',
+            'challenge_refs'
         )
 
     def get_created_at_formatted(self, obj):
@@ -170,23 +185,23 @@ class SerializerForChallengeDetail(serializers.ModelSerializer):
         representation['evaluation_results'] = evaluation_data
 
         return representation
-    
+
     # comment writer 가 챌린지 유저이거나 로그인 유저
     def get_challenge_comments(self, obj):
         request = self.context.get('request')
         user = request.user if request else None
-        
+
         # 현재 유저 (request.user) 또는 challenge.writer와 동일한 writer를 가진 challenge_comments 필터링
         # comments = obj.challenge_comments.filter(
         #     Q(challenger=user) | Q(writer=obj.writer))
-        comments = obj.challenge_comments.all()      
-        
+        comments = obj.challenge_comments.all()
+
         # 필터링된 데이터를 ChallengeCommentSerializer를 사용하여 직렬화
         serializer = ChallengeCommentSerializer(comments, many=True)
         return serializer.data
 
-
     # 추가: is_exist_for_evaluation_result 필드의 값을 설정하는 메서드
+
     def get_is_exist_for_evaluation_result(self, obj):
         # 현재 유저 (request.user)의 평가 결과가 있는지 여부를 확인
         request = self.context.get('request')

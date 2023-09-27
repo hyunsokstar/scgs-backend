@@ -1,10 +1,12 @@
 from django.contrib import admin
 from .models import (
     Challenge,
+    ChallengeRef,
     EvaluationCriteria,
     EvaluationResult,
     ChallengeResult,
-    ChallengeComment
+    ChallengeComment,
+    ChallengeRef    
 )
 
 # 1122
@@ -55,3 +57,9 @@ class ChallengeCommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'writer', 'writer_classfication', 'comment')
     list_filter = ('writer_classfication',)
     search_fields = ('writer__username', 'comment')
+
+@admin.register(ChallengeRef)
+class ChallengeRefAdmin(admin.ModelAdmin):
+    list_display = ('id', 'challenge', 'url', 'description')
+    list_filter = ('challenge',)
+    search_fields = ('challenge__title', 'url', 'description')

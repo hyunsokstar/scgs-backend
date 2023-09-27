@@ -23,6 +23,7 @@ from rest_framework.status import (
 
 from .models import (
     Challenge,
+    ChallengeRef,
     EvaluationCriteria,
     EvaluationResult,
     ChallengeResult,
@@ -30,6 +31,7 @@ from .models import (
 )
 
 from .serializers import (
+    SerializerForChallengeRef,
     SerializerForChallenges,
     SerializerForCreateChallenge,
     SerializerForChallengeDetail,
@@ -37,6 +39,70 @@ from .serializers import (
 )
 
 # 1122
+# UpdateViewForChallengeRef
+class UpdateViewForChallengeRef(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, challengeRefId):
+        try:
+            return ChallengeRef.objects.get(id=challengeRefId)
+        except ChallengeRef.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, challengeRefId):
+        challenge_ref = self.get_object(challengeRefId)  # 개별 유저 가져 오기
+
+        # 요청 데이터에서 이미지 가져오기
+        urlText = request.data.get("urlText")
+        descriptionText = request.data.get("descriptionText")
+
+        print("challengeRefId:", challengeRefId)
+        print("urlTet:", urlText)
+        print("descriptionText:", descriptionText)
+
+        try:
+            # 이미지 업데이트
+            challenge_ref.url = urlText
+            challenge_ref.description = descriptionText
+            challenge_ref.save()
+
+            # 업데이트 성공 응답
+            return Response({"message": "challenge ref is updated"}, status=HTTP_200_OK)
+        except Exception as e:
+            # 예외 처리: 데이터베이스 작업 중 오류가 발생한 경우
+            return Response({"message": f"An error occurred: {str(e)}"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ListViewForChallengeRef
+
+
+class ListViewForChallengeRef(APIView):
+    def get(self, request, challengeId):
+        try:
+            # 주어진 challengeId에 해당하는 Challenge 조회
+            challenge = Challenge.objects.get(id=challengeId)
+
+            # ChallengeRef 목록 조회
+            challenge_refs = ChallengeRef.objects.filter(challenge=challenge)
+
+            # 시리얼라이즈
+            serializer = SerializerForChallengeRef(challenge_refs, many=True)
+
+            # 응답 데이터 구성
+            response_data = {
+                # "challenge": SerializerForChallenges(challenge).data,
+                "challengeRefList": serializer.data
+            }
+
+            return Response(response_data, status=HTTP_200_OK)
+
+        except Challenge.DoesNotExist:
+            # 주어진 challengeId에 해당하는 Challenge가 존재하지 않는 경우
+            return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 발생 시
+            return Response({"error": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # DeleteViewForCommentForChallenge
 class DeleteViewForCommentForChallenge(APIView):
     def delete(self, request, commentId):
@@ -173,7 +239,8 @@ class UpdateViewForChallenge(APIView):
         challenge.subtitle = request.data.get("subtitle", challenge.subtitle)
         challenge.description = request.data.get(
             "description", challenge.description)
-        challenge.started_at = request.data.get("started_at", challenge.started_at)
+        challenge.started_at = request.data.get(
+            "started_at", challenge.started_at)
         challenge.deadline = request.data.get("deadline", challenge.deadline)
 
         challenge.save()
