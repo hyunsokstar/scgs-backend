@@ -6,10 +6,13 @@ from .models import (
     EvaluationResult,
     ChallengeResult,
     ChallengeComment,
-    ChallengeRef    
+    ChallengeRef,
+    ChallengerRef
 )
 
 # 1122
+
+
 @admin.register(EvaluationResult)
 class EvaluationResultAdmin(admin.ModelAdmin):
     list_display = ('challenge', 'challenger',
@@ -52,14 +55,23 @@ class ChallengeResultAdmin(admin.ModelAdmin):
     # list_filter = ('pass_status',)
     # search_fields = ('challenge__title',)
 
+
 @admin.register(ChallengeComment)
 class ChallengeCommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'writer', 'writer_classfication', 'comment')
     list_filter = ('writer_classfication',)
     search_fields = ('writer__username', 'comment')
 
+
 @admin.register(ChallengeRef)
 class ChallengeRefAdmin(admin.ModelAdmin):
     list_display = ('id', 'challenge', 'url', 'description')
+    list_filter = ('challenge',)
+    search_fields = ('challenge__title', 'url', 'description')
+
+
+@admin.register(ChallengerRef)
+class ChallengeRefAdmin(admin.ModelAdmin):
+    list_display = ('id', 'challenge', 'url', 'writer', 'description')
     list_filter = ('challenge',)
     search_fields = ('challenge__title', 'url', 'description')

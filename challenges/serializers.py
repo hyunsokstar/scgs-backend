@@ -5,7 +5,8 @@ from .models import (
     EvaluationResult,
     ChallengeResult,
     ChallengeComment,
-    ChallengeRef
+    ChallengeRef,
+    ChallengerRef
 )
 from users.serializers import UserProfileImageSerializer
 from django.db.models import Q
@@ -114,6 +115,17 @@ class EvaluationResultSerializer(serializers.ModelSerializer):
         fields = ('id', 'challenger',
                   'evaluate_criteria_description', 'result')
 
+
+class SerializerForChallengerRef(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+    class Meta:
+        model = ChallengerRef
+        fields = (
+            'id',
+            'writer',
+            'url',
+            'description'
+        )
 
 class SerializerForChallengeRef(serializers.ModelSerializer):
     class Meta:

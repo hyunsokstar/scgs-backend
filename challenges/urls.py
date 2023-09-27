@@ -6,6 +6,8 @@ urlpatterns = [
     path('', views.ListViewForChallenge.as_view()),
     path('<int:challengeId>/challenge-ref/list',
          views.ListViewForChallengeRef.as_view()),
+    path('<int:challengeId>/challenger-ref/list',
+         views.ListViewForChallengerRef.as_view()),
 
     # create view
     path('create', views.CreateViewForChallenge.as_view()),

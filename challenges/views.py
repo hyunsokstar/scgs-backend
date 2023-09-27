@@ -27,11 +27,13 @@ from .models import (
     EvaluationCriteria,
     EvaluationResult,
     ChallengeResult,
-    ChallengeComment
+    ChallengeComment,
+    ChallengerRef
 )
 
 from .serializers import (
     SerializerForChallengeRef,
+    SerializerForChallengerRef,
     SerializerForChallenges,
     SerializerForCreateChallenge,
     SerializerForChallengeDetail,
@@ -39,8 +41,36 @@ from .serializers import (
 )
 
 # 1122
+class ListViewForChallengerRef(APIView):
+    def get(self, request, challengeId):
+        try:
+            # 주어진 challengeId에 해당하는 Challenge 조회
+            challenge = Challenge.objects.get(id=challengeId)
+
+            # ChallengeRef 목록 조회
+            challenge_refs = ChallengerRef.objects.filter(challenge=challenge)
+
+            # 시리얼라이즈
+            serializer = SerializerForChallengerRef(challenge_refs, many=True)
+
+            # 응답 데이터 구성
+            response_data = {
+                # "challenge": SerializerForChallenges(challenge).data,
+                "challengerRefList": serializer.data
+            }
+
+            return Response(response_data, status=HTTP_200_OK)
+
+        except Challenge.DoesNotExist:
+            # 주어진 challengeId에 해당하는 Challenge가 존재하지 않는 경우
+            return Response({"error": "Challenge not found"}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 발생 시
+            return Response({"error": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class DeleteViewForChallengeRef(APIView):
-    def delete(self, request, challengeRefId):
+    def delete(self, request, challengeId):
         if not request.user.is_authenticated:
             return Response(
                 {"message": "로그인 안한 유저는 삭제할 수 없습니다."},
@@ -48,13 +78,13 @@ class DeleteViewForChallengeRef(APIView):
             )
 
         try:
-            challenge_ref = ChallengeRef.objects.get(id=challengeRefId)
+            challenge_ref = ChallengeRef.objects.get(id=challengeId)
             # Assuming ChallengeRef has a 'title' field
-            challenge_ref_description = challenge_ref.description
+            challenge_title = challenge_ref.title
 
             challenge_ref.delete()
 
-            message = f'{challenge_ref_description} 삭제 성공!'
+            message = f'{challenge_title} 삭제 성공!'
 
             return Response({"message": message}, status=HTTP_204_NO_CONTENT)
         except ChallengeRef.DoesNotExist:
