@@ -39,6 +39,31 @@ from .serializers import (
 )
 
 # 1122
+class DeleteViewForChallengeRef(APIView):
+    def delete(self, request, challengeRefId):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 삭제할 수 없습니다."},
+                status=HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            challenge_ref = ChallengeRef.objects.get(id=challengeRefId)
+            # Assuming ChallengeRef has a 'title' field
+            challenge_ref_description = challenge_ref.description
+
+            challenge_ref.delete()
+
+            message = f'{challenge_ref_description} 삭제 성공!'
+
+            return Response({"message": message}, status=HTTP_204_NO_CONTENT)
+        except ChallengeRef.DoesNotExist:
+            return Response(
+                {"message": "해당하는 ChallengeRef를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND
+            )
+
+
 class CreateViewForChallengeRef(APIView):
 
     def post(self, request, challengeId):
@@ -51,7 +76,7 @@ class CreateViewForChallengeRef(APIView):
         try:
             challenge = Challenge.objects.get(id=challengeId)
 
-            # challenge.writer 와 request.user 즉 로그인 유저가 다르면 
+            # challenge.writer 와 request.user 즉 로그인 유저가 다르면
             # message challenge.writer.username 님만 ref 를 추가 가능합니다 응답
             if challenge.writer != request.user:
                 return Response(
@@ -86,6 +111,8 @@ class CreateViewForChallengeRef(APIView):
             )
 
 # UpdateViewForChallengeRef
+
+
 class UpdateViewForChallengeRef(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 

@@ -36,6 +36,9 @@ urlpatterns = [
     path('<int:challengeId>/delete',
          views.DeleteViewForChallenge.as_view()),
 
+    path('challenge-ref/<int:challengeRefId>/delete',
+         views.DeleteViewForChallengeRef.as_view()),
+
     # update view
     path('<int:challengeId>/update/evaluate-result',
          views.UpdateViewForEvaluateResultForChallenge.as_view()),
