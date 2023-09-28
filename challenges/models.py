@@ -44,7 +44,7 @@ class ChallengerRef(models.Model):
     challenge = models.ForeignKey(
         Challenge,
         on_delete=models.CASCADE,
-        related_name="challenger_refs"
+        related_name="challenger_ref"
     )
 
     writer = models.ForeignKey(
@@ -142,7 +142,10 @@ class ChallengeResult(models.Model):
 
     github_url1 = models.URLField(blank=True, null=True)  # github_url1 필드
     github_url2 = models.URLField(blank=True, null=True)  # github_url2 필드
-    note_url = models.URLField(blank=True, null=True)  # note_url 필드
+    github_url3 = models.URLField(blank=True, null=True)  # github_url2 필드
+    note_url1 = models.URLField(blank=True, null=True)  # note_url 필드
+    note_url2 = models.URLField(blank=True, null=True)  # note_url 필드
+    note_url3 = models.URLField(blank=True, null=True)  # note_url 필드
 
     @property
     def created_at_formatted(self):

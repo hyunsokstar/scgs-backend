@@ -58,7 +58,10 @@ class ChallengeResultSerializer(serializers.ModelSerializer):
             'created_at_formatted',
             'github_url1',
             'github_url2',
-            'note_url',
+            'github_url3',
+            'note_url1',
+            'note_url2',
+            'note_url3',
         )
 
     def get_created_at_formatted(self, obj):

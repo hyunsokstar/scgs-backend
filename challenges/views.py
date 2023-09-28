@@ -41,6 +41,123 @@ from .serializers import (
 )
 
 # 1122
+
+
+class DeleteViewForChallengerRef(APIView):
+    def delete(self, request, challengerRefId):
+        print("challengerRefId : ", challengerRefId)
+
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 삭제할 수 없습니다."},
+                status=HTTP_401_UNAUTHORIZED
+            )
+        try:
+            challenger_ref = ChallengerRef.objects.get(id=challengerRefId)
+            # todo
+            if challenger_ref.writer != request.user:
+                message = f"Only {challenger_ref.challenge.writer.username} can delete this challenger ref."
+                return Response({"message": message},
+                                status=HTTP_400_BAD_REQUEST)
+
+            # Assuming ChallengeRef has a 'title' field
+            challenge_ref_description = challenger_ref.description
+
+            challenger_ref.delete()
+
+            message = f'{challenge_ref_description} 삭제 성공!'
+
+            return Response({"message": message}, status=HTTP_204_NO_CONTENT)
+        except ChallengerRef.DoesNotExist:
+            return Response(
+                {"message": "해당하는 Challenger Ref를 찾을 수 없습니다."}
+                    ,status=HTTP_404_NOT_FOUND)
+
+# UpdateViewForChallengerRef
+
+
+class UpdateViewForChallengerRef(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, challengerRefId):
+        try:
+            return ChallengerRef.objects.get(id=challengerRefId)
+        except ChallengerRef.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, challengerRefId):
+        # todo
+        # challenge.writer 와 request.user 가 다를 경ㅇ우
+        # challenge.writer 님만 수정 가능 합니다. 메세지 응답
+
+        challenger_ref = self.get_object(challengerRefId)  # 개별 유저 가져 오기
+
+        if challenger_ref.writer != request.user:
+            return Response(
+                {"message": f"Only {challenger_ref.challenge.writer.username} can update this challenger ref."},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # 요청 데이터에서 이미지 가져오기
+        urlText = request.data.get("urlText")
+        descriptionText = request.data.get("descriptionText")
+
+        print("challengerRefId:", challengerRefId)
+        print("urlTet:", urlText)
+        print("descriptionText:", descriptionText)
+
+        try:
+            # 이미지 업데이트
+            challenger_ref.url = urlText
+            challenger_ref.description = descriptionText
+            challenger_ref.save()
+
+            # 업데이트 성공 응답
+            return Response({"message": "challenger ref is updated"}, status=HTTP_200_OK)
+        except Exception as e:
+            # 예외 처리: 데이터베이스 작업 중 오류가 발생한 경우
+            return Response({"message": f"An error occurred: {str(e)}"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CreateViewForChallengerRef(APIView):
+    def post(self, request, challengeId):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인 안한 유저는 challenger ref 생성 못해요 !"},
+                status=HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            challenge = Challenge.objects.get(id=challengeId)
+
+            # 댓글 생성
+            urlText = request.data.get("urlText")
+            descriptionText = request.data.get("descriptionText")
+
+            if urlText and descriptionText:
+                ChallengerRef.objects.create(
+                    challenge=challenge,
+                    url=urlText,
+                    writer=request.user,
+                    description=descriptionText,
+                )
+                return Response(
+                    {"message": "ChallengerRef is Successfully Created"},
+                    status=HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {"message": "댓글 텍스트가 비어 있습니다."},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
+        except Challenge.DoesNotExist:
+            return Response(
+                {"message": "해당하는 Challenge를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND
+            )
+
+
 class ListViewForChallengerRef(APIView):
     def get(self, request, challengeId):
         try:
@@ -141,6 +258,8 @@ class CreateViewForChallengeRef(APIView):
             )
 
 # UpdateViewForChallengeRef
+
+# UpdateViewForChallengerRef
 
 
 class UpdateViewForChallengeRef(APIView):
@@ -305,12 +424,18 @@ class UpdateViewForChallengeResultMetaInfo(APIView):
             # 요청에서 전달된 데이터 가져오기
             github_url1 = request.data.get("github_url1")
             github_url2 = request.data.get("github_url2")
-            note_url = request.data.get("note_url")
+            github_url3 = request.data.get("github_url3")
+            note_url1 = request.data.get("note_url1")
+            note_url2 = request.data.get("note_url2")
+            note_url3 = request.data.get("note_url3")
 
             # 받은 데이터로 필드를 업데이트
             challenge_result.github_url1 = github_url1
             challenge_result.github_url2 = github_url2
-            challenge_result.note_url = note_url
+            challenge_result.github_url3 = github_url3
+            challenge_result.note_url1 = note_url1
+            challenge_result.note_url2 = note_url2
+            challenge_result.note_url3 = note_url3
 
             # 변경사항 저장
             challenge_result.save()

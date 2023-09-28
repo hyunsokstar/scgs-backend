@@ -14,9 +14,11 @@ urlpatterns = [
     # ${challengeId}/challenge-comment/create
     path('<int:challengeId>/challenge-comment/create',
          views.CreateViewForCommentForChallenge.as_view()),
-     # ${challengeId}/challenge-ref/create
+    # ${challengeId}/challenge-ref/create
     path('<int:challengeId>/challenge-ref/create',
          views.CreateViewForChallengeRef.as_view()),
+    path('<int:challengeId>/challenger-ref/create',
+         views.CreateViewForChallengerRef.as_view()),
 
     # register view
     path('<int:challengeId>/register', views.ReigsterViewForChallenge.as_view()),
@@ -40,6 +42,8 @@ urlpatterns = [
 
     path('challenge-ref/<int:challengeRefId>/delete',
          views.DeleteViewForChallengeRef.as_view()),
+    path('challenger-ref/<int:challengerRefId>/delete',
+         views.DeleteViewForChallengerRef.as_view()),
 
     # update view
     path('<int:challengeId>/update/evaluate-result',
@@ -48,9 +52,11 @@ urlpatterns = [
          views.UpdateViewForChallenge.as_view()),
     path('<int:challengeId>/update/main_image',
          views.UpdateViewForChallengeMainImage.as_view()),
-     #  `/challenge-ref/${challengeRefId}/update`,
+    #  `/challenge-ref/${challengeRefId}/update`,
     path('challenge-ref/<int:challengeRefId>/update',
          views.UpdateViewForChallengeRef.as_view()),
+    path('challenger-ref/<int:challengerRefId>/update',
+         views.UpdateViewForChallengerRef.as_view()),
 
     # challenge resut meta info update
     path('challenge-result/<int:challengeResultId>/update',
