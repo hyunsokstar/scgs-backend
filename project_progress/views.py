@@ -53,6 +53,17 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
+class DeleteCompletedTasksForChecked(APIView):
+    def delete(self, request):
+        selected_buttons_data = request.data  # [1, 2, 3, 5]
+        print("selected_buttons_data : ", selected_buttons_data)
+
+        deleted_count = ProjectProgress.objects.filter(
+            pk__in=selected_buttons_data).delete()[0]
+
+        return Response({
+            'message': f'{deleted_count} StudyNoteContent instances deleted.'
+        })
 
 # class UpdateViewForTaskDueDateForDueDateOption(APIView):
 #     def put(self, request, pk):
@@ -1386,7 +1397,7 @@ class UpdateViewForTaskDueDateForChecked(APIView):
         message = f"{updated_count} ProjectProgress instances updated." if updated_count > 0 else "No ProjectProgress instances updated."
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
 
-
+# DeleteCompletedTasksForChecked
 class DeleteTasksForChecked(APIView):
     def delete(self, request):
         selected_buttons_data = request.data  # [1, 2, 3, 5]

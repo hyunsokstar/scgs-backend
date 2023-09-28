@@ -4,7 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
-    path("<int:pk>/update-due-date-by-due-date-option", views.UpdateViewForTaskDueDateForDueDateOption.as_view()),
+    path("<int:pk>/update-due-date-by-due-date-option",
+         views.UpdateViewForTaskDueDateForDueDateOption.as_view()),
 
     path("comment/<int:commentPk>/edit-mode/update",
          views.UpdateViewForCommentEdit.as_view()),
@@ -50,6 +51,10 @@ urlpatterns = [
     path('delete-for-checked', views.DeleteTasksForChecked.as_view(),
          name='project_progress'),
 
+    # 0928 checkrow 삭제 뷰 추가
+    path('delete-complted-tasks-for-chkeck', views.DeleteCompletedTasksForChecked.as_view(),
+         name='project_progress'),
+
     path('task-statics', views.TaskStaticsIView.as_view()),
     path('<int:userPk>/daily-task-count',
          views.TaskStaticsIViewForPersnalUser.as_view()),
@@ -60,7 +65,7 @@ urlpatterns = [
     path("tasks-with-cash-prize", views.TasksWithCashPrize.as_view(),
          name="completed_task_list"),
 
-    # 참고 
+    # 참고
     path("uncompleted", views.UncompletedTaskListView.as_view(),
          name="completed_task_list"),
 
@@ -123,7 +128,8 @@ urlpatterns = [
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
     # extra task detail
     path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
-    path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status', views.UpdateViewForExtraTaskProgressStatus.as_view()),
+    path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status',
+         views.UpdateViewForExtraTaskProgressStatus.as_view()),
     path('extra-task/<int:commentPk>/update-edit-mode',
          views.UpdateEditModeForCommentForExtraTask.as_view(), name='extra_tasks'),
     path("extra-task/<int:taskPk>/comment",
@@ -137,7 +143,7 @@ urlpatterns = [
          views.UpateViewForTesterForExtraTask.as_view()),
     path("TestForExtraTask/<int:testPk>/delete",
          views.DeleteViewForTestForExtraTask.as_view()),
-#     path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view()),
+    #     path("<int:taskPk>/TestForTasks", views.TestForTasks.as_view()),
 
     path("ExtraTask/<int:taskPk>/add-test-for-extra-task",
          views.CreateViewForTestForExtraTask.as_view()),
