@@ -67,7 +67,7 @@ urlpatterns = [
 
     # 참고
     path("uncompleted", views.UncompletedTaskListView.as_view(),
-         name="completed_task_list"),
+         name="uncompleted_task_list"),
 
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(),
          name="uncompleted_task_list_for_me"),

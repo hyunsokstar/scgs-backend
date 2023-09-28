@@ -73,7 +73,6 @@ class DeleteCompletedTasksForChecked(APIView):
 #         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분
 #         # until-morning 일 경우 pk에 해당하는  ProjectProgress.due_date 를 23시 59분
 
-
 class UpdateViewForTaskDueDateForOneTask(APIView):
     def put(self, request):
         # duration_option 값을 가져옵니다.
@@ -2513,13 +2512,18 @@ class UncompletedTaskListView(APIView):
             self.uncompleted_project_task_list_for_current_page, many=True)
 
         if self.user_for_search == "":
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
             count_for_ready = self.all_uncompleted_project_task_list.filter(
                 in_progress=False).count()
             count_for_in_progress = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=False, task_completed=False).count()
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False).count()
+            count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
+                due_date__lt=current_datetime, task_completed=False).count()           
+
         else:
+            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
             serializer = ProjectProgressListSerializer(
                 self.uncompleted_project_task_list_for_current_page, many=True)
             count_for_ready = self.all_uncompleted_project_task_list.filter(
@@ -2528,6 +2532,8 @@ class UncompletedTaskListView(APIView):
                 in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
+            count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
+                due_date__lt=current_datetime, task_completed=False).count()
 
         print("is_task_due_date_has_passed ::::::::::::::: ",
               is_task_due_date_has_passed)
@@ -2586,6 +2592,7 @@ class UncompletedTaskListView(APIView):
             "count_for_ready": count_for_ready,
             "count_for_in_progress": count_for_in_progress,
             "count_for_in_testing": count_for_in_testing,
+            "count_for_duedate_passed": count_for_duedate_passed,
             "totalPageCount": self.totalCountForTask,
             "task_number_for_one_page": self.task_number_for_one_page,
             "total_task_count_for_today": total_task_count_for_today,
