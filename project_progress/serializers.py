@@ -660,19 +660,28 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 
     def get_d_day_count(self, obj):
         # 현재 시간을 현지 시간으로 설정
-        local_time = timezone.localtime(timezone.now()).date()
+        local_time = timezone.localtime(timezone.now())
+        print("local_time : ", local_time)
 
         # obj.due_date를 현지 시간으로 변환하여 현재 시간과 비교
-        obj_local_time = timezone.localtime(obj.due_date).date()
+        obj_local_time = timezone.localtime(obj.due_date)
+        print("obj_local_time : ", obj_local_time)
 
         if obj_local_time > local_time:
             # D-day까지 남은 일 수 계산
             d_day = obj_local_time - local_time
-            return d_day.days
+            return f"- {d_day.days}일"
         else:
             # 이미 D-day가 지났거나 오늘인 경우
-            return ""
+            over_time = local_time - obj_local_time
+            over_time_seconds = int(over_time.total_seconds())  # 초로 변환
+            # 일, 시간, 분 계산
+            days = over_time_seconds // (24 * 3600)
+            hours = (over_time_seconds % (24 * 3600)) // 3600
+            minutes = (over_time_seconds % 3600) // 60
 
+            # 결과 반환
+            return f"+ {days}일 {hours}시간 {minutes}분"
 
 def get_current_time_in_seoul():
     seoul_tz = pytz.timezone('Asia/Seoul')

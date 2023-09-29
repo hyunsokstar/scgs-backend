@@ -53,6 +53,8 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
+
+
 class DeleteCompletedTasksForChecked(APIView):
     def delete(self, request):
         selected_buttons_data = request.data  # [1, 2, 3, 5]
@@ -72,6 +74,7 @@ class DeleteCompletedTasksForChecked(APIView):
 #         # until-noon 일 경우 pk에 해당하는 ProjectProgress.due_date 를 12시 59분
 #         # until-evening 일 경우 pk에 해당하는  ProjectProgress.due_date 를 18시 59분
 #         # until-morning 일 경우 pk에 해당하는  ProjectProgress.due_date 를 23시 59분
+
 
 class UpdateViewForTaskDueDateForOneTask(APIView):
     def put(self, request):
@@ -1397,6 +1400,8 @@ class UpdateViewForTaskDueDateForChecked(APIView):
         return Response({'message': message}, status=HTTP_204_NO_CONTENT)
 
 # DeleteCompletedTasksForChecked
+
+
 class DeleteTasksForChecked(APIView):
     def delete(self, request):
         selected_buttons_data = request.data  # [1, 2, 3, 5]
@@ -2306,7 +2311,7 @@ class UncompletedTaskListViewForMe(APIView):
 
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
-    task_number_for_one_page = 5  # 1 페이지에 몇개씩
+    task_number_for_one_page = 20  # 1 페이지에 몇개씩
     all_uncompleted_project_task_list = []
     completed_project_task_list_for_current_page = []
     user_for_search = ""
@@ -2520,7 +2525,7 @@ class UncompletedTaskListView(APIView):
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False).count()
             count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
-                due_date__lt=current_datetime, task_completed=False).count()           
+                due_date__lt=current_datetime, task_completed=False).count()
 
         else:
             current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
@@ -2537,7 +2542,7 @@ class UncompletedTaskListView(APIView):
 
         print("is_task_due_date_has_passed ::::::::::::::: ",
               is_task_due_date_has_passed)
-        
+
         if is_task_due_date_has_passed == "true":
             current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
 
@@ -2568,7 +2573,6 @@ class UncompletedTaskListView(APIView):
             datetime.combine(date.today(), time.min))
         today_end = timezone.localize(datetime.combine(date.today(), time.max))
 
-        
         total_task_count_for_today = ProjectProgress.objects.filter(
             due_date__range=(today_start, today_end)).count()
 
@@ -2584,7 +2588,7 @@ class UncompletedTaskListView(APIView):
 
         current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
         task_count_for_due_date_passed = self.all_uncompleted_project_task_list.filter(
-            due_date__lt=current_datetime, due_date__isnull=False).count()        
+            due_date__lt=current_datetime, due_date__isnull=False).count()
 
         response_data = {
             "writers_info": writers_info,
@@ -2598,7 +2602,7 @@ class UncompletedTaskListView(APIView):
             "total_task_count_for_today": total_task_count_for_today,
             "completed_task_count_for_today": completed_task_count_for_today,
             "achievement_rate_for_today": achievement_rate_for_today,
-            "task_count_for_due_date_passed":task_count_for_due_date_passed
+            "task_count_for_due_date_passed": task_count_for_due_date_passed
         }
 
         return Response(response_data, status=HTTP_200_OK)
