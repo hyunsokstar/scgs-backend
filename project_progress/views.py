@@ -3257,7 +3257,16 @@ class UpdateProjectTaskDueDate(APIView):
         print("put 요청 확인")
 
         # request body 에서 star_count 가져 오기
-        due_date = request.data.get("due_date")
+        due_date_str = request.data.get("due_date")
+        print("due_date ::::::::: ", due_date_str)
+
+        # 문자열을 datetime 객체로 변환하고 시간대 정보 추가
+        try:
+            due_date = datetime.strptime(due_date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+            # 시간대 정보 추가
+            due_date = pytz.timezone('UTC').localize(due_date)
+        except ValueError as e:
+            return Response({"error": "잘못된 날짜 형식입니다."}, status=HTTP_400_BAD_REQUEST)
 
         # 해당 행 찾기
         project_task = self.get_object(pk)
