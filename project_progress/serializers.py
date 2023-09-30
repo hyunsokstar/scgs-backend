@@ -27,6 +27,7 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
+
 class CompletedTaskSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -90,12 +91,14 @@ class CompletedTaskSerializer(serializers.ModelSerializer):
 
     def get_time_left_to_due_date(self, obj):
         return obj.time_left_to_due_date()
+
     def get_is_for_today(self, obj):
         # 현재 시간을 현지 시간으로 설정
         local_time = timezone.localtime(timezone.now()).date()
 
         # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
         return obj.completed_at.date() == local_time
+
 
 class CreateCommentSerializerForExtraTask(ModelSerializer):
 
@@ -422,6 +425,29 @@ class TaskCommentSerializer(serializers.ModelSerializer):
 
 # 1122 0611
 
+class SerializerForTaskListForSelectTargetForIntergration(serializers.ModelSerializer):
+    task_manager = UserProfileImageSerializer()
+    is_for_today = serializers.SerializerMethodField()    
+
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "id",
+            "task_manager",
+            "writer",
+            "task",
+            "task_manager",
+            "current_status",
+            "is_for_today"
+        )
+
+    def get_is_for_today(self, obj):
+        # 현재 시간을 현지 시간으로 설정
+        local_time = timezone.localtime(timezone.now()).date()
+
+        # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
+        return obj.due_date.date() == local_time        
+
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
@@ -573,6 +599,8 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
         return obj.time_left_to_due_date()
 
 # fix 0705
+
+
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -648,7 +676,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 
         # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
         return obj.due_date.date() == local_time
-    
+
     def get_is_due_date_has_passed(self, obj):
         # 현재 시간을 현지 시간으로 설정
         local_time = timezone.localtime(timezone.now())
@@ -682,6 +710,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 
             # 결과 반환
             return f"+ {days}일 {hours}시간 {minutes}분"
+
 
 def get_current_time_in_seoul():
     seoul_tz = pytz.timezone('Asia/Seoul')

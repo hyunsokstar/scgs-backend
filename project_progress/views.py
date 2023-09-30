@@ -18,6 +18,7 @@ from project_progress.serializers import (
     ExtraTasksSerializer,
     ProjectProgressDetailSerializer,
     ProjectProgressListSerializer,
+    SerializerForTaskListForSelectTargetForIntergration,
     SerializerForUncompletedTaskDetailListForChecked,
     TaskSerializerForToday,
     TaskUrlForExtraTaskSerializer,
@@ -53,6 +54,40 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
+# ListViewForGetTaskListForTaskIntegration
+class ListViewForGetTaskListForTaskIntegration(APIView):
+    listForTask = []
+    perPage = 2
+    totalCountForTaskList = 0
+
+    def get(self, request):
+        pageNum = request.query_params.get("pageNum", 1)
+        pageNum = int(pageNum)
+
+        list_for_task = ProjectProgress.objects.all().order_by('-created_at')
+        # step1 클래스 변수에 리스트 정보 담기
+        self.listForTask = list_for_task
+        # step2 클래스 변수에 리스트 총 개수 담기
+        self.totalCountForTaskList = self.listForTask.count()
+        # step3 특정 페이지에 대한 리스트 정보 클래스 변수에 담기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.listForTask = self.listForTask[start:end]
+
+        # step4 클래스 변수에 담긴 리스트 정보 직렬화 하기
+        serializer = SerializerForTaskListForSelectTargetForIntergration(
+            self.listForTask, many=True)
+
+        # step5 응답할 페이지 네이션 관련 리스트 정보 딕셔너리로 선언 하기
+        response_data = {
+            "listForTask": serializer.data,
+            "totalCountForTaskList": self.totalCountForTaskList,
+            "perPage": self.perPage,
+        }        
+
+        # step6 step5에서 선언한 페이지 네이션 데이터 응답하도록 수정
+        # return Response(serializer.data, status=HTTP_200_OK)
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class DeleteCompletedTasksForChecked(APIView):

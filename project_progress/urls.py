@@ -4,9 +4,13 @@ from . import views
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+
+    #     listview
+    path("getTaskListForTaskIntegration",
+         views.ListViewForGetTaskListForTaskIntegration.as_view()),
+
     path("<int:pk>/update-due-date-by-due-date-option",
          views.UpdateViewForTaskDueDateForDueDateOption.as_view()),
-
     path("comment/<int:commentPk>/edit-mode/update",
          views.UpdateViewForCommentEdit.as_view()),
     path("comment/<int:commentPk>/comment/update",
@@ -86,7 +90,6 @@ urlpatterns = [
     path("<int:pk>/check_for_cash_prize/update",
          views.UpdateCheckForCashPrize.as_view()),
 
-
     path("<int:pk>/score-update-by-tester",
          views.UpdateScoreByTesterView.as_view()),
 
@@ -148,4 +151,3 @@ urlpatterns = [
     path("ExtraTask/<int:taskPk>/add-test-for-extra-task",
          views.CreateViewForTestForExtraTask.as_view()),
 ]
-# project_progress/extra-task/comment/${commentPk}/delete

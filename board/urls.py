@@ -3,7 +3,6 @@ from . import views  # board 앱의 views.py를 import
 
 urlpatterns = [
     # 여기에 board 앱의 URL 패턴을 추가합니다.
-
     # list view
     path('suggestion', views.ListViewForSuggestion.as_view()),
     path('faq-board', views.ListViewForFaqBoard.as_view()),
