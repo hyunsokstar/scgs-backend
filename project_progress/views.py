@@ -3,7 +3,14 @@ import math
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_403_FORBIDDEN,
+    HTTP_401_UNAUTHORIZED
+)
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
@@ -56,6 +63,8 @@ from django.shortcuts import get_object_or_404
 
 # 1122
 # DetailViewForTargetTaskForTaskIntegration
+
+
 class DetailViewForTargetTaskForTaskIntegration(APIView):
     def get_object(self, taskId):
         try:
@@ -106,12 +115,6 @@ class DetailViewForTargetTaskForTaskIntegration(APIView):
             ParseError("serializer is not valid: {}".format(serializer.errors))
             print(error_message)
 
-    def delete(self, request, pk):
-        print("삭제 요청 확인")
-        project_task = self.get_object(pk)
-        project_task.delete()
-        return Response(status=HTTP_204_NO_CONTENT)
-
 
 class ListViewForGetTaskListForTaskIntegration(APIView):
     listForTask = []
@@ -124,10 +127,11 @@ class ListViewForGetTaskListForTaskIntegration(APIView):
         checkedRowPks = request.query_params.getlist("checkedRowPks[]")
         checkedRowPks = [int(pk) for pk in checkedRowPks]
 
-        print("params: " ,request.query_params)
+        print("params: ", request.query_params)
 
         # list_for_task = ProjectProgress.objects.all().order_by('-created_at')
-        list_for_task = ProjectProgress.objects.exclude(id__in=checkedRowPks).order_by('-created_at')
+        list_for_task = ProjectProgress.objects.exclude(
+            id__in=checkedRowPks).order_by('-created_at')
         print("list_for_task : ", list_for_task)
 
         # step1 클래스 변수에 리스트 정보 담기
@@ -148,7 +152,7 @@ class ListViewForGetTaskListForTaskIntegration(APIView):
             "listForTask": serializer.data,
             "totalCountForTaskList": self.totalCountForTaskList,
             "perPage": self.perPage,
-        }        
+        }
 
         # step6 step5에서 선언한 페이지 네이션 데이터 응답하도록 수정
         # return Response(serializer.data, status=HTTP_200_OK)
@@ -2058,6 +2062,11 @@ class ExtraTasks(APIView):
 
         return Response(result_data, status=HTTP_200_OK)
 
+# ready = ("ready", "준비")
+# in_progress = ("in_progress", "작업중")
+# testing = ("testing", "테스트중")
+# completed = ("completed", "완료")
+
 
 class UpdateViewForExtraTaskProgressStatus(APIView):
     def get_object(self, pk):
@@ -2069,8 +2078,22 @@ class UpdateViewForExtraTaskProgressStatus(APIView):
 
     def put(self, request, pk):
         print("request.data : ", request.data)
+        status_for_update = request.data.get('task_status')
+
         extra_task = self.get_object(pk)
-        extra_task.task_status = request.data.get('task_status')
+        extra_task.task_status = status_for_update
+
+        if (status_for_update == "in_progress"):
+            extra_task.started_at = timezone.now()
+        elif (status_for_update == "ready"):
+            extra_task.started_at = None
+
+        if (status_for_update == "completed"):
+            if(extra_task.started_at == None):
+                extra_task.started_at = timezone.now()
+            extra_task.completed_at = timezone.now()
+        else:
+            extra_task.completed_at = None
 
         try:
             extra_task.save()
@@ -2090,6 +2113,22 @@ class ExtraTaskDetail(APIView):
             return ExtraTask.objects.get(pk=pk)
         except ProjectProgress.DoesNotExist:
             raise NotFound
+
+    def delete(self, request, pk):
+        print("delete request check !!")
+        extra_task = self.get_object(pk)
+
+        # TODO: 로그인 안했으면 로그인 유저만 삭제 가능 메세지와 함께 response
+        if not request.user.is_authenticated:
+            return Response({"message": "로그인이 필요합니다."}, status=HTTP_401_UNAUTHORIZED)
+
+        # TODO: extra_task.task_manager와 request.user가 같지 않으면 삭제 권한 없음 메세지와 함께 response
+        if extra_task.task_manager != request.user:
+            return Response({"message": "삭제 권한이 없습니다."}, status=HTTP_403_FORBIDDEN)
+
+        # extra_task가 존재할 경우 삭제하고 삭제 완료 메시지와 함께 response
+        extra_task.delete()
+        return Response({"message": "부가 업무를 삭제하였습니다."}, status=HTTP_204_NO_CONTENT)
 
     def get(self, request, pk):
         extra_task = self.get_object(pk)
