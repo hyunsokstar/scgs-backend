@@ -435,6 +435,10 @@ class ExtraTask(models.Model):
     )
 
     task = models.TextField(default="", blank=True, null=True)
+    
+    task_description = models.TextField(
+        max_length=300, blank=True, null=True, default="")
+
     # fix 0530
     task_url1 = models.TextField(null=True, blank=True)
     task_url2 = models.TextField(null=True, blank=True)

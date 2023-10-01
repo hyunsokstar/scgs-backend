@@ -3,14 +3,21 @@ from . import views
 
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
-    path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
-#     detail view
-    path("target-task/<int:taskId>", views.DetailViewForTargetTaskForTaskIntegration.as_view()),
-
-    #     listview
+    # listview
     path("getTaskListForTaskIntegration",
          views.ListViewForGetTaskListForTaskIntegration.as_view()),
+    path("extra-task/list", views.ListViewForExtraTask.as_view()),
+
+    path("<int:pk>", views.ProjectProgressDetailView.as_view()),
+
+    # detail view
+    path("target-task/<int:taskId>",
+         views.DetailViewForTargetTaskForTaskIntegration.as_view()),
+    # update view
+    path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status',
+         views.UpdateViewForExtraTaskProgressStatus.as_view()),
+    path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
 
     path("<int:pk>/update-due-date-by-due-date-option",
          views.UpdateViewForTaskDueDateForDueDateOption.as_view()),
@@ -132,10 +139,7 @@ urlpatterns = [
     path("TestForExtraTask/<int:testPk>/update-test-passed",
          views.UpdateViewForTestPassedForExtraTask.as_view()),
     path('extra_tasks', views.ExtraTasks.as_view(), name='extra_tasks'),
-    # extra task detail
-    path('extra_tasks/<int:pk>', views.ExtraTaskDetail.as_view(), name='extra_tasks'),
-    path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status',
-         views.UpdateViewForExtraTaskProgressStatus.as_view()),
+
     path('extra-task/<int:commentPk>/update-edit-mode',
          views.UpdateEditModeForCommentForExtraTask.as_view(), name='extra_tasks'),
     path("extra-task/<int:taskPk>/comment",

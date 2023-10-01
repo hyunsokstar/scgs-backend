@@ -9,7 +9,8 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_403_FORBIDDEN,
-    HTTP_401_UNAUTHORIZED
+    HTTP_401_UNAUTHORIZED,
+    HTTP_500_INTERNAL_SERVER_ERROR
 )
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
@@ -35,7 +36,8 @@ from project_progress.serializers import (
     TaskLogSerializer,
     CreateTestSerializerForExtraTask,
     CompletedTaskSerializer,
-    TargetTaskSerializer
+    TargetTaskSerializer,
+    SerializerForAllExtraTaskList
 )
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -63,7 +65,15 @@ from django.shortcuts import get_object_or_404
 
 # 1122
 # DetailViewForTargetTaskForTaskIntegration
-
+# ListViewForExtraTask
+class ListViewForExtraTask(APIView):
+    def get(self, request):
+        try:
+            extra_tasks = ExtraTask.objects.all()
+            serializer = SerializerForAllExtraTaskList(extra_tasks, many=True)
+            return Response(serializer.data, status=HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 class DetailViewForTargetTaskForTaskIntegration(APIView):
     def get_object(self, taskId):
@@ -118,7 +128,7 @@ class DetailViewForTargetTaskForTaskIntegration(APIView):
 
 class ListViewForGetTaskListForTaskIntegration(APIView):
     listForTask = []
-    perPage = 2
+    perPage = 20
     totalCountForTaskList = 0
 
     def get(self, request):
@@ -2114,6 +2124,13 @@ class ExtraTaskDetail(APIView):
         except ProjectProgress.DoesNotExist:
             raise NotFound
 
+    def get(self, request, pk):
+        extra_task = self.get_object(pk)
+        print("request.data : ", request.data)  # request.data 출력
+
+        serializer = ExtraTasksDetailSerializer(extra_task)
+        return Response(serializer.data, status=HTTP_200_OK)
+
     def delete(self, request, pk):
         print("delete request check !!")
         extra_task = self.get_object(pk)
@@ -2130,29 +2147,21 @@ class ExtraTaskDetail(APIView):
         extra_task.delete()
         return Response({"message": "부가 업무를 삭제하였습니다."}, status=HTTP_204_NO_CONTENT)
 
-    def get(self, request, pk):
-        extra_task = self.get_object(pk)
-        print("request.data : ", request.data)  # request.data 출력
-
-        serializer = ExtraTasksDetailSerializer(extra_task)
-        return Response(serializer.data, status=HTTP_200_OK)
-
     def put(self, request, pk):
-        print("!@#$!@#$!@#$!@#$!@#$!@#$!@#$!@$#!@")
         print("request.data : ", request.data)
         extra_task = self.get_object(pk)
 
         # 업데이트할 필드명과 값을 직접 설정
         task_manager_id = request.data.get('task_manager')
         print("task_manager_id :::::::::::::::::", task_manager_id)
+        print("task_description  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ", request.data.get('task_description'))
 
         task_manager = User.objects.get(pk=task_manager_id)
         extra_task.task_manager = task_manager
 
         extra_task.task = request.data.get('task')
+        extra_task.task_description = request.data.get('task_description')
         extra_task.task_status = request.data.get('task_status')
-        extra_task.task_url1 = request.data.get('task_url1')
-        extra_task.task_url2 = request.data.get('task_url2')
 
         try:
             extra_task.save()

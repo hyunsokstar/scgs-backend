@@ -1,4 +1,10 @@
-# from medias.serializers import ReferImageForTaskSerializer, TestResultImageForTaskSerializer,TestResultImageForExtraTaskSerializer, ReferImageForExtraTaskSerializer
+from rest_framework import serializers
+from requests import Response
+from django.utils import timezone
+from rest_framework.serializers import ModelSerializer
+from datetime import timedelta, datetime
+import pytz
+
 from medias.serializers import (
     ReferImageForTaskSerializer,
     TestResultImageForCompletedTaskSerializer,
@@ -20,12 +26,21 @@ from .models import (
     TestersForTestForExtraTask
 )
 
-from rest_framework import serializers
-from requests import Response
-from django.utils import timezone
-from rest_framework.serializers import ModelSerializer
-from datetime import timedelta, datetime
-import pytz
+# 1122
+
+class SerializerForAllExtraTaskList(serializers.ModelSerializer):
+    class Meta:
+        model = ExtraTask
+        fields = [
+            'id',
+            'original_task',
+            'task_manager',
+            'task',
+            'task_description',
+            'task_status',
+            'importance'
+        ]
+
 
 class CompletedTaskSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
@@ -198,6 +213,7 @@ class ExtraTasksDetailSerializer(ModelSerializer):
             "pk",
             "task_manager",
             "task",
+            "task_description",
             "task_comments",
             "task_images",
             "tests_for_extra_task",
@@ -422,11 +438,12 @@ class TaskCommentSerializer(serializers.ModelSerializer):
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
-# 1122 0611
 # http://127.0.0.1:8000/api/v1/project_progress/getTaskListForTaskIntegration
+
+
 class SerializerForTaskListForSelectTargetForIntergration(serializers.ModelSerializer):
     task_manager = UserProfileImageSerializer()
-    is_for_today = serializers.SerializerMethodField()    
+    is_for_today = serializers.SerializerMethodField()
     extra_tasks = ExtraTasksSerializer(many=True)
 
     class Meta:
@@ -447,7 +464,7 @@ class SerializerForTaskListForSelectTargetForIntergration(serializers.ModelSeria
         local_time = timezone.localtime(timezone.now()).date()
 
         # obj.due_date를 현지 시간으로 변환하여 오늘과 비교
-        return obj.due_date.date() == local_time        
+        return obj.due_date.date() == local_time
 
 
 class ProjectProgressDetailSerializer(serializers.ModelSerializer):
@@ -778,4 +795,3 @@ class TargetTaskSerializer(serializers.ModelSerializer):
             "due_date",
             "extra_tasks",
         )
-   
