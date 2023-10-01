@@ -5,6 +5,9 @@ urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
     path("<int:pk>", views.ProjectProgressDetailView.as_view()),
 
+#     detail view
+    path("target-task/<int:taskId>", views.DetailViewForTargetTaskForTaskIntegration.as_view()),
+
     #     listview
     path("getTaskListForTaskIntegration",
          views.ListViewForGetTaskListForTaskIntegration.as_view()),

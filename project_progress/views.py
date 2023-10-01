@@ -27,7 +27,8 @@ from project_progress.serializers import (
     UncompletedTaskSerializerForCashPrize,
     TaskLogSerializer,
     CreateTestSerializerForExtraTask,
-    CompletedTaskSerializer
+    CompletedTaskSerializer,
+    TargetTaskSerializer
 )
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -54,7 +55,64 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
-# ListViewForGetTaskListForTaskIntegration
+# DetailViewForTargetTaskForTaskIntegration
+class DetailViewForTargetTaskForTaskIntegration(APIView):
+    def get_object(self, taskId):
+        try:
+            return ProjectProgress.objects.get(pk=taskId)
+        except ProjectProgress.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, taskId):
+        print("견적 디테일 페이지 요청 확인 (백엔드) !")
+        print(taskId, type(taskId))
+
+        project_task = self.get_object(taskId)
+        print("project_task : ", project_task)
+        print("project_task.extra_tasks ::::: ", project_task.extra_tasks)
+
+        serializer = TargetTaskSerializer(
+            project_task, context={"request": request})
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        print("put 요청 확인 ")
+        print("request.data", request.data)
+        print("pk : ", pk)
+
+        project_task = self.get_object(pk)
+        print("project_task : ", project_task)
+
+        serializer = TargetTaskSerializer(
+            project_task,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            print("serializer 유효함")
+            try:
+                project_task = serializer.save()
+                serializer = TargetTaskSerializer(project_task)
+                return Response(serializer.data)
+
+            except Exception as e:
+                print("ee : ", e)
+                raise ParseError("project_task not found")
+        else:
+            print("시리얼 라이저가 유효하지 않음")
+            error_message = "serializer is not valid: {}".format(
+                serializer.errors)
+            ParseError("serializer is not valid: {}".format(serializer.errors))
+            print(error_message)
+
+    def delete(self, request, pk):
+        print("삭제 요청 확인")
+        project_task = self.get_object(pk)
+        project_task.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
 class ListViewForGetTaskListForTaskIntegration(APIView):
     listForTask = []
     perPage = 2
@@ -63,8 +121,15 @@ class ListViewForGetTaskListForTaskIntegration(APIView):
     def get(self, request):
         pageNum = request.query_params.get("pageNum", 1)
         pageNum = int(pageNum)
+        checkedRowPks = request.query_params.getlist("checkedRowPks[]")
+        checkedRowPks = [int(pk) for pk in checkedRowPks]
 
-        list_for_task = ProjectProgress.objects.all().order_by('-created_at')
+        print("params: " ,request.query_params)
+
+        # list_for_task = ProjectProgress.objects.all().order_by('-created_at')
+        list_for_task = ProjectProgress.objects.exclude(id__in=checkedRowPks).order_by('-created_at')
+        print("list_for_task : ", list_for_task)
+
         # step1 클래스 변수에 리스트 정보 담기
         self.listForTask = list_for_task
         # step2 클래스 변수에 리스트 총 개수 담기

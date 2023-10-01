@@ -27,7 +27,6 @@ from rest_framework.serializers import ModelSerializer
 from datetime import timedelta, datetime
 import pytz
 
-
 class CompletedTaskSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -424,10 +423,11 @@ class TaskCommentSerializer(serializers.ModelSerializer):
         return obj.created_at_formatted()
 
 # 1122 0611
-
+# http://127.0.0.1:8000/api/v1/project_progress/getTaskListForTaskIntegration
 class SerializerForTaskListForSelectTargetForIntergration(serializers.ModelSerializer):
     task_manager = UserProfileImageSerializer()
     is_for_today = serializers.SerializerMethodField()    
+    extra_tasks = ExtraTasksSerializer(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -438,7 +438,8 @@ class SerializerForTaskListForSelectTargetForIntergration(serializers.ModelSeria
             "task",
             "task_manager",
             "current_status",
-            "is_for_today"
+            "is_for_today",
+            "extra_tasks",
         )
 
     def get_is_for_today(self, obj):
@@ -756,3 +757,25 @@ class CreateProjectProgressSerializer(serializers.ModelSerializer):
                 data['due_date'] = due_date
 
         return super().to_internal_value(data)
+
+
+class TargetTaskSerializer(serializers.ModelSerializer):
+    task_images = ReferImageForTaskSerializer(many=True)
+    extra_tasks = ExtraTasksSerializer(many=True)
+    task_manager = UserProfileImageSerializer()
+    # tests_for_tasks = TestSerializerForOneTask(many=True)
+    # task_comments = TaskCommentSerializer(many=True)
+
+    class Meta:
+        model = ProjectProgress
+        fields = (
+            "id",
+            "task",
+            "task_manager",
+            "importance",
+            "task_completed",
+            "task_images",
+            "due_date",
+            "extra_tasks",
+        )
+   

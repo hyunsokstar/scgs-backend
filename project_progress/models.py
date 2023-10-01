@@ -409,7 +409,8 @@ class TaskUrlForTask(models.Model):
     task_url = models.URLField(null=True, blank=True)
     task_description = models.CharField(max_length=30, default="")
 
-
+# 필수 : 
+# original_task, task_manager, task , task_status, started_at, completed_at, due_date
 class ExtraTask(models.Model):
     class TaskStatusChoices(models.TextChoices):
         ready = ("ready", "준비")
