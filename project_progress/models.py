@@ -480,6 +480,7 @@ class ExtraTask(models.Model):
             return "준비"
 
 
+
 class TaskUrlForExtraTask(models.Model):
     task = models.ForeignKey(
         "project_progress.ExtraTask",

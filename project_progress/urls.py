@@ -17,7 +17,7 @@ urlpatterns = [
 
     # search view
     path('target-tasks-for-intergration/by-search-word',
-         views.SearchViewForTargetTasksForIntergration.as_view()),         
+         views.SearchViewForTargetTasksForIntergration.as_view()),
 
     # update view
     path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status',
@@ -162,4 +162,8 @@ urlpatterns = [
 
     path("ExtraTask/<int:taskPk>/add-test-for-extra-task",
          views.CreateViewForTestForExtraTask.as_view()),
+    # transform
+    # transform/checked-tasks/target-task
+    path("transform/checked-tasks/target-task",
+         views.TransformViewCheckedTasksToTargetTask.as_view())
 ]

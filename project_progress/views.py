@@ -1,4 +1,5 @@
 import calendar
+from django.db import transaction
 import math
 from users.models import User
 from rest_framework.views import APIView
@@ -64,8 +65,42 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
-# SearchViewForTargetTasksForIntergration
+class TransformViewCheckedTasksToTargetTask(APIView):
+    @transaction.atomic
+    def post(self, request):
+        checkedRowPks = request.data.get('checkedRowPks', [])
+        selectedTargetPk = request.data.get('selectedTargetPk', None)
 
+        print("checkedRowPks ::::::::::::::::::::::::::: ", checkedRowPks)
+
+        try:
+            # selectedTargetPk에 해당하는 ProjectProgress 객체를 가져옵니다.
+            selected_project_progress = ProjectProgress.objects.get(pk=selectedTargetPk)
+
+            # 새로운 ExtraTask 생성
+            # target_task = ExtraTask()
+
+            # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져와서 처리합니다.
+            for project_progress_pk in checkedRowPks:
+                project_progress = ProjectProgress.objects.get(pk=project_progress_pk)
+
+                target_task = ExtraTask()
+
+                # ExtraTask로 필드 값을 복사합니다.
+                target_task.original_task = selected_project_progress
+                target_task.task_manager = selected_project_progress.task_manager
+                target_task.task = project_progress.task
+                target_task.task_description = project_progress.task_description
+                target_task.save()
+
+                # ProjectProgress를 삭제합니다.
+                project_progress.delete()
+
+            return Response({'message': '체크한 업무들을 선택한 업무의 기타 업무로 전환 하였습니다.'})
+        except Exception as e:
+            # 예외 메시지를 가져와서 반환합니다.
+            error_message = str(e)
+            return Response({'error': f'전환 중 오류가 발생했습니다: {error_message}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SearchViewForTargetTasksForIntergration(APIView):
 
