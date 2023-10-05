@@ -15,6 +15,7 @@ from rest_framework.status import (
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, time, date
+
 # from project_progress.serializers import CreateCommentSerializerForExtraTask, CreateCommentSerializerForTask, CreateExtraTaskSerializer, CreateProjectProgressSerializer, CreateTestSerializerForOneTask, ExtraTasksDetailSerializer, ExtraTasksSerializer, ProjectProgressDetailSerializer, ProjectProgressListSerializer, TaskSerializerForToday, TaskUrlForExtraTaskSerializer, TaskUrlForTaskSerializer, TestSerializerForOneTask, TestersForTestSerializer, UncompletedTaskSerializerForCashPrize, TaskLogSerializer
 from project_progress.serializers import (
     CreateCommentSerializerForExtraTask,
@@ -39,11 +40,10 @@ from project_progress.serializers import (
     TargetTaskSerializer,
     SerializerForAllExtraTaskList
 )
-from django.db.models import Count
 from django.db.models.functions import TruncDate
 import pandas as pd
 import pytz
-from django.db.models import Q, F, Max
+from django.db.models import Q, F, Max, Count
 from django.http import JsonResponse
 from collections import defaultdict
 from django.db.models.functions import ExtractWeekDay
@@ -64,8 +64,51 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
-# DetailViewForTargetTaskForTaskIntegration
+# SearchViewForTargetTasksForIntergration
+
+
+class SearchViewForTargetTasksForIntergration(APIView):
+
+    def perform_search(self, searchWords, checkedRowPks):
+        print("perform : ", searchWords, checkedRowPks)
+
+        # 검색어를 사용하여 ProjectProgress 모델의 task 필드를 부분적으로 검색
+        list_for_task = ProjectProgress.objects.exclude(
+            id__in=checkedRowPks
+        ).filter(task__icontains=searchWords).order_by('-created_at')
+
+        return list_for_task
+
+    def get(self, request):
+        searchWords = request.query_params.get("searchWords")
+        checkedRowPks = request.query_params.getlist("checkedRowPks[]")
+        checkedRowPks = [int(pk) for pk in checkedRowPks]
+        print(
+            f"searchWords : ${searchWords}, checkedRowPks : ${checkedRowPks}")
+
+        search_results = self.perform_search(searchWords, checkedRowPks)
+        num_results = search_results.count()
+        
+        # SerializerForTaskListForSelectTargetForIntergration
+        serializer = SerializerForTaskListForSelectTargetForIntergration(
+            search_results, many=True)
+
+        # 메시지 생성
+        message = f"search result {num_results} 개 by {searchWords}"
+
+        # JSON 응답 데이터 생성
+        response_data = {
+            "message": message,
+            "searchWords": searchWords,
+            "results": serializer.data,
+        }
+
+        # Response 객체 생성
+        return Response(response_data, status=HTTP_200_OK)
+
 # ListViewForExtraTask
+
+
 class ListViewForExtraTask(APIView):
     def get(self, request):
         try:
@@ -74,6 +117,7 @@ class ListViewForExtraTask(APIView):
             return Response(serializer.data, status=HTTP_200_OK)
         except Exception as e:
             return Response({"detail": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class DetailViewForTargetTaskForTaskIntegration(APIView):
     def get_object(self, taskId):
@@ -157,11 +201,15 @@ class ListViewForGetTaskListForTaskIntegration(APIView):
         serializer = SerializerForTaskListForSelectTargetForIntergration(
             self.listForTask, many=True)
 
+        task_managers = list_for_task.values('task_manager__username').annotate(
+            task_manager_count=Count('task_manager__username')).distinct().order_by('task_manager__username')
+
         # step5 응답할 페이지 네이션 관련 리스트 정보 딕셔너리로 선언 하기
         response_data = {
             "listForTask": serializer.data,
             "totalCountForTaskList": self.totalCountForTaskList,
             "perPage": self.perPage,
+            "taskManagers": task_managers
         }
 
         # step6 step5에서 선언한 페이지 네이션 데이터 응답하도록 수정
@@ -2099,7 +2147,7 @@ class UpdateViewForExtraTaskProgressStatus(APIView):
             extra_task.started_at = None
 
         if (status_for_update == "completed"):
-            if(extra_task.started_at == None):
+            if (extra_task.started_at == None):
                 extra_task.started_at = timezone.now()
             extra_task.completed_at = timezone.now()
         else:
@@ -2154,7 +2202,8 @@ class ExtraTaskDetail(APIView):
         # 업데이트할 필드명과 값을 직접 설정
         task_manager_id = request.data.get('task_manager')
         print("task_manager_id :::::::::::::::::", task_manager_id)
-        print("task_description  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ", request.data.get('task_description'))
+        print("task_description  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ",
+              request.data.get('task_description'))
 
         task_manager = User.objects.get(pk=task_manager_id)
         extra_task.task_manager = task_manager

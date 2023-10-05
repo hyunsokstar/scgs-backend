@@ -14,6 +14,11 @@ urlpatterns = [
     # detail view
     path("target-task/<int:taskId>",
          views.DetailViewForTargetTaskForTaskIntegration.as_view()),
+
+    # search view
+    path('target-tasks-for-intergration/by-search-word',
+         views.SearchViewForTargetTasksForIntergration.as_view()),         
+
     # update view
     path('extra_tasks/<int:pk>/update-extrak-task-prgoress-status',
          views.UpdateViewForExtraTaskProgressStatus.as_view()),
