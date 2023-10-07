@@ -74,6 +74,37 @@ from django.shortcuts import get_object_or_404
 #             list_for_task, many=True)
 #         # pass
 #         return Response(serializer.data, status=HTTP_200_OK)
+class PostViewForRevertTaskForExtraTaskForCheckedFromSelectedOne(APIView):
+    @transaction.atomic
+    def post(self, request):
+        checkedRowsForConvertForRevert = request.data.get('checkedRowsForConvertForRevert', [])
+        print("checkedRowsForConvertForRevert 1111111111111 ", checkedRowsForConvertForRevert)
+
+        try:
+            # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져와서 처리합니다.
+            for selected_pk in checkedRowsForConvertForRevert:
+                selected_task = ExtraTask.objects.get(
+                    pk=selected_pk)
+                
+                new_task = ProjectProgress()
+
+                # ExtraTask로 필드 값을 복사합니다.
+                new_task.task_manager = selected_task.task_manager
+                new_task.task = selected_task.task
+                new_task.task_description = selected_task.task_description
+                new_task.due_date = selected_task.due_date
+                new_task.save()
+
+                # ProjectProgress를 삭제합니다.
+                selected_task.delete()
+
+            return Response({'message': '체크한 업무들을 revert 하였습니다'})
+        except Exception as e:
+            # 예외 메시지를 가져와서 반환합니다.
+            error_message = str(e)
+            return Response({'message': f'{error_message}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
@@ -126,18 +157,18 @@ class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
 class TransformViewCheckedTasksToTargetTask(APIView):
     @transaction.atomic
     def post(self, request):
-        checkedRowPks = request.data.get('checkedRowPks', [])
-        selectedTargetPk = request.data.get('selectedTargetPk', None)
-        print("checkedRowPks ::::::::::::::::::::::::::: ", checkedRowPks)
+        checkedRowsForConvert = request.data.get('checkedRowsForConvert', [])
+        selectedTaskPk = request.data.get('selectedTaskPk', None)
+        print("checkedRowsForConvert ::::::::::::::::::::::::::: ", checkedRowsForConvert)
 
         try:
             # selectedTargetPk에 해당하는 ProjectProgress 객체를 가져옵니다.
             selected_project_progress = ProjectProgress.objects.get(
-                pk=selectedTargetPk)
+                pk=selectedTaskPk)
             # 새로운 ExtraTask 생성
             # target_task = ExtraTask()
             # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져와서 처리합니다.
-            for project_progress_pk in checkedRowPks:
+            for project_progress_pk in checkedRowsForConvert:
                 project_progress = ProjectProgress.objects.get(
                     pk=project_progress_pk)
 
@@ -148,6 +179,7 @@ class TransformViewCheckedTasksToTargetTask(APIView):
                 target_task.task_manager = selected_project_progress.task_manager
                 target_task.task = project_progress.task
                 target_task.task_description = project_progress.task_description
+                target_task.due_date = project_progress.due_date
                 target_task.save()
 
                 # ProjectProgress를 삭제합니다.

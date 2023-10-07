@@ -163,9 +163,11 @@ urlpatterns = [
     path("ExtraTask/<int:taskPk>/add-test-for-extra-task",
          views.CreateViewForTestForExtraTask.as_view()),
     # transform
-    # transform/checked-tasks/target-task
     path("transform/checked-tasks/target-task",
          views.TransformViewCheckedTasksToTargetTask.as_view()),
+
+    path("selected-one/checked-tasks/revert-task",
+         views.PostViewForRevertTaskForExtraTaskForCheckedFromSelectedOne.as_view()),
 
     # list view for task intergration without one
     path("taskListForTaskIntergrationForSelectedOne/<int:selectedTaskPk>",
