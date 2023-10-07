@@ -53,6 +53,7 @@ from .models import (
     ProjectProgress,
     ExtraTask,
     TaskComment,
+
     TestForTask,
     TestersForTest,
     TaskLog,
@@ -65,24 +66,80 @@ from .models import (
 from django.shortcuts import get_object_or_404
 
 # 1122
+# class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
+#     def get(self, request, selectedTaskPk):
+#         print("task list 요청 확인 for data intergration !!!!!!!!!!!!!!")
+#         list_for_task = ProjectProgress.objects.all()
+#         serializer = SerializerForTaskListForSelectTargetForIntergration(
+#             list_for_task, many=True)
+#         # pass
+#         return Response(serializer.data, status=HTTP_200_OK)
+
+
+class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
+    listForTask = []
+    perPage = 15
+    totalCountForTaskList = 0
+
+    def get(self, request, selectedTaskPk):
+        pageNum = request.query_params.get("pageNum", 1)
+        pageNum = int(pageNum)
+        checkedRowPks = request.query_params.getlist("checkedRowPks[]")
+        checkedRowPks = [int(pk) for pk in checkedRowPks]
+
+        print("params: ", request.query_params)
+        # list_for_task = ProjectProgress.objects.all().order_by('-created_at')
+        # list_for_task 구할때 ProjectProgress중에서 id 가 selectedTaskPk 인거 제외 하려면?
+        list_for_task = ProjectProgress.objects.exclude(
+            id=selectedTaskPk).order_by('-created_at')
+        print("list_for_task : ", list_for_task)
+
+        # step1 클래스 변수에 리스트 정보 담기
+        self.listForTask = list_for_task
+        # step2 클래스 변수에 리스트 총 개수 담기
+        self.totalCountForTaskList = self.listForTask.count()
+        # step3 특정 페이지에 대한 리스트 정보 클래스 변수에 담기
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.listForTask = self.listForTask[start:end]
+
+        # step4 클래스 변수에 담긴 리스트 정보 직렬화 하기
+        serializer = SerializerForTaskListForSelectTargetForIntergration(
+            self.listForTask, many=True)
+
+        task_managers = list_for_task.values('task_manager__username').annotate(
+            task_manager_count=Count('task_manager__username')).distinct().order_by('task_manager__username')
+
+        # step5 응답할 페이지 네이션 관련 리스트 정보 딕셔너리로 선언 하기
+        response_data = {
+            "listForTask": serializer.data,
+            "totalCountForTaskList": self.totalCountForTaskList,
+            "perPage": self.perPage,
+            "taskManagers": task_managers
+        }
+
+        # step6 step5에서 선언한 페이지 네이션 데이터 응답하도록 수정
+        # return Response(serializer.data, status=HTTP_200_OK)
+        return Response(response_data, status=HTTP_200_OK)
+
+
 class TransformViewCheckedTasksToTargetTask(APIView):
     @transaction.atomic
     def post(self, request):
         checkedRowPks = request.data.get('checkedRowPks', [])
         selectedTargetPk = request.data.get('selectedTargetPk', None)
-
         print("checkedRowPks ::::::::::::::::::::::::::: ", checkedRowPks)
 
         try:
             # selectedTargetPk에 해당하는 ProjectProgress 객체를 가져옵니다.
-            selected_project_progress = ProjectProgress.objects.get(pk=selectedTargetPk)
-
+            selected_project_progress = ProjectProgress.objects.get(
+                pk=selectedTargetPk)
             # 새로운 ExtraTask 생성
             # target_task = ExtraTask()
-
             # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져와서 처리합니다.
             for project_progress_pk in checkedRowPks:
-                project_progress = ProjectProgress.objects.get(pk=project_progress_pk)
+                project_progress = ProjectProgress.objects.get(
+                    pk=project_progress_pk)
 
                 target_task = ExtraTask()
 
@@ -100,7 +157,8 @@ class TransformViewCheckedTasksToTargetTask(APIView):
         except Exception as e:
             # 예외 메시지를 가져와서 반환합니다.
             error_message = str(e)
-            return Response({'error': f'전환 중 오류가 발생했습니다: {error_message}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': f'{error_message}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class SearchViewForTargetTasksForIntergration(APIView):
 
@@ -123,7 +181,7 @@ class SearchViewForTargetTasksForIntergration(APIView):
 
         search_results = self.perform_search(searchWords, checkedRowPks)
         num_results = search_results.count()
-        
+
         # SerializerForTaskListForSelectTargetForIntergration
         serializer = SerializerForTaskListForSelectTargetForIntergration(
             search_results, many=True)

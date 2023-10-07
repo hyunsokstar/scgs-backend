@@ -165,5 +165,10 @@ urlpatterns = [
     # transform
     # transform/checked-tasks/target-task
     path("transform/checked-tasks/target-task",
-         views.TransformViewCheckedTasksToTargetTask.as_view())
+         views.TransformViewCheckedTasksToTargetTask.as_view()),
+
+    # list view for task intergration without one
+    path("taskListForTaskIntergrationForSelectedOne/<int:selectedTaskPk>",
+         views.ListViewForgetTaskListWithoutOneForTaskIntergration.as_view())
+
 ]
