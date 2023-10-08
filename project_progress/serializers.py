@@ -619,6 +619,17 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
 # fix 0705
 
 
+class SerializerForExtraManager(serializers.ModelSerializer):
+    task_manager = UserProfileImageSerializer()
+
+    class Meta:
+        model = ExtraTask
+        fields = [
+            'id',
+            'task_manager',
+            'original_task'
+        ]
+
 class ProjectProgressListSerializer(serializers.ModelSerializer):
     started_at_formatted = serializers.SerializerMethodField()
     completed_at_formatted = serializers.SerializerMethodField()
@@ -633,6 +644,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     is_due_date_has_passed = serializers.SerializerMethodField()
     task_comments = ExtraTaskCommentSerializer(many=True)
     d_day_count = serializers.SerializerMethodField()
+    extra_managers = SerializerForExtraManager(many=True)
 
     class Meta:
         model = ProjectProgress
@@ -668,6 +680,7 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             'd_day_count',
             'test_result_images',
             'task_comments',
+            'extra_managers'
         )
 
     def get_started_at_formatted(self, obj):

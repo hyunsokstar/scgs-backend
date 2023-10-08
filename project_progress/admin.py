@@ -5,7 +5,8 @@ from .models import (
     TestForTask, TestersForTest, TaskLog,
     TaskUrlForTask, TaskUrlForExtraTask,
     ExtraTaskComment, TestForExtraTask,
-    TestersForTestForExtraTask
+    TestersForTestForExtraTask,
+    ExtraManager
 )
 
 
@@ -136,3 +137,25 @@ class TestersForTestForExtraTaskAdmin(admin.ModelAdmin):
     list_filter = ('test', 'tester')
     search_fields = ('test__name', 'tester__username')
     fields = ('test', 'tester')
+
+@admin.register(ExtraManager)
+class ExtraManagerAdmin(admin.ModelAdmin):
+    list_display = ('original_task', 'task_manager')  # 이 부분에서 필요한 필드를 나열합니다.
+    list_filter = ('original_task', 'task_manager')  # 필터링 옵션을 추가할 수 있습니다.
+    search_fields = ('original_task__name', 'task_manager__username')  # 검색 필드를 설정합니다.
+
+    # # 주석(annotation) 예시
+    # list_display_links = ('original_task',)  # 이 필드가 모델 목록에서 링크가 되도록 합니다.
+    # list_editable = ('task_manager',)  # 이 필드를 목록에서 직접 수정 가능하게 합니다.
+
+    # # 필드에 대한 설명 주석 추가
+    # def original_task_name(self, obj):
+    #     return obj.original_task.name
+    # original_task_name.short_description = 'Original Task Name'
+
+    # def task_manager_username(self, obj):
+    #     return obj.task_manager.username
+    # task_manager_username.short_description = 'Task Manager Username'
+    
+    # # 필드 순서 변경
+    # ordering = ('original_task',) 

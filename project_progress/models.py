@@ -568,3 +568,20 @@ class TestersForTestForExtraTask(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+class ExtraManager(models.Model):
+    original_task = models.ForeignKey(
+        "project_progress.ProjectProgress",
+        on_delete=models.CASCADE,
+        related_name="extra_managers",
+        blank=True,
+        null=True,
+    )
+
+    task_manager = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )    
