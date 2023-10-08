@@ -2,7 +2,7 @@ from medias.models import PhotoForProfile
 from medias.serializers import ProfilePhotoSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import AddMultiUserSerializer, PrivateUserSerializer, SerializerForCreateForUserTaskComment, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
+from .serializers import AddMultiUserSerializer, PrivateUserSerializer, SerializerForCreateForUserTaskComment, SerializerForManagerListForRegisterExtraManager, TaskStatusForTeamMembersSerializer, UserListSerializer, UserProfileImageSerializer, UserProfileSerializer, UsersForCreateSerializer
 from users.models import User, UserPosition, UserTaskComment
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
@@ -17,6 +17,52 @@ from project_progress.models import ProjectProgress
 from project_progress.serializers import ProjectProgressListSerializer
 from datetime import datetime, time, timedelta
 import math
+import json
+
+
+class ListViewForManagerListForRegisterExtraManager(APIView):
+    def get(self, request, ownerUser):
+        # 여기서 데이터를 가져오거나 처리합니다. 예: 데이터베이스 쿼리 등
+        print("ownerUser : ", ownerUser)
+
+        # extra_managers를 Query Parameter로부터 받아옵니다.
+        extra_managers_str = request.GET.get('extra_managers', '[]')  # 기본값은 빈 JSON 배열 문자열
+        extra_managers = json.loads(extra_managers_str)
+
+        # 여기서 extra_managers 배열을 사용할 수 있습니다.
+        print("extra_managers:::::::::::::: ??????? ", extra_managers)
+
+        # 'task_manager' 내부의 'username' 값을 추출하여 배열로 만듦
+        usernames = [item['task_manager']['username'] for item in extra_managers]
+
+        # usernames 배열 출력
+        print(usernames)
+
+        # username 이 usernames 배열에 속하는거 제외 하고 가져 오려면?
+        # managers = User.objects.exclude(username=ownerUser)
+        managers = User.objects.exclude(username=ownerUser).exclude(username__in=usernames)
+
+        serializer = SerializerForManagerListForRegisterExtraManager(
+            managers, many=True)
+
+        try:
+            # 예시 데이터 (수정 필요)
+            data = {
+                "message": "데이터를 성공적으로 가져왔습니다.",
+                "manager_list": serializer.data,
+                # 기타 데이터 필드 추가
+            }
+
+            # 응답을 생성하고 반환합니다.
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # 에러가 발생한 경우 에러 응답을 반환합니다.
+            error_data = {
+                "message": "데이터를 가져오는 중에 오류가 발생했습니다.",
+                "error": str(e),  # 실제 에러 메시지 포함 가능
+            }
+            return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DeleteViewForUserCommentTaskByPk(APIView):
@@ -435,14 +481,14 @@ class AddMultiUsersView(APIView):
                 if row["position"] == "frontend" or row["position"] == "backend":
                     print("row position ", row["position"])
                     user_position = UserPosition.objects.get(
-                        position_name=row["position"])                
+                        position_name=row["position"])
                     user.position = user_position
                 else:
                     print("user position update by ", row["position"])
                     user_position = UserPosition.objects.get(
-                        pk=row["position"])                
+                        pk=row["position"])
                     user.position = user_position
-                    
+
                 print("업데이트 하겠습니다 admin_level : ", row["admin_level"])
                 user.name = row["name"]
                 user.email = row["email"]
@@ -487,6 +533,8 @@ class UserProfile(APIView):
 # 유저 이미지 업데이트
 
 # UpdateViewForChallengeMainImage
+
+
 class UserPhotos(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -510,7 +558,6 @@ class UserPhotos(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors)
-
 
 
 class Me(APIView):

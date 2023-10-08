@@ -140,7 +140,7 @@ class TestersForTestForExtraTaskAdmin(admin.ModelAdmin):
 
 @admin.register(ExtraManager)
 class ExtraManagerAdmin(admin.ModelAdmin):
-    list_display = ('original_task', 'task_manager')  # 이 부분에서 필요한 필드를 나열합니다.
+    list_display = ('id','original_task', 'task_manager')  # 이 부분에서 필요한 필드를 나열합니다.
     list_filter = ('original_task', 'task_manager')  # 필터링 옵션을 추가할 수 있습니다.
     search_fields = ('original_task__name', 'task_manager__username')  # 검색 필드를 설정합니다.
 

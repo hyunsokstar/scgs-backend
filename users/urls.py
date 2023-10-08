@@ -14,11 +14,14 @@ urlpatterns = [
     path("multi-users/delete", views.DeleteMultiUsersView.as_view()),
     path("<int:pk>", views.UserProfile.as_view()),
     path("<int:userPk>/comment", views.CreateViewForUserTaskComment.as_view()),
-    path("comment/<int:commentPk>/delete", views.DeleteViewForUserCommentTaskByPk.as_view()),
+    path("comment/<int:commentPk>/delete",
+         views.DeleteViewForUserCommentTaskByPk.as_view()),
 
     path("<int:pk>/comment", views.UserProfile.as_view()),
-    path("<int:pk>/task-data-for-uncompleted", views.UncompletedTaskDataForSelectedUser.as_view()),
-    path("<int:pk>/task-data-for-completed", views.CompletedTaskDataForSelectedUser.as_view()),
+    path("<int:pk>/task-data-for-uncompleted",
+         views.UncompletedTaskDataForSelectedUser.as_view()),
+    path("<int:pk>/task-data-for-completed",
+         views.CompletedTaskDataForSelectedUser.as_view()),
 
     path("<int:userPk>/EditModeForStudyNoteForContent/update",
          views.UpdateViewForEditModeForStudyNoteContent.as_view()),
@@ -28,4 +31,6 @@ urlpatterns = [
     path("change-password", views.ChangePassword.as_view()),
     path("token-login", obtain_auth_token),
     path("@<str:username>", views.PublicUser.as_view()),
+    path("manager-list-without-main-manager/<str:ownerUser>",
+         views.ListViewForManagerListForRegisterExtraManager.as_view())
 ]

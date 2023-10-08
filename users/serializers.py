@@ -6,6 +6,14 @@ from project_progress.models import ProjectProgress
 from django.utils import timezone
 from datetime import datetime, time
 
+class SerializerForManagerListForRegisterExtraManager(ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "pk",
+            "username",
+            "profile_image"
+        )
 
 class UserProfileImageSerializer(ModelSerializer):
     class Meta:
