@@ -54,7 +54,6 @@ class ProjectProgress(models.Model):
     due_date = models.DateTimeField(
         auto_now_add=False, null=True, blank=True)
 
-    # due_date_option = models.CharField(max_length=20, default="")
     due_date_option = models.CharField(
         max_length=20,
         choices=TimeOptionChoices.choices,
@@ -584,4 +583,151 @@ class ExtraManager(models.Model):
         null=True,
         on_delete=models.CASCADE,
         related_name="+",
-    )    
+    )
+
+
+# class TaskBackUp(models.Model):
+
+#     class TaskClassificationChoices(models.TextChoices):
+#         CRUD = ("crud", "CRUD 작업")
+#         NEW_FUTURE = ("new-future", "새로운 기능 개발")
+#         TROUBLE_SHOOTING = ("trouble-shooting", "문제 해결 작업")
+#         UI_TASK = ("ui-task", "UI 작업")
+#         REFACTORING = ("refactoring", "리팩토링 작업")
+#         OPTIMIZATION = ("optimization", "최적화 작업")
+#         BOILTER_PATE = ("boiler-plate", "보일러 플레이트 만들기")
+#         TEST_CODE = ("test-code", "테스트 코드 작성")
+
+#     class TaskStatusChoices(models.TextChoices):
+#         ready = ("ready", "준비")
+#         in_progress = ("in_progress", "작업중")
+#         testing = ("testing", "테스트중")
+#         completed = ("completed", "완료")
+
+#     class TimeOptionChoices(models.TextChoices):
+#         MORNING_TASKS = 'morning_tasks', '아침 작업'
+#         AFTERNOON_TASKS = 'afternoon_tasks', '오후 작업'
+#         NIGHT_TASKS = 'night_tasks', '밤 작업'
+
+#     class DueDateOptionChoices(models.TextChoices):
+#         UNTIL_NOON = ("until-noon", "오전까지")
+#         UNTIL_EVENING = ("until-evening", "오후까지")
+#         UNTIL_NIGHT = ("until-night", "밤 늦게 까지")
+
+#     task_manager = models.ForeignKey(
+#         "users.User",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#         related_name="progect_tasks",
+#     )
+#     task = models.CharField(max_length=80, default="")
+
+#     task_description = models.TextField(
+#         max_length=300, blank=True, null=True, default="")
+
+#     due_date = models.DateTimeField(
+#         auto_now_add=False, null=True, blank=True)
+
+#     due_date_option = models.CharField(
+#         max_length=20,
+#         choices=TimeOptionChoices.choices,
+#         default=TimeOptionChoices.MORNING_TASKS,
+#     )
+
+#     task_classification = models.CharField(
+#         max_length=20,
+#         choices=TaskClassificationChoices.choices,
+#         default=TaskClassificationChoices.CRUD,
+#     )
+
+#     writer = models.CharField(max_length=50, blank=True, null=True)
+#     importance = models.IntegerField(default=1, blank=True, null=True)
+
+#     in_progress = models.BooleanField(default=False)
+#     is_testing = models.BooleanField(default=False)
+#     task_completed = models.BooleanField(default=False)
+
+#     current_status = models.CharField(
+#         max_length=20,
+#         choices=TaskStatusChoices.choices,
+#         default=TaskStatusChoices.ready  # 기본값을 "ready"로 설정
+#     )
+
+#     created_at = models.DateTimeField(default=timezone.now)
+#     started_at_utc = models.DateTimeField(null=True, blank=True, default=None)
+#     completed_at = models.DateTimeField(blank=True, null=True)
+
+#     due_date_option_for_today = models.CharField(
+#         max_length=20,
+#         choices=DueDateOptionChoices.choices,
+#         default=DueDateOptionChoices.UNTIL_NOON  # 기본값을 "오전까지"로 설정
+#     )
+
+# class TaskCommentBackUp(models.Model):
+#     task = models.ForeignKey(
+#         "project_progress.ProjectProgress",
+#         on_delete=models.CASCADE,
+#         related_name="task_comments",
+#         blank=True,
+#         null=True,
+#     )
+
+#     writer = models.ForeignKey(
+#         "users.User",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#         related_name="task_comments",
+#     )
+
+#     comment = models.CharField(max_length=100)
+#     like_count = models.IntegerField(default=0)
+#     created_at = models.DateTimeField(default=timezone.now)
+#     is_edit_mode = models.BooleanField(default=False)
+
+#     def created_at_formatted(self):
+#         if (self.created_at != None):
+#             local_created_at = timezone.localtime(self.created_at)
+#             return local_created_at.strftime('%y년 %m월 %d일 %H시 %M분')
+#         else:
+#             return "준비"
+
+# class TestForTaskBackUp(models.Model):
+#     class TestMethodChoices(models.TextChoices):
+#         browser = ("browser", "브라우져")
+#         postman = ("postman", "postman")
+#         test_code = ("test_code", "test_code")
+
+#     original_task = models.ForeignKey(                  # 어떤 태스크의 테스트
+#         "project_progress.ProjectProgress",
+#         on_delete=models.CASCADE,
+#         related_name="tests_for_tasks",
+#         blank=True,
+#         null=True,
+#     )
+
+#     test_description = models.CharField(max_length=50, default="")
+#     test_passed = models.BooleanField(default=False)
+
+#     test_method = models.CharField(
+#         max_length=20,
+#         choices=TestMethodChoices.choices,
+#         default=TestMethodChoices.browser  # 기본값을 "ready"로 설정
+#     )
+
+#     test_result_image = models.URLField(null=True, blank=True)
+
+#     def __str__(self):
+#         return self.test_description
+
+# class TaskUrlForTaskBackUp(models.Model):
+#     task = models.ForeignKey(
+#         "project_progress.ProjectProgress",
+#         on_delete=models.CASCADE,
+#         related_name="task_urls",
+#         blank=True,
+#         null=True,
+#     )
+#     task_url = models.URLField(null=True, blank=True)
+#     task_description = models.CharField(max_length=30, default="")

@@ -21,38 +21,38 @@ import json
 
 
 class ListViewForManagerListForRegisterExtraManager(APIView):
+    
+    listForExtraManager = []
+    perPage = 10
+    totalCountForExtraManagerList = 0
+    
     def get(self, request, ownerUser):
-        # 여기서 데이터를 가져오거나 처리합니다. 예: 데이터베이스 쿼리 등
 
-        # extra_managers를 Query Parameter로부터 받아옵니다.
+        pageNum = request.query_params.get("pageNum", 1)
+        pageNum = int(pageNum)
+
+        # print("실행 되는지 확인 !!!!!!!!!!!!!! : ", extra_managers)
         extra_managers_str = request.GET.get('extra_managers', '[]')  # 기본값은 빈 JSON 배열 문자열
         extra_managers = json.loads(extra_managers_str)
-
-        print("실행 되는지 확인 !!!!!!!!!1341324134143!!!!! : ", extra_managers)
-
-        # 여기서 extra_managers 배열을 사용할 수 있습니다.
-        print("extra_managers::::!@#$!#@$!#$!#$!#$! ", extra_managers)
-
-        # 'task_manager' 내부의 'username' 값을 추출하여 배열로 만듦
         usernames = [item['task_manager']['username'] for item in extra_managers]
-
-        # usernames 배열 출력
         print("usernames ::!@#$!@#$!@#$!@$!@$!@$::", usernames)
 
-        # username 이 usernames 배열에 속하는거 제외 하고 가져 오려면?
-        managers = User.objects.exclude(username=ownerUser).exclude(username__in=usernames)
-
-        print("managers !!!!!!!!!!!!!!!!!!!!!!!!!!!", managers)
+        extra_manager_list = User.objects.exclude(username=ownerUser).exclude(username__in=usernames)
 
         serializer = SerializerForManagerListForRegisterExtraManager(
-            managers, many=True)
+            extra_manager_list, many=True)
+        
+        self.totalCountForExtraManagerList = len(self.listForExtraManager)
+
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        self.listForExtraManager = self.listForExtraManager[start:end]
 
         try:
-            # 예시 데이터 (수정 필요)
             data = {
-                "message": "데이터를 성공적으로 가져왔습니다.",
-                "manager_list": serializer.data,
-                # 기타 데이터 필드 추가
+            "listForExtraManager": serializer.data,
+            "totalCountForExtraManagerList": self.totalCountForExtraManagerList,
+            "perPage": self.perPage,
             }
 
             # 응답을 생성하고 반환합니다.
