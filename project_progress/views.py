@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_200_OK,
+    HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_403_FORBIDDEN,
@@ -53,7 +54,6 @@ from .models import (
     ProjectProgress,
     ExtraTask,
     TaskComment,
-
     TestForTask,
     TestersForTest,
     TaskLog,
@@ -61,31 +61,80 @@ from .models import (
     TaskUrlForExtraTask,
     ExtraTaskComment,
     TestForExtraTask,
-    TestersForTestForExtraTask
+    TestersForTestForExtraTask,
+    ExtraManager
 )
 from django.shortcuts import get_object_or_404
 
 # 1122
-# class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
-#     def get(self, request, selectedTaskPk):
-#         print("task list 요청 확인 for data intergration !!!!!!!!!!!!!!")
-#         list_for_task = ProjectProgress.objects.all()
-#         serializer = SerializerForTaskListForSelectTargetForIntergration(
-#             list_for_task, many=True)
-#         # pass
-#         return Response(serializer.data, status=HTTP_200_OK)
+# CreateViewForExtraTaskManager
+class CreateViewForExtraTaskManager(APIView):
+    def post(self, request, targetTaskId):
+        try:
+            # targetTaskId에 해당하는 ProjectProgress 객체 가져오기
+            target_task = ProjectProgress.objects.get(pk=targetTaskId)
+            userNameForRegister = request.data.get('userNameForRegister')
+            task_manager_to_register = User.objects.get(username=userNameForRegister)
+
+            # ExtraManager 생성
+            extra_manager = ExtraManager.objects.create(
+                original_task=target_task,
+                task_manager=task_manager_to_register,  # 현재 로그인한 사용자를 task_manager로 설정
+            )
+
+            # 성공 메시지 응답
+            return Response(
+                {"message": "ExtraManager가 성공적으로 생성되었습니다."},
+                status=HTTP_201_CREATED,
+            )
+        except ProjectProgress.DoesNotExist:
+            return Response(
+                {"message": "targetTaskId에 해당하는 ProjectProgress를 찾을 수 없습니다."},
+                status=HTTP_404_NOT_FOUND,
+            )
+
+
+class DeleteViewForExtraManagerForTask(APIView):
+    def delete(self, request, extraManagerId):
+        try:
+            extra_manager = ExtraManager.objects.get(pk=extraManagerId)
+
+            extra_manager.delete()
+            return Response(
+                {"message": "${extra_manager.task_manager.username} 님을 삭제 하였습니다 !"},
+                status=HTTP_200_OK)
+
+            # 현재 로그인한 사용자와 extra_manager.task_manager를 비교하여 권한 확인
+            # if extra_manager.task_manager == request.user:
+            #     extra_manager.delete()
+            #     return Response(
+            #         {"message": "${extra_manager.task_manager.username} 님을 삭제 하였습니다 !"},
+            #         status=HTTP_200_OK)
+            # else:
+            #     return Response(
+            #         {"message": f"{extra_manager.task_manager.username} 님만 삭제할 수 있습니다."},
+            #         status=HTTP_403_FORBIDDEN  # 권한이 없는 경우 403 Forbidden 응답
+            #     )
+            
+        except ExtraManager.DoesNotExist:
+            print("extra_manager를 찾지 못했습니다")
+            return Response(status=HTTP_404_NOT_FOUND)
+
+
 class PostViewForRevertTaskForExtraTaskForCheckedFromSelectedOne(APIView):
     @transaction.atomic
     def post(self, request):
-        checkedRowsForConvertForRevert = request.data.get('checkedRowsForConvertForRevert', [])
-        print("checkedRowsForConvertForRevert 1111111111111 ", checkedRowsForConvertForRevert)
+        checkedRowsForConvertForRevert = request.data.get(
+            'checkedRowsForConvertForRevert', [])
+        print("checkedRowsForConvertForRevert 1111111111111 ",
+              checkedRowsForConvertForRevert)
 
         try:
             # checkedRowPks에 해당하는 ProjectProgress 객체들을 가져와서 처리합니다.
             for selected_pk in checkedRowsForConvertForRevert:
                 selected_task = ExtraTask.objects.get(
                     pk=selected_pk)
-                
+
                 new_task = ProjectProgress()
 
                 # ExtraTask로 필드 값을 복사합니다.
@@ -103,8 +152,6 @@ class PostViewForRevertTaskForExtraTaskForCheckedFromSelectedOne(APIView):
             # 예외 메시지를 가져와서 반환합니다.
             error_message = str(e)
             return Response({'message': f'{error_message}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 
 class ListViewForgetTaskListWithoutOneForTaskIntergration(APIView):
@@ -159,7 +206,8 @@ class TransformViewCheckedTasksToTargetTask(APIView):
     def post(self, request):
         checkedRowsForConvert = request.data.get('checkedRowsForConvert', [])
         selectedTaskPk = request.data.get('selectedTaskPk', None)
-        print("checkedRowsForConvert ::::::::::::::::::::::::::: ", checkedRowsForConvert)
+        print("checkedRowsForConvert ::::::::::::::::::::::::::: ",
+              checkedRowsForConvert)
 
         try:
             # selectedTargetPk에 해당하는 ProjectProgress 객체를 가져옵니다.
@@ -618,6 +666,8 @@ class UpdateEditModeForCommentForExtraTask(APIView):
         }
 
         return Response(result_data, status=HTTP_200_OK)
+
+# deleteViewForExtraManagerForTask
 
 
 class deleteViewForTaskUrlForExtraTask(APIView):

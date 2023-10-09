@@ -23,24 +23,26 @@ import json
 class ListViewForManagerListForRegisterExtraManager(APIView):
     def get(self, request, ownerUser):
         # 여기서 데이터를 가져오거나 처리합니다. 예: 데이터베이스 쿼리 등
-        print("ownerUser : ", ownerUser)
 
         # extra_managers를 Query Parameter로부터 받아옵니다.
         extra_managers_str = request.GET.get('extra_managers', '[]')  # 기본값은 빈 JSON 배열 문자열
         extra_managers = json.loads(extra_managers_str)
 
+        print("실행 되는지 확인 !!!!!!!!!1341324134143!!!!! : ", extra_managers)
+
         # 여기서 extra_managers 배열을 사용할 수 있습니다.
-        print("extra_managers:::::::::::::: ??????? ", extra_managers)
+        print("extra_managers::::!@#$!#@$!#$!#$!#$! ", extra_managers)
 
         # 'task_manager' 내부의 'username' 값을 추출하여 배열로 만듦
         usernames = [item['task_manager']['username'] for item in extra_managers]
 
         # usernames 배열 출력
-        print(usernames)
+        print("usernames ::!@#$!@#$!@#$!@$!@$!@$::", usernames)
 
         # username 이 usernames 배열에 속하는거 제외 하고 가져 오려면?
-        # managers = User.objects.exclude(username=ownerUser)
         managers = User.objects.exclude(username=ownerUser).exclude(username__in=usernames)
+
+        print("managers !!!!!!!!!!!!!!!!!!!!!!!!!!!", managers)
 
         serializer = SerializerForManagerListForRegisterExtraManager(
             managers, many=True)
