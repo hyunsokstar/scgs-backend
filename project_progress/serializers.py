@@ -73,6 +73,7 @@ class CompletedTaskSerializer(serializers.ModelSerializer):
             "task_classification",
             "started_at",
             "started_at_formatted",
+            "completed_at",
             "completed_at_formatted",
             "due_date_formatted",
             "elapsed_time_from_started_at",

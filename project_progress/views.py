@@ -2910,7 +2910,7 @@ class UncompletedTaskListView(APIView):
             count_for_in_testing = self.all_uncompleted_project_task_list.filter(
                 in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
             count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
-                due_date__lt=current_datetime, task_completed=False).count()
+                due_date__lt=current_datetime, task_completed=False, task_manager__username=self.user_for_search).count()
 
         print("is_task_due_date_has_passed ::::::::::::::: ",
               is_task_due_date_has_passed)
@@ -3007,19 +3007,19 @@ class CompletedTaskListView(APIView):
 
         if period_option == "all":
             self.all_completed_project_task_list = ProjectProgress.objects.filter(
-                task_completed=True).order_by('-in_progress', '-created_at')
+                task_completed=True).order_by('-completed_at', '-created_at')
         elif period_option == "within_a_week":
             one_week_ago = datetime.now() - timedelta(days=7)
             self.all_completed_project_task_list = ProjectProgress.objects.filter(
-                task_completed=True, created_at__gte=one_week_ago).order_by('-in_progress', '-created_at')
+                task_completed=True, created_at__gte=one_week_ago).order_by('-completed_at', '-created_at')
         elif period_option == "within_a_month":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_completed_project_task_list = ProjectProgress.objects.filter(
-                task_completed=True, created_at__gte=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=True, created_at__gte=one_month_ago).order_by('-completed_at', '-created_at')
         elif period_option == "over_a_month_ago":
             one_month_ago = datetime.now() - timedelta(days=30)
             self.all_completed_project_task_list = ProjectProgress.objects.filter(
-                task_completed=True, created_at__lt=one_month_ago).order_by('-in_progress', '-created_at')
+                task_completed=True, created_at__lt=one_month_ago).order_by('-completed_at', '-created_at')
 
         # total count 초기화
         if self.user_for_search == "":

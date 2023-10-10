@@ -121,6 +121,8 @@ class UncompletedTaskDataForSelectedUser(APIView):
         try:
             page = request.query_params.get("page", 1)
             page = int(page)
+            print("pk : ", pk)
+
         except ValueError:
             page = 1
 
