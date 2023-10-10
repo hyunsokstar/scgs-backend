@@ -3278,7 +3278,7 @@ class UpdateTaskCompetedView(APIView):
             message = "완료에서 비완료로 update"
             project_task.task_completed = False
             project_task.current_status = "testing"
-            project_task.completed_at = None  # completed_at을 blank 상태로 만듦
+            project_task.completed_at = None 
 
             try:
                 task_log_for_delete = TaskLog.objects.get(
@@ -3288,7 +3288,6 @@ class UpdateTaskCompetedView(APIView):
 
             if task_log_for_delete:
                 time_distance_for_team_task_for_delete_row = task_log_for_delete.time_distance_for_team_task
-                # task_log_for_delete의 바로 다음 row 데이터 가져오기
                 next_task_log = TaskLog.objects.filter(
                     id__gt=task_log_for_delete.id).first()
                 before_task_log = TaskLog.objects.filter(
@@ -3309,12 +3308,42 @@ class UpdateTaskCompetedView(APIView):
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 
             seoul_tz = pytz.timezone('Asia/Seoul')
-            # todo2
+
+            before_task_log = TaskLog.objects.filter(
+                taskPk__lt=project_task.id,
+            ).order_by('-taskPk').first()
+
+            if before_task_log:
+                current_time = timezone.localtime()
+                time_difference = current_time - before_task_log.completed_at
+                interval_between_team_task = time_difference.total_seconds()
+            else:
+                # 직전에 생성된 업무가 없으면 interval_between_team_task를 0으로 설정
+                interval_between_team_task = 0
+
+            if before_task_log and before_task_log.writer == project_task.task_manager:
+                current_time = timezone.localtime()
+                time_difference_for_my_task = current_time - before_task_log.completed_at
+                interval_between_my_task = time_difference_for_my_task.total_seconds()
+
+            else:
+                # 생성하려는 업무 바로 이전에 생성한 업무가 없거나 writer가 다르면 시간 차이를 0으로 설정
+                time_difference_for_my_task = 0                
+                
             task_log = TaskLog.objects.create(
                 original_task=project_task,
                 taskPk=project_task.id,
                 writer=project_task.task_manager,
                 task=project_task.task,
+                # todo 11 생성하려는 업무 바로 이전에 생성한 업무가 존재할 경우 시간차(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무)를 초 단위로 interval_between_team_task에 저장
+                time_distance_for_team_task = interval_between_team_task,
+                # todo 22 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 일 경우
+                # time_distance_for_my_task 에 시간 차이(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 인 업무)를 초 단위로 저장
+                time_distance_for_my_task = interval_between_my_task,
+
+                
+                # todo 22 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 일 경우
+                # time_distance_for_my_task 에 시간 차이(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 인 업무) 저장
                 completed_at=timezone.now().astimezone(pytz.timezone('Asia/Seoul')),
                 completed_at_formatted=timezone.now().astimezone(
                     seoul_tz).strftime("%m월 %d일 %H시 %M분")

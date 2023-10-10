@@ -365,38 +365,6 @@ class TaskLog(models.Model):
     def __str__(self):
         return self.task
 
-    def save(self, *args, **kwargs):
-        if not self.id:
-            # 이전 row와의 차이 시간 계산
-            previous_task_log = TaskLog.objects.order_by(
-                '-completed_at').first()
-
-            if previous_task_log:
-                time_difference = timezone.now() - previous_task_log.completed_at
-                self.interval_between_team_task = time_difference  # timedelta 객체를 그대로 저장
-                self.time_distance_for_team_task = math.floor(
-                    time_difference.total_seconds() / 600)
-
-                if time_difference.total_seconds() % 600 >= 360:
-                    self.time_distance_for_team_task += 1
-
-            # 작성자가 같은 이전의 업무에 대해 시간 차이 계산
-            previous_task_log_same_writer = TaskLog.objects.filter(
-                writer=self.writer).order_by('-completed_at').first()
-
-            if previous_task_log_same_writer:
-                time_difference_same_writer = timezone.now(
-                ) - previous_task_log_same_writer.completed_at
-                self.interval_between_my_task = time_difference_same_writer  # timedelta 객체를 그대로 저장
-                self.time_distance_for_my_task = math.floor(
-                    time_difference_same_writer.total_seconds() / 600)
-
-                if time_difference_same_writer.total_seconds() % 600 >= 360:
-                    self.time_distance_for_my_task += 1
-
-        super().save(*args, **kwargs)
-
-
 class TaskUrlForTask(models.Model):
     task = models.ForeignKey(
         "project_progress.ProjectProgress",
