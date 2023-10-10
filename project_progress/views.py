@@ -3328,7 +3328,7 @@ class UpdateTaskCompetedView(APIView):
 
             else:
                 # 생성하려는 업무 바로 이전에 생성한 업무가 없거나 writer가 다르면 시간 차이를 0으로 설정
-                time_difference_for_my_task = 0                
+                interval_between_my_task = 0                
                 
             task_log = TaskLog.objects.create(
                 original_task=project_task,
