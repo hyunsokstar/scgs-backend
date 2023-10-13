@@ -473,7 +473,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
     elapsed_time_from_started_at = serializers.SerializerMethodField()
     task_images = ReferImageForTaskSerializer(many=True)
     extra_tasks = ExtraTasksSerializer(many=True)
-    tests_for_tasks = TestSerializerForOneTask(many=True)
+    tests_for_task = TestSerializerForOneTask(many=True)
     task_comments = TaskCommentSerializer(many=True)
     task_manager = UserProfileImageSerializer()
     task_urls = TaskUrlForTaskSerializer(many=True)
@@ -500,7 +500,7 @@ class ProjectProgressDetailSerializer(serializers.ModelSerializer):
             "task_images",
             "task_comments",
             "extra_tasks",
-            "tests_for_tasks",
+            "tests_for_task",
             "cash_prize",
             "is_urgent_request",
         )
@@ -561,7 +561,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
     task_manager = TinyUserSerializer(read_only=True)
     task_urls = TaskUrlForTaskSerializer(many=True)
     task_comments = ExtraTaskCommentSerializer(many=True)
-    tests_for_tasks = TestSerializerForOneTask(many=True)
+    tests_for_task = TestSerializerForOneTask(many=True)
     extra_tasks = ExtraTasksSerializer(many=True)
     task_images = ReferImageForTaskSerializer(many=True)
 
@@ -574,7 +574,7 @@ class SerializerForUncompletedTaskDetailListForChecked(serializers.ModelSerializ
             "task_description",
             "task_urls",
             "task_comments",
-            "tests_for_tasks",
+            "tests_for_task",
             "extra_tasks",
             "task_manager",
             "importance",
@@ -644,6 +644,9 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     d_day_count = serializers.SerializerMethodField()
     extra_managers = SerializerForExtraManager(many=True)
     count_for_extra_tasks = serializers.SerializerMethodField()
+    count_for_tests_for_task = serializers.SerializerMethodField()
+    count_for_task_comments = serializers.SerializerMethodField()
+    count_for_task_images = serializers.SerializerMethodField()
     # task_comments = ExtraTaskCommentSerializer(many=True)
     # test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
     # time_consumed_from_start_to_complete = serializers.SerializerMethodField()
@@ -670,17 +673,20 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
             "started_at",
             "started_at_formatted",
             "due_date",
+            'due_date_option_for_today',
             "due_date_formatted",
             "elapsed_time_from_started_at",
-            # "time_consumed_from_start_to_complete",
             "completed_at_formatted",
             "time_left_to_due_date",
             "is_task_for_cash_prize",
             "is_task_for_urgent",
-            "count_for_extra_tasks"
+            "count_for_task_images",
+            "count_for_extra_tasks",
+            "count_for_tests_for_task",
+            "count_for_task_comments"
+            # "time_consumed_from_start_to_complete",
             # 'task_comments',
             # 'test_result_images',
-            # 'due_date_option_for_today',
             # "check_result_by_tester",
             # "cash_prize",
             # "score_by_tester",
@@ -748,6 +754,17 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     def get_count_for_extra_tasks(self, obj):
         countForExtraTaks = obj.extra_tasks.count()
         return countForExtraTaks
+    
+    def get_count_for_tests_for_task(self, obj):
+        countForTest = obj.tests_for_task.count()
+        return countForTest
+    
+    def get_count_for_task_comments(self, obj):
+        countForComments = obj.task_comments.count()
+        return countForComments
+    def get_count_for_task_images(self, obj):
+        countForTaskImages = obj.task_images.count()
+        return countForTaskImages
 
 
 

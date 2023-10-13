@@ -247,7 +247,7 @@ class TestForTask(models.Model):
     original_task = models.ForeignKey(                  # 어떤 태스크의 테스트
         "project_progress.ProjectProgress",
         on_delete=models.CASCADE,
-        related_name="tests_for_tasks",
+        related_name="tests_for_task",
         blank=True,
         null=True,
     )
@@ -670,7 +670,7 @@ class ExtraManager(models.Model):
 #     original_task = models.ForeignKey(                  # 어떤 태스크의 테스트
 #         "project_progress.ProjectProgress",
 #         on_delete=models.CASCADE,
-#         related_name="tests_for_tasks",
+#         related_name="tests_for_task",
 #         blank=True,
 #         null=True,
 #     )
