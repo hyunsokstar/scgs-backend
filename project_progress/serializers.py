@@ -636,52 +636,54 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
     completed_at_formatted = serializers.SerializerMethodField()
     due_date_formatted = serializers.SerializerMethodField()
     elapsed_time_from_started_at = serializers.SerializerMethodField()
-    time_consumed_from_start_to_complete = serializers.SerializerMethodField()
     time_left_to_due_date = serializers.SerializerMethodField()
     task_manager = UserProfileImageSerializer()
     task_images = ReferImageForTaskSerializer(many=True)
-    test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
     is_for_today = serializers.SerializerMethodField()
     is_due_date_has_passed = serializers.SerializerMethodField()
-    task_comments = ExtraTaskCommentSerializer(many=True)
     d_day_count = serializers.SerializerMethodField()
     extra_managers = SerializerForExtraManager(many=True)
+    count_for_extra_tasks = serializers.SerializerMethodField()
+    # task_comments = ExtraTaskCommentSerializer(many=True)
+    # test_result_images = TestResultImageForCompletedTaskSerializer(many=True)
+    # time_consumed_from_start_to_complete = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectProgress
         fields = (
             "id",
             "writer",
+            'extra_managers',
             "task",
             "task_images",
             "task_description",
             "task_manager",
             "importance",
+            "task_classification",
             "is_testing",
             "in_progress",
             "task_completed",
             "current_status",
-            "due_date",
-            "task_classification",
+            'is_for_today',
+            'd_day_count',
+            'is_due_date_has_passed',
             "started_at",
             "started_at_formatted",
-            "completed_at_formatted",
+            "due_date",
             "due_date_formatted",
             "elapsed_time_from_started_at",
-            "time_consumed_from_start_to_complete",
+            # "time_consumed_from_start_to_complete",
+            "completed_at_formatted",
             "time_left_to_due_date",
-            "check_result_by_tester",
-            "score_by_tester",
             "is_task_for_cash_prize",
             "is_task_for_urgent",
-            "cash_prize",
-            'due_date_option_for_today',
-            'is_for_today',
-            'is_due_date_has_passed',
-            'd_day_count',
-            'test_result_images',
-            'task_comments',
-            'extra_managers'
+            "count_for_extra_tasks"
+            # 'task_comments',
+            # 'test_result_images',
+            # 'due_date_option_for_today',
+            # "check_result_by_tester",
+            # "cash_prize",
+            # "score_by_tester",
         )
 
     def get_started_at_formatted(self, obj):
@@ -742,6 +744,11 @@ class ProjectProgressListSerializer(serializers.ModelSerializer):
 
             # 결과 반환
             return f"+ {days}일 {hours}시간 {minutes}분"
+
+    def get_count_for_extra_tasks(self, obj):
+        countForExtraTaks = obj.extra_tasks.count()
+        return countForExtraTaks
+
 
 
 def get_current_time_in_seoul():

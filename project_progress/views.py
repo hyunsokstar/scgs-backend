@@ -2688,7 +2688,6 @@ class UncompletedTaskListView(APIView):
     completed_project_task_list_for_current_page = []
     user_for_search = ""
 
-    # get 요청에 대해 처리
     def get(self, request):
         response_data = {}
         try:
@@ -2697,37 +2696,23 @@ class UncompletedTaskListView(APIView):
 
             period_option = request.query_params.get(
                 "selectedPeriodOptionForUncompletedTaskList", "all")
-            # task_status_for_search
             task_status_option = request.query_params.get(
                 "task_status_for_search", "")
-            print("task_status_option : ", task_status_option)
-
-            # 검색을 위한 user name 가져오기 (필수 아님)
             self.user_for_search = request.query_params.get(
                 "username_for_search", "")
             due_date_option_for_filtering = request.query_params.get(
                 "due_date_option_for_filtering", "")
             rating_for_filter_option = request.query_params.get(
                 "rating_for_filter_option", "")
-            #   isForUrgent,
             isForUrgent = request.query_params.get(
                 "isForUrgent", False)
-
             checkForCashPrize = request.query_params.get(
                 "checkForCashPrize", False)
-
             groupByOption = request.query_params.get(
                 "groupByOption", "")
-            print("groupByOption : ", groupByOption)
-
-            print("isForUrgent : ", isForUrgent)
-            print("checkForCashPrize : ",
-                checkForCashPrize)
-
             is_task_due_date_has_passed = request.query_params.get(
                 "is_task_due_date_has_passed", False)
-
-            # self.all_uncompleted_project_task_list 초기화 하기 for period option
+            
             if period_option == "all":
                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                     task_completed=False).order_by('-created_at')
@@ -2744,7 +2729,6 @@ class UncompletedTaskListView(APIView):
                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
                     task_completed=False, created_at__lt=one_month_ago).order_by('-created_at')
 
-            # total count 초기화
             if self.user_for_search == "":
                 count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
                     task_completed=False).count()
@@ -2757,18 +2741,13 @@ class UncompletedTaskListView(APIView):
                 count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
                     due_date__lt=current_datetime, due_date__isnull=False).count()
 
-            print("count_for_all_uncompleted_project_task_list : ",
-                count_for_all_uncompleted_project_task_list)
-
             self.totalCountForTask = math.trunc(
                 count_for_all_uncompleted_project_task_list)
 
-            # 페이지에 해당하는 list 정보 초기화
             start = (page - 1) * self.task_number_for_one_page
             end = start + self.task_number_for_one_page
 
             if self.user_for_search != "":
-                print("#####################################")
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                     task_manager__username=self.user_for_search)
             else:
@@ -2785,7 +2764,6 @@ class UncompletedTaskListView(APIView):
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
                     due_date=None)
 
-            # fix
             if due_date_option_for_filtering == "until-yesterday":
                 morning = time(hour=0, minute=0, second=0)
                 deadline = datetime.combine(datetime.today(), morning)
@@ -2831,9 +2809,7 @@ class UncompletedTaskListView(APIView):
             if due_date_option_for_filtering == "until-this-week":
                 print("due_date_option_for_filtering this week !!!!!!!!!!!! ")
                 today = datetime.today()
-                # 이번 주의 마지막 날짜 계산
                 last_day_of_week = today + timedelta(days=(6 - today.weekday()))
-                # 이번 주 마지막 날짜의 오후 11시 59분 59초까지
                 deadline = datetime.combine(
                     last_day_of_week, time(hour=23, minute=59, second=59))
                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
@@ -2882,7 +2858,6 @@ class UncompletedTaskListView(APIView):
                     due_date__lt=current_datetime, due_date__isnull=False
                 )
 
-            # 직렬화
             serializer = ProjectProgressListSerializer(
                 self.uncompleted_project_task_list_for_current_page, many=True)
 
@@ -2933,8 +2908,6 @@ class UncompletedTaskListView(APIView):
             deadline = datetime.combine(
                 datetime.today(), time(hour=23, minute=59, second=59))
             # fix
-            # total_task_count_for_today = ProjectProgress.objects.filter(
-            #     due_date__lte=deadline).count()
             # 서울 시간대 설정
             timezone = pytz.timezone('Asia/Seoul')
 
