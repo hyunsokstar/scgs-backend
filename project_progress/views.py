@@ -68,13 +68,16 @@ from django.shortcuts import get_object_or_404
 
 # 1122
 # CreateViewForExtraTaskManager
+
+
 class CreateViewForExtraTaskManager(APIView):
     def post(self, request, targetTaskId):
         try:
             # targetTaskId에 해당하는 ProjectProgress 객체 가져오기
             target_task = ProjectProgress.objects.get(pk=targetTaskId)
             userNameForRegister = request.data.get('userNameForRegister')
-            task_manager_to_register = User.objects.get(username=userNameForRegister)
+            task_manager_to_register = User.objects.get(
+                username=userNameForRegister)
 
             # ExtraManager 생성
             extra_manager = ExtraManager.objects.create(
@@ -115,7 +118,7 @@ class DeleteViewForExtraManagerForTask(APIView):
             #         {"message": f"{extra_manager.task_manager.username} 님만 삭제할 수 있습니다."},
             #         status=HTTP_403_FORBIDDEN  # 권한이 없는 경우 403 Forbidden 응답
             #     )
-            
+
         except ExtraManager.DoesNotExist:
             print("extra_manager를 찾지 못했습니다")
             return Response(status=HTTP_404_NOT_FOUND)
@@ -2681,142 +2684,383 @@ class UncompletedTaskListViewForMe(APIView):
         return Response(data, status=HTTP_200_OK)
 
 
+# class UncompletedTaskListView(APIView):
+#     totalCountForTask = 0  # total_count 계산
+#     task_number_for_one_page = 10  # 1 페이지에 몇개씩
+#     all_uncompleted_project_task_list = []
+#     completed_project_task_list_for_current_page = []
+#     user_for_search = ""
+
+#     def get(self, request):
+#         response_data = {}
+#         try:
+#             page = request.query_params.get("page", 1)
+#             page = int(page)
+
+#             period_option = request.query_params.get(
+#                 "selectedPeriodOptionForUncompletedTaskList", "all")
+#             task_status_option = request.query_params.get(
+#                 "task_status_for_search", "")
+#             self.user_for_search = request.query_params.get(
+#                 "username_for_search", "")
+#             due_date_option_for_filtering = request.query_params.get(
+#                 "due_date_option_for_filtering", "")
+#             rating_for_filter_option = request.query_params.get(
+#                 "rating_for_filter_option", "")
+#             isForUrgent = request.query_params.get(
+#                 "isForUrgent", False)
+#             checkForCashPrize = request.query_params.get(
+#                 "checkForCashPrize", False)
+#             groupByOption = request.query_params.get(
+#                 "groupByOption", "")
+#             is_task_due_date_has_passed = request.query_params.get(
+#                 "is_task_due_date_has_passed", False)
+
+#             if period_option == "all":
+#                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+#                     task_completed=False).order_by('-created_at')
+#             elif period_option == "within_a_week":
+#                 one_week_ago = datetime.now() - timedelta(days=7)
+#                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+#                     task_completed=False, created_at__gte=one_week_ago).order_by('-created_at')
+#             elif period_option == "within_a_month":
+#                 one_month_ago = datetime.now() - timedelta(days=30)
+#                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+#                     task_completed=False, created_at__gte=one_month_ago).order_by('-created_at')
+#             elif period_option == "over_a_month_ago":
+#                 one_month_ago = datetime.now() - timedelta(days=30)
+#                 self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+#                     task_completed=False, created_at__lt=one_month_ago).order_by('-created_at')
+
+#             if self.user_for_search == "":
+#                 count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+#                     task_completed=False).count()
+#             else:
+#                 count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+#                     task_completed=False, task_manager__username=self.user_for_search).count()
+
+#             if is_task_due_date_has_passed == "true":
+#                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+#                 count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lt=current_datetime, due_date__isnull=False).count()
+
+#             self.totalCountForTask = math.trunc(
+#                 count_for_all_uncompleted_project_task_list)
+
+#             start = (page - 1) * self.task_number_for_one_page
+#             end = start + self.task_number_for_one_page
+
+#             if self.user_for_search != "":
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     task_manager__username=self.user_for_search)
+#             else:
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
+#                     start:end]
+
+#             if task_status_option != "":
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     current_status=task_status_option)
+
+#             if due_date_option_for_filtering == "undecided":
+#                 noon = time(hour=12, minute=10, second=0)
+#                 deadline = datetime.combine(datetime.today(), noon)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date=None)
+
+#             if due_date_option_for_filtering == "until-yesterday":
+#                 morning = time(hour=0, minute=0, second=0)
+#                 deadline = datetime.combine(datetime.today(), morning)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lt=deadline)
+
+#             if due_date_option_for_filtering == "until-noon":
+#                 noon = time(hour=12, minute=10, second=0)
+#                 deadline = datetime.combine(datetime.today(), noon)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-evening":
+#                 print("due_date_option_for_filtering !!!!!!!!!!!! ")
+#                 evening = time(hour=19, minute=10, second=0)
+#                 deadline = datetime.combine(datetime.today(), evening)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-night":
+#                 print("due_date_option_for_filtering !!!!!!!!!!!! ")
+#                 evening = time(hour=23, minute=59, second=59)
+#                 deadline = datetime.combine(datetime.today(), evening)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-tomorrow":
+#                 print("due_date_option_for_filtering !!!!!!!!!!!! ")
+#                 tomorrow = datetime.today() + timedelta(days=1)
+#                 evening = time(hour=19, minute=10, second=0)
+#                 deadline = datetime.combine(tomorrow, evening)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-the-day-after-tomorrow":
+#                 print("due_date_option_for_filtering tomorrow !!!!!!!!!!!! ")
+#                 tomorrow = datetime.today() + timedelta(days=2)
+#                 evening = time(hour=19, minute=10, second=0)
+#                 deadline = datetime.combine(tomorrow, evening)
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-this-week":
+#                 print("due_date_option_for_filtering this week !!!!!!!!!!!! ")
+#                 today = datetime.today()
+#                 last_day_of_week = today + timedelta(days=(6 - today.weekday()))
+#                 deadline = datetime.combine(
+#                     last_day_of_week, time(hour=23, minute=59, second=59))
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if due_date_option_for_filtering == "until-this-month":
+#                 print("due_date_option_for_filtering this month !!!!!!!!!!!! ")
+#                 today = datetime.today()
+#                 # 이번 달의 마지막 날짜 계산
+#                 last_day_of_month = datetime(
+#                     today.year, today.month, 1) + timedelta(days=32)
+#                 last_day_of_month = last_day_of_month.replace(
+#                     day=1) - timedelta(days=1)
+#                 # 이번 달 마지막 날짜의 오후 11시 59분 59초까지
+#                 deadline = datetime.combine(
+#                     last_day_of_month, time(hour=23, minute=59, second=59))
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lte=deadline)
+
+#             if rating_for_filter_option != "":
+#                 if int(rating_for_filter_option) > 0:
+#                     print("rating_for_filter_option : ", rating_for_filter_option)
+#                     self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                         importance=rating_for_filter_option)
+
+#             if isForUrgent == "true":
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     is_task_for_urgent=True)
+#             if checkForCashPrize == "true":
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     is_task_for_cash_prize=True)
+
+#             if groupByOption != "":
+#                 if groupByOption == "member":
+#                     self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
+#                         'task_manager')
+#                 if groupByOption == "importance":
+#                     self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
+#                         'importance')
+
+#             if is_task_due_date_has_passed == "true":
+#                 # todo due_date 가 지금 시간 보다 과거인것들 검색 (현지 시간 기준)
+
+#                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+#                 self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lt=current_datetime, due_date__isnull=False
+#                 )
+
+#             serializer = ProjectProgressListSerializer(
+#                 self.uncompleted_project_task_list_for_current_page, many=True)
+
+#             if self.user_for_search == "":
+#                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+#                 count_for_ready = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=False).count()
+#                 count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=False, task_completed=False).count()
+#                 count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=True, task_completed=False).count()
+#                 count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lt=current_datetime, task_completed=False).count()
+
+#             else:
+#                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+#                 serializer = ProjectProgressListSerializer(
+#                     self.uncompleted_project_task_list_for_current_page, many=True)
+#                 count_for_ready = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=False, task_manager__username=self.user_for_search).count()
+#                 count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
+#                 count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
+#                 count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
+#                     due_date__lt=current_datetime, task_completed=False, task_manager__username=self.user_for_search).count()
+
+#             print("is_task_due_date_has_passed ::::::::::::::: ",
+#                 is_task_due_date_has_passed)
+
+#             if is_task_due_date_has_passed == "true":
+#                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+
+#                 count_for_ready = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=False, due_date__lt=current_datetime, due_date__isnull=False).count()
+#                 count_for_in_progress = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=False, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
+#                 count_for_in_testing = self.all_uncompleted_project_task_list.filter(
+#                     in_progress=True, is_testing=True, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
+
+#             # 리스트 직렬화
+#             data = serializer.data
+
+#             # 작성자 목록
+#             writers_info = get_writers_info(complete_status=False)
+
+#             # 오늘까지인 task 총 개수
+#             deadline = datetime.combine(
+#                 datetime.today(), time(hour=23, minute=59, second=59))
+#             # fix
+#             # 서울 시간대 설정
+#             timezone = pytz.timezone('Asia/Seoul')
+
+#             # 서울 시간으로 오늘의 시작과 끝 시간 계산
+#             today_start = timezone.localize(
+#                 datetime.combine(date.today(), time.min))
+#             today_end = timezone.localize(datetime.combine(date.today(), time.max))
+
+#             total_task_count_for_today = ProjectProgress.objects.filter(
+#                 due_date__range=(today_start, today_end)).count()
+
+#             completed_task_count_for_today = ProjectProgress.objects.filter(
+#                 task_completed=True, due_date__range=(today_start, today_end)).count()
+
+#             achievement_rate_for_today = 0  # 기본값으로 0 설정
+
+#             if total_task_count_for_today != 0:
+#                 achievement_rate_for_today = (
+#                     completed_task_count_for_today / total_task_count_for_today) * 100
+#                 achievement_rate_for_today = round(achievement_rate_for_today)
+
+#             current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
+#             task_count_for_due_date_passed = self.all_uncompleted_project_task_list.filter(
+#                 due_date__lt=current_datetime, due_date__isnull=False).count()
+
+#             response_data = {
+#                 "writers_info": writers_info,
+#                 "ProjectProgressList": data,
+#                 "count_for_ready": count_for_ready,
+#                 "count_for_in_progress": count_for_in_progress,
+#                 "count_for_in_testing": count_for_in_testing,
+#                 "count_for_duedate_passed": count_for_duedate_passed,
+#                 "totalPageCount": self.totalCountForTask,
+#                 "task_number_for_one_page": self.task_number_for_one_page,
+#                 "total_task_count_for_today": total_task_count_for_today,
+#                 "completed_task_count_for_today": completed_task_count_for_today,
+#                 "achievement_rate_for_today": achievement_rate_for_today,
+#                 "task_count_for_due_date_passed": task_count_for_due_date_passed
+#             }
+
+#         except ValueError:
+#             page = 1
+
+#         except Exception as e:  # 에러 처리를 위해 Exception으로 변경
+#             # ObjectDoesNotExist 에러가 발생한 경우
+#             error_message = str(e)  # 에러 메시지를 문자열로 변환
+#             response_data = {"error": error_message}
+#             return Response(response_data, status=HTTP_400_BAD_REQUEST)
+
+#         return Response(response_data, status=HTTP_200_OK)
+
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
-    task_number_for_one_page = 10  # 1 페이지에 몇개씩
+    task_number_for_one_page = 10  # 1 페이지에 몇 개씩
     all_uncompleted_project_task_list = []
-    completed_project_task_list_for_current_page = []
     user_for_search = ""
+    order_by_field = "id"
 
     def get(self, request):
-        response_data = {}
         try:
-            page = request.query_params.get("page", 1)
-            page = int(page)
-
+            page = int(request.query_params.get("page", 1))
             period_option = request.query_params.get(
                 "selectedPeriodOptionForUncompletedTaskList", "all")
-            task_status_option = request.query_params.get(
-                "task_status_for_search", "")
-            self.user_for_search = request.query_params.get(
-                "username_for_search", "")
+
+            task_status_for_filter = request.query_params.get(
+                "task_status_for_filter", "")
             due_date_option_for_filtering = request.query_params.get(
                 "due_date_option_for_filtering", "")
-            rating_for_filter_option = request.query_params.get(
-                "rating_for_filter_option", "")
-            isForUrgent = request.query_params.get(
-                "isForUrgent", False)
+            self.user_for_search = request.query_params.get(
+                "username_for_search", "")
+            isForUrgent = request.query_params.get("isForUrgent", False)
+
             checkForCashPrize = request.query_params.get(
                 "checkForCashPrize", False)
+
             groupByOption = request.query_params.get(
                 "groupByOption", "")
-            is_task_due_date_has_passed = request.query_params.get(
-                "is_task_due_date_has_passed", False)
-            
-            if period_option == "all":
-                self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                    task_completed=False).order_by('-created_at')
-            elif period_option == "within_a_week":
-                one_week_ago = datetime.now() - timedelta(days=7)
-                self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                    task_completed=False, created_at__gte=one_week_ago).order_by('-created_at')
+
+            # 필터링 조건을 간소화
+            filter_params = {"task_completed": False}
+
+            print("groupByOption ::::::::::::::::::", groupByOption)
+
+            if groupByOption == "member":
+                self.order_by_field = 'task_manager'
+            elif groupByOption == "importance":
+                self.order_by_field = '-importance'
+
+            if period_option == "within_a_week":
+                filter_params["created_at__gte"] = datetime.now() - \
+                    timedelta(days=7)
             elif period_option == "within_a_month":
-                one_month_ago = datetime.now() - timedelta(days=30)
-                self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                    task_completed=False, created_at__gte=one_month_ago).order_by('-created_at')
+                filter_params["created_at__gte"] = datetime.now() - \
+                    timedelta(days=30)
             elif period_option == "over_a_month_ago":
-                one_month_ago = datetime.now() - timedelta(days=30)
-                self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
-                    task_completed=False, created_at__lt=one_month_ago).order_by('-created_at')
+                filter_params["created_at__lt"] = datetime.now() - \
+                    timedelta(days=30)
 
-            if self.user_for_search == "":
-                count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
-                    task_completed=False).count()
-            else:
-                count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
-                    task_completed=False, task_manager__username=self.user_for_search).count()
+            if self.user_for_search:
+                filter_params["task_manager__username"] = self.user_for_search
 
-            if is_task_due_date_has_passed == "true":
-                current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-                count_for_all_uncompleted_project_task_list = self.all_uncompleted_project_task_list.filter(
-                    due_date__lt=current_datetime, due_date__isnull=False).count()
+            if isForUrgent == "true":
+                filter_params["is_task_for_urgent"] = True
 
-            self.totalCountForTask = math.trunc(
-                count_for_all_uncompleted_project_task_list)
+            if checkForCashPrize == "true":
+                filter_params["is_task_for_cash_prize"] = True
 
-            start = (page - 1) * self.task_number_for_one_page
-            end = start + self.task_number_for_one_page
-
-            if self.user_for_search != "":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    task_manager__username=self.user_for_search)
-            else:
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
-                    start:end]
-
-            if task_status_option != "":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    current_status=task_status_option)
-
-            if due_date_option_for_filtering == "undecided":
-                noon = time(hour=12, minute=10, second=0)
-                deadline = datetime.combine(datetime.today(), noon)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date=None)
+            if task_status_for_filter:
+                filter_params["current_status"] = task_status_for_filter
+            print("due_date_option_for_filtering :::::::::::::",
+                  due_date_option_for_filtering)
 
             if due_date_option_for_filtering == "until-yesterday":
-                morning = time(hour=0, minute=0, second=0)
-                deadline = datetime.combine(datetime.today(), morning)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lt=deadline)
+                filter_params["due_date__lt"] = datetime.combine(
+                    date.today(), time(0, 0, 0))
 
-            if due_date_option_for_filtering == "until-noon":
-                noon = time(hour=12, minute=10, second=0)
-                deadline = datetime.combine(datetime.today(), noon)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
+            elif due_date_option_for_filtering == "until-noon":
+                filter_params["due_date__lt"] = datetime.combine(
+                    date.today(), time(12, 10, 0))
 
             if due_date_option_for_filtering == "until-evening":
-                print("due_date_option_for_filtering !!!!!!!!!!!! ")
-                evening = time(hour=19, minute=10, second=0)
-                deadline = datetime.combine(datetime.today(), evening)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
+                filter_params["due_date__lt"] = datetime.combine(
+                    date.today(), time(19, 10, 0))
 
             if due_date_option_for_filtering == "until-night":
-                print("due_date_option_for_filtering !!!!!!!!!!!! ")
-                evening = time(hour=23, minute=59, second=59)
-                deadline = datetime.combine(datetime.today(), evening)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
+                filter_params["due_date__lt"] = datetime.combine(
+                    date.today(), time(23, 59, 59))
 
             if due_date_option_for_filtering == "until-tomorrow":
-                print("due_date_option_for_filtering !!!!!!!!!!!! ")
                 tomorrow = datetime.today() + timedelta(days=1)
                 evening = time(hour=19, minute=10, second=0)
-                deadline = datetime.combine(tomorrow, evening)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
+                filter_params["due_date__lt"] = datetime.combine(
+                    tomorrow, evening)
 
             if due_date_option_for_filtering == "until-the-day-after-tomorrow":
-                print("due_date_option_for_filtering tomorrow !!!!!!!!!!!! ")
-                tomorrow = datetime.today() + timedelta(days=2)
+                day_afoter_tomorrow = datetime.today() + timedelta(days=2)
                 evening = time(hour=19, minute=10, second=0)
-                deadline = datetime.combine(tomorrow, evening)
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
+                filter_params["due_date__lt"] = datetime.combine(
+                    day_afoter_tomorrow, evening)
 
             if due_date_option_for_filtering == "until-this-week":
                 print("due_date_option_for_filtering this week !!!!!!!!!!!! ")
                 today = datetime.today()
-                last_day_of_week = today + timedelta(days=(6 - today.weekday()))
-                deadline = datetime.combine(
+                last_day_of_week = today + \
+                    timedelta(days=(6 - today.weekday()))
+                filter_params["due_date__lt"] = datetime.combine(
                     last_day_of_week, time(hour=23, minute=59, second=59))
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
 
             if due_date_option_for_filtering == "until-this-month":
-                print("due_date_option_for_filtering this month !!!!!!!!!!!! ")
+                #  print("due_date_option_for_filtering this month !!!!!!!!!!!! ")
                 today = datetime.today()
                 # 이번 달의 마지막 날짜 계산
                 last_day_of_month = datetime(
@@ -2824,140 +3068,72 @@ class UncompletedTaskListView(APIView):
                 last_day_of_month = last_day_of_month.replace(
                     day=1) - timedelta(days=1)
                 # 이번 달 마지막 날짜의 오후 11시 59분 59초까지
-                deadline = datetime.combine(
+                filter_params["due_date__lt"] = datetime.combine(
                     last_day_of_month, time(hour=23, minute=59, second=59))
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lte=deadline)
 
-            if rating_for_filter_option != "":
-                if int(rating_for_filter_option) > 0:
-                    print("rating_for_filter_option : ", rating_for_filter_option)
-                    self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                        importance=rating_for_filter_option)
+            self.all_uncompleted_project_task_list = ProjectProgress.objects.filter(
+                **filter_params).order_by('-created_at').order_by(self.order_by_field)
 
-            if isForUrgent == "true":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    is_task_for_urgent=True)
-            if checkForCashPrize == "true":
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    is_task_for_cash_prize=True)
+            self.totalCountForTask = self.all_uncompleted_project_task_list.count()
+            start = (page - 1) * self.task_number_for_one_page
+            end = start + self.task_number_for_one_page
 
-            if groupByOption != "":
-                if groupByOption == "member":
-                    self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
-                        'task_manager')
-                if groupByOption == "importance":
-                    self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.order_by(
-                        'importance')
-
-            if is_task_due_date_has_passed == "true":
-                # todo due_date 가 지금 시간 보다 과거인것들 검색 (현지 시간 기준)
-
-                current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-                self.uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
-                    due_date__lt=current_datetime, due_date__isnull=False
-                )
+            if self.user_for_search:
+                uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list.filter(
+                    task_manager__username=self.user_for_search)
+            else:
+                uncompleted_project_task_list_for_current_page = self.all_uncompleted_project_task_list[
+                    start:end]
 
             serializer = ProjectProgressListSerializer(
-                self.uncompleted_project_task_list_for_current_page, many=True)
-
-            if self.user_for_search == "":
-                current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-                count_for_ready = self.all_uncompleted_project_task_list.filter(
-                    in_progress=False).count()
-                count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=False, task_completed=False).count()
-                count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=True, task_completed=False).count()
-                count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
-                    due_date__lt=current_datetime, task_completed=False).count()
-
-            else:
-                current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-                serializer = ProjectProgressListSerializer(
-                    self.uncompleted_project_task_list_for_current_page, many=True)
-                count_for_ready = self.all_uncompleted_project_task_list.filter(
-                    in_progress=False, task_manager__username=self.user_for_search).count()
-                count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=False, task_completed=False, task_manager__username=self.user_for_search).count()
-                count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=True, task_completed=False, task_manager__username=self.user_for_search).count()
-                count_for_duedate_passed = self.all_uncompleted_project_task_list.filter(
-                    due_date__lt=current_datetime, task_completed=False, task_manager__username=self.user_for_search).count()
-
-            print("is_task_due_date_has_passed ::::::::::::::: ",
-                is_task_due_date_has_passed)
-
-            if is_task_due_date_has_passed == "true":
-                current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-
-                count_for_ready = self.all_uncompleted_project_task_list.filter(
-                    in_progress=False, due_date__lt=current_datetime, due_date__isnull=False).count()
-                count_for_in_progress = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=False, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
-                count_for_in_testing = self.all_uncompleted_project_task_list.filter(
-                    in_progress=True, is_testing=True, task_completed=False, due_date__lt=current_datetime, due_date__isnull=False).count()
-
-            # 리스트 직렬화
-            data = serializer.data
-
-            # 작성자 목록
-            writers_info = get_writers_info(complete_status=False)
-
-            # 오늘까지인 task 총 개수
-            deadline = datetime.combine(
-                datetime.today(), time(hour=23, minute=59, second=59))
-            # fix
-            # 서울 시간대 설정
-            timezone = pytz.timezone('Asia/Seoul')
-
-            # 서울 시간으로 오늘의 시작과 끝 시간 계산
-            today_start = timezone.localize(
-                datetime.combine(date.today(), time.min))
-            today_end = timezone.localize(datetime.combine(date.today(), time.max))
-
-            total_task_count_for_today = ProjectProgress.objects.filter(
-                due_date__range=(today_start, today_end)).count()
-
-            completed_task_count_for_today = ProjectProgress.objects.filter(
-                task_completed=True, due_date__range=(today_start, today_end)).count()
-
-            achievement_rate_for_today = 0  # 기본값으로 0 설정
-
-            if total_task_count_for_today != 0:
-                achievement_rate_for_today = (
-                    completed_task_count_for_today / total_task_count_for_today) * 100
-                achievement_rate_for_today = round(achievement_rate_for_today)
-
-            current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
-            task_count_for_due_date_passed = self.all_uncompleted_project_task_list.filter(
-                due_date__lt=current_datetime, due_date__isnull=False).count()
+                uncompleted_project_task_list_for_current_page, many=True)
 
             response_data = {
-                "writers_info": writers_info,
-                "ProjectProgressList": data,
-                "count_for_ready": count_for_ready,
-                "count_for_in_progress": count_for_in_progress,
-                "count_for_in_testing": count_for_in_testing,
-                "count_for_duedate_passed": count_for_duedate_passed,
+                "writers_info": get_writers_info(complete_status=False),
+                "ProjectProgressList": serializer.data,
+                "count_for_ready": self.all_uncompleted_project_task_list.filter(in_progress=False).count(),
+                "count_for_in_progress": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=False, task_completed=False).count(),
+                "count_for_in_testing": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=True, task_completed=False).count(),
+                "count_for_duedate_passed": self.all_uncompleted_project_task_list.filter(due_date__lt=datetime.now(), task_completed=False).count(),
                 "totalPageCount": self.totalCountForTask,
                 "task_number_for_one_page": self.task_number_for_one_page,
-                "total_task_count_for_today": total_task_count_for_today,
-                "completed_task_count_for_today": completed_task_count_for_today,
-                "achievement_rate_for_today": achievement_rate_for_today,
-                "task_count_for_due_date_passed": task_count_for_due_date_passed
+                "total_task_count_for_today": self.get_total_task_count_for_today(),
+                "completed_task_count_for_today": self.get_completed_task_count_for_today(),
+                "achievement_rate_for_today": self.get_achievement_rate_for_today(),
+                "task_count_for_due_date_passed": self.get_task_count_for_due_date_passed(),
             }
 
-        except ValueError:
-            page = 1
-
-        except Exception as e:  # 에러 처리를 위해 Exception으로 변경
-            # ObjectDoesNotExist 에러가 발생한 경우
-            error_message = str(e)  # 에러 메시지를 문자열로 변환
+            return Response(response_data, status=HTTP_200_OK)
+        except Exception as e:
+            error_message = str(e)
             response_data = {"error": error_message}
             return Response(response_data, status=HTTP_400_BAD_REQUEST)
 
-        return Response(response_data, status=HTTP_200_OK)
+    def get_total_task_count_for_today(self):
+        today_start, today_end = self.get_today_start_and_end()
+        return ProjectProgress.objects.filter(due_date__range=(today_start, today_end)).count()
+
+    def get_completed_task_count_for_today(self):
+        today_start, today_end = self.get_today_start_and_end()
+        return ProjectProgress.objects.filter(task_completed=True, due_date__range=(today_start, today_end)).count()
+
+    def get_achievement_rate_for_today(self):
+        total_task_count_for_today = self.get_total_task_count_for_today()
+        if total_task_count_for_today == 0:
+            return 0
+        completed_task_count_for_today = self.get_completed_task_count_for_today()
+        return round((completed_task_count_for_today / total_task_count_for_today) * 100)
+
+    def get_task_count_for_due_date_passed(self):
+        current_datetime = datetime.now()
+        return self.all_uncompleted_project_task_list.filter(due_date__lt=current_datetime, due_date__isnull=False).count()
+
+    def get_today_start_and_end(self):
+        timezone = pytz.timezone('Asia/Seoul')
+        today_start = timezone.localize(
+            datetime.combine(date.today(), time.min))
+        today_end = timezone.localize(datetime.combine(date.today(), time.max))
+        return today_start, today_end
 
 
 class CompletedTaskListView(APIView):
@@ -3258,7 +3434,7 @@ class UpdateTaskCompetedView(APIView):
             message = "완료에서 비완료로 update"
             project_task.task_completed = False
             project_task.current_status = "testing"
-            project_task.completed_at = None 
+            project_task.completed_at = None
 
             try:
                 task_log_for_delete = TaskLog.objects.get(
@@ -3308,20 +3484,20 @@ class UpdateTaskCompetedView(APIView):
 
             else:
                 # 생성하려는 업무 바로 이전에 생성한 업무가 없거나 writer가 다르면 시간 차이를 0으로 설정
-                interval_between_my_task = 0                
-                
+                interval_between_my_task = 0
+
             task_log = TaskLog.objects.create(
                 original_task=project_task,
                 taskPk=project_task.id,
                 writer=project_task.task_manager,
                 task=project_task.task,
                 # todo 11 생성하려는 업무 바로 이전에 생성한 업무가 존재할 경우 시간차(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무)를 초 단위로 interval_between_team_task에 저장
-                time_distance_for_team_task = interval_between_team_task,
+                time_distance_for_team_task=interval_between_team_task,
                 # todo 22 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 일 경우
                 # time_distance_for_my_task 에 시간 차이(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 인 업무)를 초 단위로 저장
-                time_distance_for_my_task = interval_between_my_task,
+                time_distance_for_my_task=interval_between_my_task,
 
-                
+
                 # todo 22 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 일 경우
                 # time_distance_for_my_task 에 시간 차이(현재 시간 - 생성하려는 업무 바로 이전에 생성한 업무가 존재하면서 동시에 writer = project_task.task_manager 인 업무) 저장
                 completed_at=timezone.now().astimezone(pytz.timezone('Asia/Seoul')),
