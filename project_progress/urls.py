@@ -4,8 +4,9 @@ from . import views
 urlpatterns = [
     path('', views.ProjectProgressView.as_view(), name='project_progress'),
 
-     # create view
-     path('<int:targetTaskId>/add-extra-manager' , views.CreateViewForExtraTaskManager.as_view()),
+    # create view
+    path('<int:targetTaskId>/add-extra-manager',
+         views.CreateViewForExtraTaskManager.as_view()),
 
     # listview
     path("getTaskListForTaskIntegration",
@@ -45,9 +46,9 @@ urlpatterns = [
     path("task-url-for-extra-task/<int:pk>/delete",
          views.deleteViewForTaskUrlForExtraTask.as_view()),
 
-     # delete view
-     path("extra-manager/<int:extraManagerId>/delete", 
-          views.DeleteViewForExtraManagerForTask.as_view()),
+    # delete view
+    path("extra-manager/<int:extraManagerId>/delete",
+         views.DeleteViewForExtraManagerForTask.as_view()),
 
     path("<int:taskPk>/create-task-urk-for-task-pk",
          views.CreateTaskUrlForTaskPk.as_view()),
@@ -96,7 +97,7 @@ urlpatterns = [
     path("uncompleted", views.UncompletedTaskListView.as_view(),
          name="uncompleted_task_list"),
 
-#     path("in_progress", views.InProgressTaskListView.as_view()),
+    path("in_progress", views.InProgressTaskListView.as_view()),
 
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(),
          name="uncompleted_task_list_for_me"),
