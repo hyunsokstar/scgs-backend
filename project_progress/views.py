@@ -3127,11 +3127,11 @@ class InProgressTaskListView(APIView):
                 "count_for_in_progress": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=False, task_completed=False).count(),
                 "count_for_in_testing": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=True, task_completed=False).count(),
                 "task_count_for_due_date_passed": self.get_task_count_for_due_date_passed(),
-                "count_for_duedate_passed": self.all_uncompleted_project_task_list.filter(due_date__lt=datetime.now(), task_completed=False).count()
+                "count_for_duedate_passed": self.all_uncompleted_project_task_list.filter(due_date__lt=datetime.now(), task_completed=False).count(),
                 # "count_for_ready": self.all_uncompleted_project_task_list.filter(in_progress=False).count(),
-                # "total_task_count_for_today": self.get_total_task_count_for_today(),
-                # "completed_task_count_for_today": self.get_completed_task_count_for_today(),
-                # "achievement_rate_for_today": self.get_achievement_rate_for_today(),
+                "total_task_count_for_today": self.get_total_task_count_for_today(),
+                "completed_task_count_for_today": self.get_completed_task_count_for_today(),
+                "achievement_rate_for_today": self.get_achievement_rate_for_today(),
             }
 
             return Response(response_data, status=HTTP_200_OK)
@@ -3198,7 +3198,7 @@ class UncompletedTaskListView(APIView):
                 "is_task_due_date_has_passed", False)
 
             # 필터링 조건을 간소화
-            filter_params = {"task_completed": False}
+            filter_params = {"in_progress":False , "task_completed": False}
 
             print("groupByOption ::::::::::::::::::", groupByOption)
 
@@ -3306,8 +3306,8 @@ class UncompletedTaskListView(APIView):
                 "writers_info": get_writers_info(complete_status=False),
                 "ProjectProgressList": serializer.data,
                 "count_for_ready": self.all_uncompleted_project_task_list.filter(in_progress=False).count(),
-                "count_for_in_progress": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=False, task_completed=False).count(),
-                "count_for_in_testing": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=True, task_completed=False).count(),
+                # "count_for_in_progress": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=False, task_completed=False).count(),
+                # "count_for_in_testing": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=True, task_completed=False).count(),
                 "count_for_duedate_passed": self.all_uncompleted_project_task_list.filter(due_date__lt=datetime.now(), task_completed=False).count(),
                 "totalPageCount": self.totalCountForTask,
                 "task_number_for_one_page": self.task_number_for_one_page,
