@@ -96,6 +96,8 @@ urlpatterns = [
     path("uncompleted", views.UncompletedTaskListView.as_view(),
          name="uncompleted_task_list"),
 
+#     path("in_progress", views.InProgressTaskListView.as_view()),
+
     path("uncompleted/for-me", views.UncompletedTaskListViewForMe.as_view(),
          name="uncompleted_task_list_for_me"),
     path("completed", views.CompletedTaskListView.as_view(),
