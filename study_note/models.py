@@ -47,6 +47,8 @@ class StudyNote(models.Model):
         ordering = ['-id']
 
 # todo ErrorReportForStudyNote의 댓글용 모델 필요 컬럼은?  error_report:ErrorReportForStudyNote, writer, content , created_at
+
+
 class ErrorReportForStudyNote(models.Model):
     study_note = models.ForeignKey(
         "study_note.StudyNote",
@@ -64,7 +66,7 @@ class ErrorReportForStudyNote(models.Model):
         on_delete=models.CASCADE,
     )
 
-    content = models.TextField(null=True, blank=True) 
+    content = models.TextField(null=True, blank=True)
 
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
@@ -76,6 +78,7 @@ class ErrorReportForStudyNote(models.Model):
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class CommentForErrorReport(models.Model):
     error_report = models.ForeignKey(
@@ -119,16 +122,17 @@ class QnABoard(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-    )    
-    created_at = models.DateTimeField(default=timezone.now)    
+    )
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.id} - {self.title}"
-    
+
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')       
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class AnswerForQaBoard(models.Model):
     question = models.ForeignKey(
@@ -148,6 +152,7 @@ class AnswerForQaBoard(models.Model):
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class ClassRoomForStudyNote(models.Model):
     current_note = models.ForeignKey(
@@ -190,7 +195,9 @@ class CoWriterForStudyNote(models.Model):
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     is_tasking = models.BooleanField(default=False)
-    task_description = models.BooleanField(default=False)
+    current_page = models.IntegerField(null=True, blank=True)
+    task_description = models.CharField(
+        max_length=30, default='', null=True, blank=True)
 
     def __str__(self):
         return f"{self.writer.username} <=> {self.study_note.title}의 공동 저자"
@@ -271,6 +278,7 @@ class StudyNoteBriefingBoard(models.Model):
         else:
             return "준비"
 
+
 class FAQBoard(models.Model):
     study_note = models.ForeignKey(
         "study_note.StudyNote",
@@ -286,16 +294,17 @@ class FAQBoard(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-    )    
-    created_at = models.DateTimeField(default=timezone.now)    
+    )
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.id} - {self.title}"
-    
+
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분') 
+        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+
 
 class CommentForFaqBoard(models.Model):
     faq_board = models.ForeignKey(
@@ -324,6 +333,7 @@ class CommentForFaqBoard(models.Model):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
 
+
 class Suggestion(models.Model):
     study_note = models.ForeignKey(
         "study_note.StudyNote",
@@ -339,16 +349,17 @@ class Suggestion(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-    )    
-    created_at = models.DateTimeField(default=timezone.now)    
+    )
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.pk} - {self.title}"
-    
+
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m%d%H%M')
+
 
 class CommentForSuggestion(models.Model):
     suggestion = models.ForeignKey(
@@ -376,6 +387,3 @@ class CommentForSuggestion(models.Model):
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
         return local_created_at.strftime('%m월 %d일 %H시 %M분')
-
-
-        

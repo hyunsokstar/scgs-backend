@@ -2246,8 +2246,12 @@ class StudyNoteDetailView(APIView):
         for cowriter in cowriters:
             if cowriter.is_approved:
                 cowriter_data = {
+                    "id": cowriter.id,
                     "username": cowriter.writer.username,
-                    "profile_image": cowriter.writer.profile_image
+                    "profile_image": cowriter.writer.profile_image,
+                    "is_tasking": cowriter.is_tasking,
+                    "current_page": cowriter.current_page,
+                    "task_description": cowriter.task_description
                 }
                 cowriters_data.append(cowriter_data)
 
@@ -2273,7 +2277,6 @@ class StudyNoteDetailView(APIView):
             "co_writers_for_approved": cowriters_data,
             "question_count_for_current_page": question_count_for_current_page,
             "authority_for_writing_note_contents": authority_for_writing_note_contents,
-            # "current_corwriter": current_corwriter
         }
 
         return Response(response_data, status=HTTP_200_OK)
