@@ -189,6 +189,8 @@ class CoWriterForStudyNote(models.Model):
     )
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
+    is_tasking = models.BooleanField(default=False)
+    task_description = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.writer.username} <=> {self.study_note.title}의 공동 저자"

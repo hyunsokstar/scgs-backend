@@ -2213,16 +2213,12 @@ class StudyNoteDetailView(APIView):
             raise NotFound
 
     def get(self, request, notePk, pageNum):
-        # study note 정보 가져 오기
         study_note = self.get_object(notePk)
-        # current_page = request.GET.get('currentPage', 1)
 
         question_count_for_current_page = study_note.question_list.filter(
             page=pageNum).count()
-        print("question_count_for_current_page ::::::::::::::::::::::::::::::::::::::::",
-              question_count_for_current_page)
-
-        print("current_page : ", pageNum)
+        print("question_count_for_current_page:", question_count_for_current_page)
+        print("current_page:", pageNum)
         note_contents = study_note.note_contents.filter(
             page=pageNum).order_by('order')
 
@@ -2238,26 +2234,34 @@ class StudyNoteDetailView(APIView):
         data = serializer.data
 
         total_note_contents = study_note.note_contents.all().order_by('order')
-        # print("total_note_contents :::::::::::::::::::: ", total_note_contents)
 
         page_numbers = total_note_contents.values(
             'page').annotate(count=Count('id')).order_by('page')
-        # print("page_numbers :::::::::::::::::", page_numbers)
-        exist_page_numbers = [page['page'] for page in page_numbers]
-        # print("exist_page_numbers ::::::::::::::: ", exist_page_numbers)
 
-        # todo
-        # study_note.note_cowriters를 가져와 cowriters에 담은 뒤 response_data에 추가
+        exist_page_numbers = [page['page'] for page in page_numbers]
+
         cowriters = study_note.note_cowriters.all()
         cowriters_data = []
+
         for cowriter in cowriters:
             if cowriter.is_approved:
-                # # cowriters_data.append(cowriter.writer.username)
                 cowriter_data = {
                     "username": cowriter.writer.username,
                     "profile_image": cowriter.writer.profile_image
                 }
                 cowriters_data.append(cowriter_data)
+
+        # Check if the request user's username is in cowriters_data
+        if request.user.username in [cowriter['username'] for cowriter in cowriters_data]:
+            # If the user's username is found, grant authority
+            authority_for_writing_note_contents = True
+            current_corwriter = request.user.username
+        else:
+            authority_for_writing_note_contents = False
+            current_corwriter = ""
+
+        if study_note.writer.username == request.user.username:
+            authority_for_writing_note_contents = True
 
         response_data = {
             "note_title": study_note.title,
@@ -2267,7 +2271,9 @@ class StudyNoteDetailView(APIView):
             "exist_page_numbers": exist_page_numbers,
             "data_for_study_note_contents": data,
             "co_writers_for_approved": cowriters_data,
-            "question_count_for_current_page": question_count_for_current_page
+            "question_count_for_current_page": question_count_for_current_page,
+            "authority_for_writing_note_contents": authority_for_writing_note_contents,
+            # "current_corwriter": current_corwriter
         }
 
         return Response(response_data, status=HTTP_200_OK)
