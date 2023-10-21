@@ -15,9 +15,11 @@ from .models import (
     CommentForFaqBoard
 )
 
+
 @admin.register(CommentForFaqBoard)
 class CommentForFaqBoardAdmin(admin.ModelAdmin):
     list_display = ('writer', 'content', 'created_at')
+
 
 @admin.register(CommentForSuggestion)
 class CommentForSuggestionAdmin(admin.ModelAdmin):
@@ -70,7 +72,7 @@ class StudyNoteContentAdmin(admin.ModelAdmin):
 
 @admin.register(CoWriterForStudyNote)
 class CoWriterForStudyNoteAdmin(admin.ModelAdmin):
-    list_display = ('writer', 'study_note', 'is_approved', 'created_at')
+    list_display = ('id', 'writer', 'study_note', 'is_tasking')
     list_filter = ('is_approved', 'created_at')
     search_fields = ('writer__username', 'study_note__title')
     readonly_fields = ('created_at',)

@@ -26,8 +26,8 @@ from .models import (
     Suggestion,
     CommentForSuggestion,
     CommentForFaqBoard,
-    CoWriterForStudyNote, 
-    StudyNote, 
+    CoWriterForStudyNote,
+    StudyNote,
     StudyNoteContent
 )
 from .serializers import (
@@ -51,6 +51,59 @@ from .serializers import (
 )
 
 # 1122
+# UpdateViewForIsTaskingForCowriter
+
+
+class UpdateViewForIsTaskingForCowriter(APIView):
+    def put(self, request, coWriterId):
+        study_note_pk = request.data.get('studyNotePk')
+        print("study_note_pk : ", study_note_pk)
+        print("coWriterId : ", coWriterId)
+
+        # 모델에서 해당하는 CoWriterForStudyNote 가져오기
+        try:
+            co_writer = CoWriterForStudyNote.objects.get(
+                id=coWriterId,
+                study_note_id=study_note_pk
+            )
+        except CoWriterForStudyNote.DoesNotExist:
+            return Response({'message': '해당 CoWriter를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 업데이트되기 전의 값을 기반으로 반전
+        is_tasking_before_update = co_writer.is_tasking
+        co_writer.is_tasking = not is_tasking_before_update
+        co_writer.save()
+
+
+        if is_tasking_before_update == False:
+            CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk).exclude(
+                id=coWriterId).update(is_tasking = is_tasking_before_update)
+
+        cowriters = CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk)
+
+        cowriters_data = []
+
+        for cowriter in cowriters:
+            if cowriter.is_approved:
+                cowriter_data = {
+                    "id": cowriter.id,
+                    "username": cowriter.writer.username,
+                    "profile_image": cowriter.writer.profile_image,
+                    "is_tasking": cowriter.is_tasking,
+                    "current_page": cowriter.current_page,
+                    "task_description": cowriter.task_description
+                }
+                cowriters_data.append(cowriter_data)
+
+        # 성공 응답
+        response_data = {
+            'message': '업데이트가 성공적으로 완료되었습니다.',
+            "cowriters_data": cowriters_data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
 # UpdateViewForSuggestion
 class UpdateViewForSuggestion(APIView):
     def put(self, request, suggestionPk):
@@ -78,7 +131,6 @@ class UpdateViewForSuggestion(APIView):
         except Exception as e:
             # 다른 예외 처리
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 # DeleteViewForSuggestion
@@ -169,6 +221,8 @@ class DeleteViewForFaqComment(APIView):
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # UpdateViewForSuggestion
+
+
 class UpdateViewForFaqComment(APIView):
     def put(self, request, commentPk):
         try:
@@ -235,13 +289,13 @@ class ListViewForCommentForFaqBoard(APIView):
         # faqId 해당하는 CommentForSuggestion 정보 가져오기
         comments = CommentForFaqBoard.objects.filter(faq_board_id=faqPk)
         print("comments : ", comments)
-        
+
         if not comments:
             raise NotFound("Comments not found")
-        
+
         # Serializer를 사용하여 데이터 직렬화
         serializer = CommentForFaqBoardSerializer(comments, many=True)
-        
+
         # 응답 데이터 구성
         response_data = {
             'comments': serializer.data,
@@ -254,11 +308,12 @@ class ListViewForCommentForSuggestion(APIView):
         print("댓글 데이터 요청 확인 for 건의 사항")
         try:
             # suggestionPk 해당하는 CommentForSuggestion 정보 가져오기
-            comments = CommentForSuggestion.objects.filter(suggestion_id=suggestionPk)
-            
+            comments = CommentForSuggestion.objects.filter(
+                suggestion_id=suggestionPk)
+
             # Serializer를 사용하여 데이터 직렬화
             serializer = CommentForSuggestionSerializer(comments, many=True)
-            
+
             # 응답 데이터 구성
             response_data = {
                 'comments': serializer.data,
@@ -268,7 +323,7 @@ class ListViewForCommentForSuggestion(APIView):
         except CommentForSuggestion.DoesNotExist:
             return Response({'detail': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            
+
 class CreateViewForCommentForSuggestionForNote(APIView):
     def post(self, request, suggestionPk):
         print("suggest 댓글 추가 요청 check !!!!!!!!!")
@@ -343,6 +398,8 @@ class SearchViewForStudyNoteSuggestionList(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 # CreateViewForSuggestionForBoard
+
+
 class CreateViewForSuggestionForNote(APIView):
     def post(self, request, study_note_pk):
         try:
@@ -371,6 +428,7 @@ class CreateViewForSuggestionForNote(APIView):
         except Exception as e:
             print("에러 발생:", str(e))
             return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CreateViewForErrorReportComment(APIView):
     def post(self, request, error_report_pk):
@@ -409,6 +467,7 @@ class CreateViewForErrorReportComment(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
 class CreteViewForFAQBoard(APIView):
     def post(self, request, study_note_pk):
         study_note_pk = int(study_note_pk)
@@ -439,6 +498,7 @@ class CreteViewForFAQBoard(APIView):
 #         )
 #         print("note_content : ", note_content)
 #         return Response(status=status.HTTP_201_CREATED)
+
 
 class DeleteViewForWithDrawClassRoom(APIView):
     def delete(self, request, study_note_pk):
@@ -634,6 +694,8 @@ class UpdateViewForFaq(APIView):
         return Response({"message": "FAQ update success"}, status=status.HTTP_200_OK)
 
 # SearchViewForStudyNoteSuggestionList
+
+
 class SearchViewForStudyNoteFaqList(APIView):
     faqList = []
 
@@ -977,6 +1039,8 @@ class CreateViewForQnABoard(APIView):
 
 # list view:
 # SuggestionView
+
+
 class ListViewForSuggestion(APIView):
     totalSuggestionCount = 0
     perPage = 5
@@ -2217,7 +2281,8 @@ class StudyNoteDetailView(APIView):
 
         question_count_for_current_page = study_note.question_list.filter(
             page=pageNum).count()
-        print("question_count_for_current_page:", question_count_for_current_page)
+        print("question_count_for_current_page:",
+              question_count_for_current_page)
         print("current_page:", pageNum)
         note_contents = study_note.note_contents.filter(
             page=pageNum).order_by('order')

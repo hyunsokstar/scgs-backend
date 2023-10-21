@@ -186,6 +186,9 @@ urlpatterns = [
     # comment delete view
     # faq-baord/${commentPk}/delete
     path('faq-board/comment/<int:commentPk>/delete',
-         views.DeleteViewForFaqComment.as_view())
+         views.DeleteViewForFaqComment.as_view()),
+
+     # update view
+     path('<int:coWriterId>/update-is-tasking-for-cowriter', views.UpdateViewForIsTaskingForCowriter.as_view())
 
 ]
