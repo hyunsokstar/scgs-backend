@@ -55,6 +55,9 @@ from .serializers import (
 
 
 class UpdateViewForIsTaskingForCowriter(APIView):
+
+    authority_for_writing_note_contents = None
+
     def put(self, request, coWriterId):
         study_note_pk = request.data.get('studyNotePk')
         print("study_note_pk : ", study_note_pk)
@@ -72,14 +75,15 @@ class UpdateViewForIsTaskingForCowriter(APIView):
         # 업데이트되기 전의 값을 기반으로 반전
         is_tasking_before_update = co_writer.is_tasking
         co_writer.is_tasking = not is_tasking_before_update
+        self.authority_for_writing_note_contents = not is_tasking_before_update
         co_writer.save()
-
 
         if is_tasking_before_update == False:
             CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk).exclude(
-                id=coWriterId).update(is_tasking = is_tasking_before_update)
+                id=coWriterId).update(is_tasking=is_tasking_before_update)
 
-        cowriters = CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk)
+        cowriters = CoWriterForStudyNote.objects.filter(
+            study_note_id=study_note_pk)
 
         cowriters_data = []
 
@@ -91,14 +95,15 @@ class UpdateViewForIsTaskingForCowriter(APIView):
                     "profile_image": cowriter.writer.profile_image,
                     "is_tasking": cowriter.is_tasking,
                     "current_page": cowriter.current_page,
-                    "task_description": cowriter.task_description
+                    "task_description": cowriter.task_description,
                 }
                 cowriters_data.append(cowriter_data)
 
         # 성공 응답
         response_data = {
             'message': '업데이트가 성공적으로 완료되었습니다.',
-            "cowriters_data": cowriters_data
+            "cowriters_data": cowriters_data,
+            "authority_for_writing_note_contents": self.authority_for_writing_note_contents
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -2321,13 +2326,15 @@ class StudyNoteDetailView(APIView):
                 cowriters_data.append(cowriter_data)
 
         # Check if the request user's username is in cowriters_data
-        if request.user.username in [cowriter['username'] for cowriter in cowriters_data]:
-            # If the user's username is found, grant authority
-            authority_for_writing_note_contents = True
-            current_corwriter = request.user.username
-        else:
-            authority_for_writing_note_contents = False
-            current_corwriter = ""
+
+        print("cowriters_data : ", cowriters_data)
+
+        authority_for_writing_note_contents = False
+
+        for cowriter in cowriters_data:
+            if cowriter['username'] == request.user.username and cowriter['is_tasking'] == True:
+                authority_for_writing_note_contents = True
+                break
 
         if study_note.writer.username == request.user.username:
             authority_for_writing_note_contents = True
