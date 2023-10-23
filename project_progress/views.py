@@ -830,7 +830,8 @@ class TaskLogView(APIView):
 
         # 유저에 대한 리스트일 경우
         if filterOptionForUserNameForTaskLogList != "":
-            user = self.get_user_obj_for_filtering_task_log(filterOptionForUserNameForTaskLogList)
+            user = self.get_user_obj_for_filtering_task_log(
+                filterOptionForUserNameForTaskLogList)
 
             now = datetime.now(pytz.timezone('Asia/Seoul'))
 
@@ -865,16 +866,9 @@ class TaskLogView(APIView):
                 print(f"남은 시간: {hours_elapsed} 시간 {minutes_elapsed} 분")
                 elapsed_time_string = f"남은 시간 {hours_elapsed} 시간 {minutes_elapsed} 분"
 
-
             # hours_elapsed = int(time_difference.total_seconds() // 3600)
             # minutes_elapsed = int(
             #     (time_difference.total_seconds() % 3600) // 60)
-
-            # if hours_elapsed > 0:
-            #     average_number_per_hour = round(
-            #         total_today_completed_task_count / hours_elapsed, 1)
-            # else:
-            #     average_number_per_hour = 0
 
             # elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
@@ -894,6 +888,12 @@ class TaskLogView(APIView):
                 due_date__range=(today_start, today_end),
                 task_completed=True
             ).count()
+
+            if hours_elapsed > 0:
+                average_number_per_hour = round(
+                    total_today_completed_task_count / hours_elapsed, 1)
+            else:
+                average_number_per_hour = 0
 
             task_logs = TaskLog.objects.filter(
                 writer=user,
@@ -976,10 +976,10 @@ class TaskLogView(APIView):
 
             # 'Asia/Seoul' 시간대로 설정
             target_time = time(9, 0)
-            task_start = datetime.now(your_timezone).replace(hour=9, minute=0, second=0, microsecond=0)
+            task_start = datetime.now(your_timezone).replace(
+                hour=9, minute=0, second=0, microsecond=0)
 
             today_end = datetime.combine(now.date(), datetime.max.time())
-            
 
             time_difference = now - task_start
 
@@ -1003,8 +1003,8 @@ class TaskLogView(APIView):
             # print("목표 시간 (오전 9시):", target_datetime)
             # print("시간 차이:", time_difference)
 
-
-            total_seconds = abs(time_difference.total_seconds())  # 양수로 변환하여 차이 계산
+            total_seconds = abs(
+                time_difference.total_seconds())  # 양수로 변환하여 차이 계산
 
             hours_elapsed = int(total_seconds // 3600)
             minutes_elapsed = int((total_seconds % 3600) // 60)
@@ -1017,7 +1017,6 @@ class TaskLogView(APIView):
                 elapsed_time_string = f"시작하기까지 {hours_remaining} 시간 {minutes_remaining} 분"
 
             print("elapsed_time_string: ", elapsed_time_string)
-
 
             total_today_task_count = ProjectProgress.objects.filter(
                 due_date__range=(today_start, today_end)
@@ -1035,12 +1034,10 @@ class TaskLogView(APIView):
                 task_completed=False
             ).count()
 
-
             if hours_elapsed > 0:
                 average_number_per_hour = total_today_completed_task_count / 10
             else:
                 average_number_per_hour = 0
-
 
             task_logs = TaskLog.objects.filter(
                 completed_at__range=(today_start, today_end))
@@ -1114,7 +1111,9 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
-            print("completionRate : ", (total_today_completed_task_count / total_today_task_count) * 100)
+            print("completionRate : ", (total_today_completed_task_count /
+                  total_today_task_count) * 100)
+            
         # TaskStatusViewForToday
         response_data = {
             'total_today_task_count': total_today_task_count,
