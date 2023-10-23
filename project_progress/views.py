@@ -966,6 +966,7 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
+        # 유저와 상관 없이 전체 리스트
         else:
             # Replace 'YOUR_TIMEZONE' with your desired timezone
             your_timezone = pytz.timezone('Asia/Seoul')
@@ -1025,7 +1026,7 @@ class TaskLogView(APIView):
             print("total_today_task_count !!!!!!!!!!! ", total_today_task_count)
 
             total_today_completed_task_count = ProjectProgress.objects.filter(
-                due_date__range=(today_start, today_end),
+                completed_at__range=(today_start, today_end),
                 task_completed=True
             ).count()
 
@@ -1034,8 +1035,10 @@ class TaskLogView(APIView):
                 task_completed=False
             ).count()
 
-            if hours_elapsed > 0:
+            if minutes_elapsed > 0:
                 average_number_per_hour = total_today_completed_task_count / 10
+                print("total_today_completed_task_count :;:::::::::::::::::::::::::::: ", total_today_completed_task_count)
+                print("average_number_per_hour :::::::::::::::::::::::::::::::::::::::::::::: ", average_number_per_hour)
             else:
                 average_number_per_hour = 0
 
@@ -1111,8 +1114,21 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
-            # print("completionRate : ", (total_today_completed_task_count /
-            #       total_today_task_count) * 100)
+            # todo !!: 오늘이 포함된 주의 월화수목금토일 날짜 어떻게 구해?
+            # 오늘의 날짜를 얻습니다.
+            today = timezone.localtime(timezone.now()).date()
+
+            # 오늘로부터 해당 주의 첫날을 계산합니다.
+            start_of_week = today - timedelta(days=today.weekday())
+
+            # 해당 주의 월화수목금토일을 구합니다.
+            weekdays = [start_of_week + timedelta(days=i) for i in range(7)]
+
+            # weekdays 리스트를 그대로 프론트로 보낼 때 UTC 형식으로 유지
+            weekdays_utc = [day.strftime('%Y-%m-%dT%H:%M:%SZ') for day in weekdays]
+
+            # 이번주 월요일의 날짜 구하려면?
+
             
         # TaskStatusViewForToday
         response_data = {
@@ -1124,7 +1140,8 @@ class TaskLogView(APIView):
             'elapsed_time': elapsed_time_string,
             'writers': writers_data,
             'task_count_for_weekdays': task_count_for_weekdays,
-            'today_info': today_info
+            'today_info': today_info,
+            'weekdays_utc': weekdays_utc
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -3973,8 +3990,39 @@ class UpdateTaskCompetedView(APIView):
 
         else:
             message = "비완료에서 완료로 update"
+
+            # # 현재 날짜 및 시간을 가져옵니다.
+            # now = timezone.now()
+
+            # # 현재 날짜의 자정을 계산합니다.
+            # today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # if project_task.due_date < today_midnight:
+            #     return Response({"message": "Due date has passed! if you want task complete update due date is necessary !"})
+            # else:
+            #     print("그대로 진행 !!!!!!!!!")
+            #     print("project_task.due_date : ", project_task.due_date)
+            #     print("today_midnight : ", today_midnight)
+
+            # 서울 시간대로 현재 날짜 및 시간을 가져옵니다.
+            seoul_timezone = pytz.timezone('Asia/Seoul')
+            now = datetime.now(seoul_timezone)
+
+            # 현재 날짜의 자정 (00시 00분 00초)를 계산합니다.
+            today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            if project_task.due_date < today_midnight:
+                return Response({"message": "Due date has passed! if you want task complete update due date is necessary !"})
+            else:
+                print("그대로 진행 !!!!!!!!!")
+                print("project_task.due_date : ", project_task.due_date)
+                print("today_midnight : ", today_midnight)
+
             project_task.task_completed = True
             project_task.current_status = "completed"
+
+            # project_task.due_date = 오늘 18시 59분 
+
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
 
