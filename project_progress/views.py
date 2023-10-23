@@ -1111,8 +1111,8 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
-            print("completionRate : ", (total_today_completed_task_count /
-                  total_today_task_count) * 100)
+            # print("completionRate : ", (total_today_completed_task_count /
+            #       total_today_task_count) * 100)
             
         # TaskStatusViewForToday
         response_data = {

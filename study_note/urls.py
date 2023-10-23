@@ -123,6 +123,9 @@ urlpatterns = [
     path('copy-selected-notes-to-my-note',
          views.CopyCopySelectedNotesToMyNoteView.as_view()),
 
+    path('copy-one-of-note-to-me',
+         views.CopyOneOfNoteToMe.as_view()),
+
     # comment create view
     # error-report/${error_report_pk}/comment/add
     path('error-report/<int:error_report_pk>/comment/add',

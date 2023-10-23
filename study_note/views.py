@@ -52,6 +52,51 @@ from .serializers import (
 
 # 1122
 # UpdateViewForIsTaskingForCowriter
+class CopyOneOfNoteToMe(APIView):
+    def post(self, request):
+        studyNotePk = request.data.get('studyNotePk')
+        print("studyNotePk : ",studyNotePk)
+
+        with transaction.atomic():
+            try:
+                user = request.user
+
+                original_study_note = StudyNote.objects.get(pk=studyNotePk)
+
+                # StudyNote 생성
+                new_study_note = StudyNote.objects.create(
+                    title=original_study_note.title,
+                    description=original_study_note.description,
+                    writer=user
+                )
+
+                # StudyNoteContent 생성
+                original_note_contents = original_study_note.note_contents.all()
+                for original_note_content in original_note_contents:
+                    StudyNoteContent.objects.create(
+                        study_note=new_study_note,
+                        title=original_note_content.title,
+                        file_name=original_note_content.file_name,
+                        content=original_note_content.content,
+                        content_option=original_note_content.content_option,
+                        writer=user,
+                        order=original_note_content.order,
+                        created_at=original_note_content.created_at,
+                        page=original_note_content.page
+                    )
+
+                response_data = {
+                    'message': 'Selected notes copied to my note successfully.'
+                }
+
+                return Response(response_data, status=HTTP_200_OK)
+
+            except StudyNote.DoesNotExist:
+                response_data = {
+                    'message': 'One or more selected notes do not exist.'
+                }
+
+                return Response(response_data, status=HTTP_400_BAD_REQUEST)
 
 
 class UpdateViewForIsTaskingForCowriter(APIView):
