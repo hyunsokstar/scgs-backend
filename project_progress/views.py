@@ -805,36 +805,82 @@ class TaskStaticsIView2(APIView):
 
         return Response(response_data)
 
-
+# 1023 fix
 # http://127.0.0.1:8000/api/v1/project_progress/task-log
+
+
 class TaskLogView(APIView):
+
+    totalCountForTaskLog = 0  # total_count 계산
+    task_log_number_for_one_page = 50  # 1 페이지에 몇개씩
+    all_task_log_list = []
+
+    def get_user_obj_for_filtering_task_log(self, filterOptionForUserNameForTaskLogList):
+        try:
+            user = User.objects.get(
+                username=filterOptionForUserNameForTaskLogList)
+        except User.DoesNotExist:
+            filterOptionForUserNameForTaskLogList = ""
+
+        return user
+
     def get(self, request):
-        userOptionForList = request.GET.get('userOptionForList', "")
+        filterOptionForUserNameForTaskLogList = request.GET.get(
+            'filterOptionForUserNameForTaskLogList', "")
 
-        if userOptionForList != "":
-            try:
-                user = User.objects.get(username=userOptionForList)
-            except User.DoesNotExist:
-                userOptionForList = ""
+        # 유저에 대한 리스트일 경우
+        if filterOptionForUserNameForTaskLogList != "":
+            user = self.get_user_obj_for_filtering_task_log(filterOptionForUserNameForTaskLogList)
 
-            print("이게 실행 되나?????????????????????????????? ; ", userOptionForList)
-            # Replace 'YOUR_TIMEZONE' with your desired timezone
             now = datetime.now(pytz.timezone('Asia/Seoul'))
+
+            print("now :::::::: ", now)
+
             today_start = datetime.combine(
                 now.date(), time(hour=0, minute=0, second=0))
+            today_end = datetime.combine(now.date(), datetime.max.time())
+
             task_start = datetime.combine(
                 now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            today_end = datetime.combine(now.date(), datetime.max.time())
+
+            task_end = datetime.combine(now.date(), time(
+                hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+
+            time_difference = now - task_start
+
+            # time_difference를 초 단위로 변환
+            total_seconds = time_difference.total_seconds()
+
+            if total_seconds >= 0:
+                # 시간이 양수 또는 0인 경우, 경과 시간을 계산
+                hours_elapsed = int(total_seconds // 3600)
+                minutes_elapsed = int((total_seconds % 3600) // 60)
+                print(f"경과 시간: {hours_elapsed} 시간 {minutes_elapsed} 분")
+                elapsed_time_string = f"경과 시간 {hours_elapsed} 시간 {minutes_elapsed} 분"
+
+            else:
+                # 시간이 음수인 경우, 남은 시간을 계산
+                hours_elapsed = int((-total_seconds) // 3600)
+                minutes_elapsed = int(((-total_seconds) % 3600) // 60)
+                print(f"남은 시간: {hours_elapsed} 시간 {minutes_elapsed} 분")
+                elapsed_time_string = f"남은 시간 {hours_elapsed} 시간 {minutes_elapsed} 분"
+
+
+            # hours_elapsed = int(time_difference.total_seconds() // 3600)
+            # minutes_elapsed = int(
+            #     (time_difference.total_seconds() % 3600) // 60)
+
+            # if hours_elapsed > 0:
+            #     average_number_per_hour = round(
+            #         total_today_completed_task_count / hours_elapsed, 1)
+            # else:
+            #     average_number_per_hour = 0
+
+            # elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
             total_today_task_count = ProjectProgress.objects.filter(
                 task_manager=user,
                 due_date__range=(today_start, today_end)
-            ).count()
-
-            total_today_completed_task_count = ProjectProgress.objects.filter(
-                task_manager=user,
-                due_date__range=(today_start, today_end),
-                task_completed=True
             ).count()
 
             total_today_uncompleted_task_count = ProjectProgress.objects.filter(
@@ -843,18 +889,11 @@ class TaskLogView(APIView):
                 task_completed=True
             ).count()
 
-            time_difference = now - task_start
-            hours_elapsed = int(time_difference.total_seconds() // 3600)
-            minutes_elapsed = int(
-                (time_difference.total_seconds() % 3600) // 60)
-
-            if hours_elapsed > 0:
-                average_number_per_hour = round(
-                    total_today_completed_task_count / hours_elapsed, 1)
-            else:
-                average_number_per_hour = 0
-
-            elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+            total_today_completed_task_count = ProjectProgress.objects.filter(
+                task_manager=user,
+                due_date__range=(today_start, today_end),
+                task_completed=True
+            ).count()
 
             task_logs = TaskLog.objects.filter(
                 writer=user,
@@ -929,20 +968,56 @@ class TaskLogView(APIView):
 
         else:
             # Replace 'YOUR_TIMEZONE' with your desired timezone
-            now = datetime.now(pytz.timezone('Asia/Seoul'))
+            your_timezone = pytz.timezone('Asia/Seoul')
+            now = datetime.now(your_timezone)
 
             today_start = datetime.combine(now.date(), time(
-                hour=0, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            today_end = datetime.combine(now.date(), time(
-                hour=23, minute=59, second=59), tzinfo=pytz.timezone('Asia/Seoul'))
+                hour=0, minute=0, second=0), tzinfo=your_timezone)
 
-            task_start = datetime.combine(now.date(), time(
-                hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
-            task_end = datetime.combine(now.date(), time(
-                hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+            # 'Asia/Seoul' 시간대로 설정
+            target_time = time(9, 0)
+            task_start = datetime.now(your_timezone).replace(hour=9, minute=0, second=0, microsecond=0)
 
+            today_end = datetime.combine(now.date(), datetime.max.time())
+            
+
+            time_difference = now - task_start
+
+            print("now : ", now)
             print("task_start : ", task_start)
-            print("task_end : ", task_end)
+            print("time_difference : ", time_difference)
+
+            # now = datetime.now()
+
+            # # 목표 시간 설정 (오전 9시)
+            # target_time = time(9, 0)
+
+            # # 현재 날짜와 목표 시간을 결합하여 목표 시간의 datetime 객체 생성
+            # target_datetime = datetime.combine(now.date(), target_time)
+
+            # # 시간 차이 계산
+            # time_difference = target_datetime - now
+
+            # # 시간 차이 출력
+            # print("현재 시간:", now)
+            # print("목표 시간 (오전 9시):", target_datetime)
+            # print("시간 차이:", time_difference)
+
+
+            total_seconds = abs(time_difference.total_seconds())  # 양수로 변환하여 차이 계산
+
+            hours_elapsed = int(total_seconds // 3600)
+            minutes_elapsed = int((total_seconds % 3600) // 60)
+
+            if now > task_start:
+                elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분 경과"
+            else:
+                hours_remaining = int(total_seconds // 3600)
+                minutes_remaining = int((total_seconds % 3600) // 60)
+                elapsed_time_string = f"시작하기까지 {hours_remaining} 시간 {minutes_remaining} 분"
+
+            print("elapsed_time_string: ", elapsed_time_string)
+
 
             total_today_task_count = ProjectProgress.objects.filter(
                 due_date__range=(today_start, today_end)
@@ -960,22 +1035,12 @@ class TaskLogView(APIView):
                 task_completed=False
             ).count()
 
-            time_difference = task_end - task_start
-            hours_elapsed = int(time_difference.total_seconds() // 3600)
-            # 총 개수가 total_today_task_count 완료 개수가 total_today_uncompleted_task_count 시간이 hours_elapsed 일때 시간당 완료 개수 => average_number_per_hour
+
             if hours_elapsed > 0:
-                average_number_per_hour = total_today_completed_task_count / hours_elapsed
+                average_number_per_hour = total_today_completed_task_count / 10
             else:
                 average_number_per_hour = 0
-            minutes_elapsed = int(
-                (time_difference.total_seconds() % 3600) // 60)
 
-            # if hours_elapsed > 0:
-            #     average_number_per_hour = round(
-            #         total_today_completed_task_count / hours_elapsed, 1)
-            # else:
-            #     average_number_per_hour = 0
-            elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
 
             task_logs = TaskLog.objects.filter(
                 completed_at__range=(today_start, today_end))
@@ -1049,6 +1114,7 @@ class TaskLogView(APIView):
                 'dayOfWeek': now.strftime('%A')
             }
 
+            print("completionRate : ", (total_today_completed_task_count / total_today_task_count) * 100)
         # TaskStatusViewForToday
         response_data = {
             'total_today_task_count': total_today_task_count,
@@ -1063,6 +1129,236 @@ class TaskLogView(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
+
+# class TaskLogView(APIView):
+#     totalCountForTaskLog = 0
+#     task_log_number_for_one_page = 50
+#     all_task_log_list = []
+
+#     def get(self, request):
+#         userOptionForList = request.GET.get('userOptionForList', "")
+
+#         if userOptionForList != "":
+#             response_data = self.get_user_task_log_data(userOptionForList)
+
+#         else:
+#             response_data = self.get_default_task_log_data()
+
+#         return Response(response_data, status=HTTP_200_OK)
+
+
+#     def get_user_task_log_data(self, username):
+#         user = User.objects.get(username=username)
+#         now = datetime.now(pytz.timezone('Asia/Seoul'))
+#         today_start, task_start, today_end, task_end = self.get_time_range(now)
+
+#         total_today_task_count = self.get_total_task_count_for_user(
+#             user, today_start, today_end)
+#         total_today_completed_task_count = self.get_completed_task_count_for_user(
+#             user, today_start, today_end)
+#         average_number_per_hour, elapsed_time_string = self.get_average_number_per_hour_for_user(
+#             total_today_completed_task_count, task_start, task_end)
+#         task_logs, writers_data = self.get_task_logs_and_writers_for_everyone(
+#             user, today_start, today_end)
+#         task_count_for_weekdays = self.get_task_count_for_weekdays(now)
+#         today_info = self.get_today_info(now)
+
+
+#         serializer = TaskLogSerializer(task_logs, many=True)
+#         task_log_data = serializer.data
+
+#         response_data = {
+#             'total_today_task_count': total_today_task_count,
+#             'total_today_completed_task_count': total_today_completed_task_count,
+#             'TaskLog': task_log_data,
+#             'average_number_per_hour': average_number_per_hour,
+#             'elapsed_time': elapsed_time_string,
+#             'writers': writers_data,
+#             'task_count_for_weekdays': task_count_for_weekdays,
+#             'today_info': today_info
+#         }
+
+#         return response_data
+
+#     def get_default_task_log_data(self):
+#         now = datetime.now(pytz.timezone('Asia/Seoul'))
+#         today_start, task_start, today_end, task_end = self.get_time_range(now)
+#         total_today_task_count = self.get_total_task_count_for_everyone(
+#             today_start, today_end)
+#         total_today_completed_task_count = self.get_completed_task_count_for_everyone(
+#             today_start, today_end)
+#         total_today_uncompleted_task_count = self.get_uncompleted_task_count(
+#             today_start, today_end)
+#         average_number_per_hour, elapsed_time_string = self.get_average_number_per_hour_for_everyone(
+#             total_today_completed_task_count, task_start, task_end)
+#         task_logs, writers_data = self.get_task_logs_and_writers_for_everyone(
+#             today_start, today_end)
+#         task_count_for_weekdays = self.get_task_count_for_weekdays(now)
+#         today_info = self.get_today_info(now)
+
+#         serializer = TaskLogSerializer(task_logs, many=True)
+#         task_log_data = serializer.data
+
+#         response_data = {
+#             'total_today_task_count': total_today_task_count,
+#             'total_today_completed_task_count': total_today_completed_task_count,
+#             'total_today_uncompleted_task_count': total_today_uncompleted_task_count,
+#             'TaskLog': task_log_data,
+#             'average_number_per_hour': average_number_per_hour,
+#             'elapsed_time': elapsed_time_string,
+#             'writers': writers_data,
+#             'task_count_for_weekdays': task_count_for_weekdays,
+#             'today_info': today_info
+#         }
+
+#         return response_data
+
+#     def get_time_range(self, now):
+#         today_start = datetime.combine(
+#             now.date(), time(hour=0, minute=0, second=0))
+#         task_start = datetime.combine(now.date(), time(
+#             hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+#         today_end = datetime.combine(now.date(), datetime.max.time())
+
+#         task_end = datetime.combine(now.date(), time(
+#             hour=19, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
+
+#         return today_start, task_start, today_end, task_end
+
+#     def get_total_task_count_for_user(self, user, today_start, today_end):
+
+#         return ProjectProgress.objects.filter(
+#             task_manager=user,
+#             due_date__range=(today_start, today_end)
+#         ).count()
+
+#     def get_total_task_count_for_everyone(self, today_start, today_end):
+
+#         return ProjectProgress.objects.filter(
+#             due_date__range=(today_start, today_end)
+#         ).count()
+
+#     def get_completed_task_count_for_user(self, user, today_start, today_end):
+#         return ProjectProgress.objects.filter(
+#             task_manager=user,
+#             due_date__range=(today_start, today_end),
+#             task_completed=True
+#         ).count()
+
+#     def get_completed_task_count_for_everyone(self, today_start, today_end):
+#         return ProjectProgress.objects.filter(
+#             due_date__range=(today_start, today_end),
+#             task_completed=True
+#         ).count()
+
+#     def get_uncompleted_task_count(self, today_start, today_end):
+#         return ProjectProgress.objects.filter(
+#             due_date__range=(today_start, today_end),
+#             task_completed=False
+#         ).count()
+
+#     def get_average_number_per_hour_for_user(self, total_today_completed_task_count, task_start, task_end):
+#         time_difference = task_end - task_start
+#         hours_elapsed = int(time_difference.total_seconds() // 3600)
+#         minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
+#         if hours_elapsed > 0:
+#             average_number_per_hour = round(
+#                 total_today_completed_task_count / hours_elapsed, 1)
+#         else:
+#             average_number_per_hour = 0
+#         elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+#         return average_number_per_hour, elapsed_time_string
+
+#     def get_average_number_per_hour_for_everyone(self, total_today_completed_task_count, task_start, task_end):
+#         time_difference = task_end - task_start
+#         hours_elapsed = int(time_difference.total_seconds() // 3600)
+#         minutes_elapsed = int((time_difference.total_seconds() % 3600) // 60)
+#         if hours_elapsed > 0:
+#             average_number_per_hour = round(
+#                 total_today_completed_task_count / hours_elapsed, 1)
+#         else:
+#             average_number_per_hour = 0
+#         elapsed_time_string = f"{hours_elapsed} 시간 {minutes_elapsed} 분"
+#         return average_number_per_hour, elapsed_time_string
+
+#     def get_task_logs_and_writers_for_user(self, user, today_start, today_end):
+#         task_logs = TaskLog.objects.filter(
+#             writer=user,
+#             completed_at__range=(today_start, today_end)
+#         )
+#         writers = defaultdict(int)
+#         for task_log in task_logs:
+#             writer = task_log.writer
+#             writers[writer.username] += 1
+#         writers_data = []
+#         for writer, count in writers.items():
+#             writer_data = {
+#                 'writer': writer,
+#                 'count': count,
+#             }
+#             writers_data.append(writer_data)
+#         serializer = TaskLogSerializer(task_logs, many=True)
+#         task_log_data = serializer.data
+#         return task_log_data, writers_data
+
+#     def get_task_logs_and_writers_for_everyone(self, today_start, today_end):
+#         task_logs = TaskLog.objects.filter(
+#             # writer=user,
+#             completed_at__range=(today_start, today_end)
+#         )
+#         writers = defaultdict(int)
+#         for task_log in task_logs:
+#             writer = task_log.writer
+#             writers[writer.username] += 1
+#         writers_data = []
+#         for writer, count in writers.items():
+#             writer_data = {
+#                 'writer': writer,
+#                 'count': count,
+#             }
+#             writers_data.append(writer_data)
+#         serializer = TaskLogSerializer(task_logs, many=True)
+#         task_log_data = serializer.data
+#         return task_log_data, writers_data
+
+#     def get_task_count_for_weekdays(self, now):
+#         weekday_mapping = {
+#             1: 'Sunday',
+#             2: 'Monday',
+#             3: 'Tuesday',
+#             4: 'Wednesday',
+#             5: 'Thursday',
+#             6: 'Friday',
+#             7: 'Saturday'
+#         }
+#         today = timezone.localtime(timezone.now()).date()
+#         start_of_week = today - timedelta(days=today.weekday())
+#         end_of_week = start_of_week + \
+#             timedelta(days=6, hours=23, minutes=59, seconds=59)
+#         task_count_for_weekdays = ProjectProgress.objects.filter(
+#             completed_at__range=(start_of_week, start_of_week +
+#                                  timedelta(days=7, hours=23, minutes=59, seconds=59)),
+#             task_completed=True
+#         ).annotate(weekday=ExtractWeekDay('completed_at', tzinfo=pytz.timezone('Asia/Seoul'))).values('weekday').annotate(count=Count('id'))
+#         task_count_for_weekdays = {
+#             weekday_mapping[entry['weekday']]: entry['count']
+#             for entry in task_count_for_weekdays
+#         }
+#         all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
+#                         'Thursday', 'Friday', 'Saturday', 'Sunday']
+#         task_count_for_weekdays = {
+#             weekday: task_count_for_weekdays.get(weekday, 0)
+#             for weekday in all_weekdays
+#         }
+#         return task_count_for_weekdays
+
+#     def get_today_info(self, now):
+#         today_info = {
+#             'date': now.strftime("%Y년 %m월 %d일"),
+#             'dayOfWeek': now.strftime('%A')
+#         }
+#         return today_info
 
 
 class UpdateTaskTimeOptionAndOrder(APIView):
@@ -1944,9 +2240,10 @@ def get_writers_info(complete_status):
         task_managers_info, key=lambda x: x['task_count'], reverse=True)
     return sorted_task_managers_info
 
+
 def get_writers_info_for_in_prgress():
     print("get_writers_info_for_in_prgress !!!!!!!!! ")
-    task_manager_counts = ProjectProgress.objects.filter(in_progress= True, task_completed=False).values(
+    task_manager_counts = ProjectProgress.objects.filter(in_progress=True, task_completed=False).values(
         'task_manager__username', 'task_manager__profile_image', 'task_manager__cash').annotate(count=Count('id'))
     print("task_manager_counts : ", task_manager_counts)
 
@@ -2982,7 +3279,7 @@ class UncompletedTaskListViewForMe(APIView):
 
 #         return Response(response_data, status=HTTP_200_OK)
 
-# 필요한거 진행중인 업무 리스트, 개수 , 유저별 
+# 필요한거 진행중인 업무 리스트, 개수 , 유저별
 class InProgressTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
     task_number_for_one_page = 10  # 1 페이지에 몇 개씩
@@ -3012,11 +3309,12 @@ class InProgressTaskListView(APIView):
 
             is_task_due_date_has_passed = request.query_params.get(
                 "is_task_due_date_has_passed", False)
-            
-            print("is_task_due_date_has_passed :::::::::::::", is_task_due_date_has_passed)
+
+            print("is_task_due_date_has_passed :::::::::::::",
+                  is_task_due_date_has_passed)
 
             # 필터링 조건을 간소화
-            filter_params = {"task_completed": False, "in_progress":True }
+            filter_params = {"task_completed": False, "in_progress": True}
 
             # print("groupByOption ::::::::::::::::::", groupByOption)
 
@@ -3157,7 +3455,8 @@ class InProgressTaskListView(APIView):
 
     def get_task_count_for_due_date_passed(self):
         current_datetime = datetime.now()
-        count = self.all_uncompleted_project_task_list.filter(due_date__lt=current_datetime, due_date__isnull=False).count()
+        count = self.all_uncompleted_project_task_list.filter(
+            due_date__lt=current_datetime, due_date__isnull=False).count()
         return count if count is not None else 0
 
     def get_today_start_and_end(self):
@@ -3166,6 +3465,7 @@ class InProgressTaskListView(APIView):
             datetime.combine(date.today(), time.min))
         today_end = timezone.localize(datetime.combine(date.today(), time.max))
         return today_start, today_end
+
 
 class UncompletedTaskListView(APIView):
     totalCountForTask = 0  # total_count 계산
@@ -3198,7 +3498,7 @@ class UncompletedTaskListView(APIView):
                 "is_task_due_date_has_passed", False)
 
             # 필터링 조건을 간소화
-            filter_params = {"in_progress":False , "task_completed": False}
+            filter_params = {"in_progress": False, "task_completed": False}
 
             print("groupByOption ::::::::::::::::::", groupByOption)
 
@@ -3231,7 +3531,7 @@ class UncompletedTaskListView(APIView):
 
             print("due_date_option_for_filtering :::::::::::::",
                   due_date_option_for_filtering)
-            
+
             if is_task_due_date_has_passed == "true":
                 current_datetime = datetime.now()  # 현재 시간을 현지 시간 기준으로 가져옴
                 filter_params["due_date__lt"] = current_datetime
@@ -3340,7 +3640,8 @@ class UncompletedTaskListView(APIView):
 
     def get_task_count_for_due_date_passed(self):
         current_datetime = datetime.now()
-        count = self.all_uncompleted_project_task_list.filter(due_date__lt=current_datetime, due_date__isnull=False).count()
+        count = self.all_uncompleted_project_task_list.filter(
+            due_date__lt=current_datetime, due_date__isnull=False).count()
         return count if count is not None else 0
 
     def get_today_start_and_end(self):
