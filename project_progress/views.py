@@ -814,6 +814,7 @@ class TaskLogView(APIView):
     totalCountForTaskLog = 0  # total_count 계산
     task_log_number_for_one_page = 50  # 1 페이지에 몇개씩
     all_task_log_list = []
+    selected_date = ""
 
     def get_user_obj_for_filtering_task_log(self, filterOptionForUserNameForTaskLogList):
         try:
@@ -828,6 +829,39 @@ class TaskLogView(APIView):
         filterOptionForUserNameForTaskLogList = request.GET.get(
             'filterOptionForUserNameForTaskLogList', "")
 
+        days_of_week = {
+            'Monday': 0,
+            'Tuesday': 1,
+            'Wednesday': 2,
+            'Thursday': 3,
+            'Friday': 4,
+            'Saturday': 5,
+            'Sunday': 6,
+        }
+
+
+        # 요청에서 selectedDay 가져오기
+        selectedDay = request.GET.get('selectedDay', "")
+
+        if selectedDay == "":
+            today_weekday = datetime.now().strftime('%A')
+            selectedDay = today_weekday
+
+        # 오늘의 날짜 얻기
+        today = datetime.now()
+
+        # 오늘로부터 몇 일 뒤의 날짜를 계산
+        days_to_add = days_of_week[selectedDay] - today.weekday()
+        selectedDaytime = today + timedelta(days=days_to_add)
+
+        print("selectedDay 1111111111111111111111111111111 222222222222222222", selectedDaytime)
+
+        # 오늘의 시작 시간 설정 (00:00:00)
+        today_start = selectedDaytime.replace(hour=0, minute=0)
+
+        # 오늘의 마지막 시간 설정 (23:59:59)
+        today_end = selectedDaytime.replace(hour=23, minute=59)
+
         # 유저에 대한 리스트일 경우
         if filterOptionForUserNameForTaskLogList != "":
             user = self.get_user_obj_for_filtering_task_log(
@@ -837,9 +871,12 @@ class TaskLogView(APIView):
 
             print("now :::::::: ", now)
 
-            today_start = datetime.combine(
-                now.date(), time(hour=0, minute=0, second=0))
-            today_end = datetime.combine(now.date(), datetime.max.time())
+            # today_start = datetime.combine(
+            #     now.date(), time(hour=0, minute=0, second=0))
+            # today_end = datetime.combine(now.date(), datetime.max.time())
+
+            print("today_start :::::::::::::::::::::::::::", today_start)
+            print("today_end :::::::::::::::::::::::::::", today_start)
 
             task_start = datetime.combine(
                 now.date(), time(hour=9, minute=0, second=0), tzinfo=pytz.timezone('Asia/Seoul'))
@@ -972,15 +1009,13 @@ class TaskLogView(APIView):
             your_timezone = pytz.timezone('Asia/Seoul')
             now = datetime.now(your_timezone)
 
-            today_start = datetime.combine(now.date(), time(
-                hour=0, minute=0, second=0), tzinfo=your_timezone)
+            # today_start = datetime.combine(now.date(), time(
+            #     hour=0, minute=0, second=0), tzinfo=your_timezone)
+            # today_end = datetime.combine(now.date(), datetime.max.time())
 
-            # 'Asia/Seoul' 시간대로 설정
-            target_time = time(9, 0)
             task_start = datetime.now(your_timezone).replace(
                 hour=9, minute=0, second=0, microsecond=0)
 
-            today_end = datetime.combine(now.date(), datetime.max.time())
 
             time_difference = now - task_start
 
