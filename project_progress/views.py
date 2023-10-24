@@ -1160,7 +1160,7 @@ class TaskLogView(APIView):
             weekdays = [start_of_week + timedelta(days=i) for i in range(7)]
 
             # weekdays 리스트를 그대로 프론트로 보낼 때 UTC 형식으로 유지
-            weekdays_utc = [day.strftime('%Y-%m-%dT%H:%M:%SZ') for day in weekdays]
+            # weekdays_utc = [day.strftime('%Y-%m-%dT%H:%M:%SZ') for day in weekdays]
 
             # 이번주 월요일의 날짜 구하려면?
 
@@ -1176,7 +1176,7 @@ class TaskLogView(APIView):
             'writers': writers_data,
             'task_count_for_weekdays': task_count_for_weekdays,
             'today_info': today_info,
-            'weekdays_utc': weekdays_utc
+            # 'weekdays_utc': weekdays_utc
         }
 
         return Response(response_data, status=HTTP_200_OK)
