@@ -839,7 +839,6 @@ class TaskLogView(APIView):
             'Sunday': 6,
         }
 
-
         # 요청에서 selectedDay 가져오기
         selectedDay = request.GET.get('selectedDay', "")
 
@@ -1016,7 +1015,6 @@ class TaskLogView(APIView):
             task_start = datetime.now(your_timezone).replace(
                 hour=9, minute=0, second=0, microsecond=0)
 
-
             time_difference = now - task_start
 
             print("now : ", now)
@@ -1072,8 +1070,10 @@ class TaskLogView(APIView):
 
             if minutes_elapsed > 0:
                 average_number_per_hour = total_today_completed_task_count / 10
-                print("total_today_completed_task_count :;:::::::::::::::::::::::::::: ", total_today_completed_task_count)
-                print("average_number_per_hour :::::::::::::::::::::::::::::::::::::::::::::: ", average_number_per_hour)
+                print("total_today_completed_task_count :;:::::::::::::::::::::::::::: ",
+                      total_today_completed_task_count)
+                print("average_number_per_hour :::::::::::::::::::::::::::::::::::::::::::::: ",
+                      average_number_per_hour)
             else:
                 average_number_per_hour = 0
 
@@ -1164,7 +1164,6 @@ class TaskLogView(APIView):
 
             # 이번주 월요일의 날짜 구하려면?
 
-            
         # TaskStatusViewForToday
         response_data = {
             'total_today_task_count': total_today_task_count,
@@ -1521,62 +1520,28 @@ class UpdateTaskTimeOptionAndOrder(APIView):
 
 class TaskStatusViewForToday(APIView):
     def get(self, request):
+        # checkedPksForUserList
+        checkedPksForUserList = request.data.get('checkedPksForUserList', [])        
+
         seoul_tz = pytz.timezone('Asia/Seoul')
         now = datetime.now().astimezone(seoul_tz)
 
-        morning_start = now.replace(hour=0, minute=0)
-        morning_end = now.replace(hour=13, minute=0)
+        # start_hour, end_hour, end_minute=0, end_seconds
+        morning_start, morning_end = self.get_time_range(now, 0, 13)
+        afternoon_start, afternoon_end = self.get_time_range(now, 13, 19)
+        night_start, night_end = self.get_time_range(now, 19, 23, 59)        
 
-        afternoon_start = morning_end
-        afternoon_end = now.replace(
-            hour=19, minute=0, second=10)
+        morning_tasks = self.get_filtered_tasks(morning_start, morning_end)
+        afternoon_tasks = self.get_filtered_tasks(afternoon_start, afternoon_end)
+        night_tasks = self.get_filtered_tasks(night_start, night_end)
 
-        night_start = now.replace(hour=19, minute=0, second=0)
-        night_end = now.replace(hour=23, minute=59, second=59)
-
-        morning_tasks = ProjectProgress.objects.filter(
-            Q(due_date__gte=morning_start) &
-            Q(due_date__lt=morning_end)
-        ).order_by("task_completed", "order")
-        afternoon_tasks = ProjectProgress.objects.filter(
-            Q(due_date__gte=afternoon_start) &
-            Q(due_date__lt=afternoon_end)
-        ).order_by("task_completed", "order")
-        night_tasks = ProjectProgress.objects.filter(
-            Q(due_date__gte=night_start) &
-            Q(due_date__lt=night_end)
-        )
-        # ).order_by("task_completed", "order")
-
-        # due_date 가 오늘 날짜 이전이고 current_status 가 비완료(completed가 아닌 것들)인 개수 구해서 response_data에 추가
-        task_count_for_uncompleted_task_until_yesterday = ProjectProgress.objects.filter(
-            (Q(due_date__lt=morning_start)) & ~Q(
-                current_status='completed')
-        ).count()
-
-        # due_date 가 오늘 날짜에 포함 되는것들에 대해 current_status 를 기준으로 ProjectProgress count 구해서 아래 항목 구한뒤 response_data 에 추가 하도록 하기
-
-        task_count_for_ready = ProjectProgress.objects.filter(
-            Q(due_date__date=now.date()) & Q(current_status='ready')
-        ).count()
-        task_count_for_in_progress = ProjectProgress.objects.filter(
-            Q(due_date__date=now.date()) & Q(current_status='in_progress')
-        ).count()
-        task_count_for_testing = ProjectProgress.objects.filter(
-            Q(due_date__date=now.date()) & Q(current_status='testing')
-        ).count()
-
-        task_count_for_completed = ProjectProgress.objects.filter(
-            Q(due_date__date=now.date()) & Q(current_status='completed')
-        ).count()
-
-        toal_task_count_for_today = task_count_for_ready + \
-            task_count_for_in_progress + task_count_for_testing + task_count_for_completed
-        if toal_task_count_for_today != 0:
-            progress_rate = int(
-                (task_count_for_completed / toal_task_count_for_today) * 100)
-        else:
-            progress_rate = 0
+        task_count_for_uncompleted_task_until_yesterday = self.get_uncompleted_task_count(now, morning_start)
+        total_task_count_for_today = self.get_total_task_count_for_today(now)
+        task_count_for_ready = self.get_task_count_by_status(now, 'ready')
+        task_count_for_in_progress = self.get_task_count_by_status(now, 'in_progress')
+        task_count_for_testing = self.get_task_count_by_status(now, 'testing')
+        task_count_for_completed = self.get_task_count_by_status(now, 'completed')
+        progress_rate = self.get_progress_rate(total_task_count_for_today, task_count_for_completed)
 
         weekday_mapping = {
             1: 'Sunday',
@@ -1632,17 +1597,27 @@ class TaskStatusViewForToday(APIView):
 
         # step2 오늘의 업무에 대해 task_manager 와 count 정보를 dict 형식으로 초기화
         for task in today_tasks:
+            print("task manager id: ", task.task_manager.id)
             task_manager = task.task_manager
+            # id = task.task_manager.id
+            task_managers[task_manager.username]['id'] = task.task_manager.id
             if task.current_status == 'completed':
                 task_managers[task_manager.username]['completed_count'] += 1
             else:
                 task_managers[task_manager.username]['uncompleted_count'] += 1
 
+        print("task_managers ", task_managers)
+
         # stpe3 task_managers 에 저장된 정보를 다시 list로 만들기
         task_managers_data = []
 
         for task_manager, counts in task_managers.items():
+
+            print("task_manager 11111111111111 : ", task_manager)
+
             task_manager_data = {
+                # 'id': 여기에 해당 task manager id 얻어 오려면?
+                'id': counts['id'],
                 'task_manager': task_manager,
                 'uncompleted_count': counts['uncompleted_count'],
                 'completed_count': counts['completed_count']
@@ -1654,7 +1629,7 @@ class TaskStatusViewForToday(APIView):
             task_managers_data, key=lambda x: x['completed_count'], reverse=True)
 
         response_data = {
-            "toal_task_count_for_today":  toal_task_count_for_today,
+            "total_task_count_for_today":  total_task_count_for_today,
             "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
             "task_count_for_ready": task_count_for_ready,
             "task_count_for_in_progress": task_count_for_in_progress,
@@ -1671,6 +1646,39 @@ class TaskStatusViewForToday(APIView):
 
         return Response(response_data, status=HTTP_200_OK)
 
+    def get_time_range(self, now, start_hour, end_hour, end_minute=0):
+        start_time = now.replace(hour=start_hour, minute=0)
+        end_time = now.replace(hour=end_hour, minute=end_minute)
+        return start_time, end_time        
+
+    def get_filtered_tasks(self, start_time, end_time):
+        return ProjectProgress.objects.filter(
+            Q(due_date__gte=start_time) &
+            Q(due_date__lt=end_time)
+        ).order_by("task_completed", "order")
+
+    def get_uncompleted_task_count(self, now, morning_start):
+        return ProjectProgress.objects.filter(
+            (Q(due_date__lt=morning_start)) & ~Q(current_status='completed')
+        ).count()
+
+    def get_total_task_count_for_today(self, now):
+        task_count_for_ready = self.get_task_count_by_status(now, 'ready')
+        task_count_for_in_progress = self.get_task_count_by_status(now, 'in_progress')
+        task_count_for_testing = self.get_task_count_by_status(now, 'testing')
+        task_count_for_completed = self.get_task_count_by_status(now, 'completed')
+        return task_count_for_ready + task_count_for_in_progress + task_count_for_testing + task_count_for_completed
+
+    def get_progress_rate(self, total_task_count_for_today, task_count_for_completed):
+        if total_task_count_for_today != 0:
+            return int((task_count_for_completed / total_task_count_for_today) * 100)
+        else:
+            return 0
+
+    def get_task_count_by_status(self, now, status):
+        return ProjectProgress.objects.filter(
+            Q(due_date__date=now.date()) & Q(current_status=status)
+        ).count()
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     # Get the date a month ago from now
@@ -4044,7 +4052,8 @@ class UpdateTaskCompetedView(APIView):
             now = datetime.now(seoul_timezone)
 
             # 현재 날짜의 자정 (00시 00분 00초)를 계산합니다.
-            today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_midnight = now.replace(
+                hour=0, minute=0, second=0, microsecond=0)
 
             if project_task.due_date < today_midnight:
                 return Response({"message": "Due date has passed! if you want task complete update due date is necessary !"})
@@ -4056,7 +4065,7 @@ class UpdateTaskCompetedView(APIView):
             project_task.task_completed = True
             project_task.current_status = "completed"
 
-            # project_task.due_date = 오늘 18시 59분 
+            # project_task.due_date = 오늘 18시 59분
 
             new_completed_at = timezone.localtime()
             project_task.completed_at = new_completed_at  # 현재 시간 저장
