@@ -1519,6 +1519,8 @@ class UpdateTaskTimeOptionAndOrder(APIView):
 
 
 class TaskStatusViewForToday(APIView):
+    taskList = []
+
     def get(self, request):
         # checkedPksForUserList
         checkedPksForUserList = request.data.get('checkedPksForUserList', [])        
@@ -1531,9 +1533,12 @@ class TaskStatusViewForToday(APIView):
         afternoon_start, afternoon_end = self.get_time_range(now, 13, 19)
         night_start, night_end = self.get_time_range(now, 19, 23, 59)        
 
-        morning_tasks = self.get_filtered_tasks(morning_start, morning_end)
-        afternoon_tasks = self.get_filtered_tasks(afternoon_start, afternoon_end)
-        night_tasks = self.get_filtered_tasks(night_start, night_end)
+        today_tasks = self.get_filtered_tasks(morning_start, night_end)
+        self.taskListForToday = list(today_tasks)
+
+        morning_tasks = self.filter_tasks_by_time(today_tasks, morning_start, morning_end)
+        afternoon_tasks = self.filter_tasks_by_time(today_tasks, afternoon_start, afternoon_end)
+        night_tasks = self.filter_tasks_by_time(today_tasks, night_start, night_end)
 
         task_count_for_uncompleted_task_until_yesterday = self.get_uncompleted_task_count(now, morning_start)
         total_task_count_for_today = self.get_total_task_count_for_today(now)
@@ -1543,91 +1548,15 @@ class TaskStatusViewForToday(APIView):
         task_count_for_completed = self.get_task_count_by_status(now, 'completed')
         progress_rate = self.get_progress_rate(total_task_count_for_today, task_count_for_completed)
 
-        weekday_mapping = {
-            1: 'Sunday',
-            2: 'Monday',
-            3: 'Tuesday',
-            4: 'Wednesday',
-            5: 'Thursday',
-            6: 'Friday',
-            7: 'Saturday'
-        }
+        task_count_for_weekdays = self.get_task_count_for_weekdays()
+        task_managers_data = self.get_task_managers_data(today_tasks)
 
-        today = timezone.localtime(timezone.now()).date()
-        start_of_week = today - timedelta(days=today.weekday())
-        end_of_week = start_of_week + \
-            timedelta(days=6, hours=23, minutes=59, seconds=59)
-
-        task_count_for_weekdays = ProjectProgress.objects.filter(
-            completed_at__range=(start_of_week, start_of_week +
-                                 timedelta(days=7, hours=23, minutes=59, seconds=59)),
-            task_completed=True
-        ).annotate(
-            weekday=ExtractWeekDay(
-                'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
-        ).values('weekday').annotate(count=Count('id'))
-
-        task_count_for_weekdays = {
-            weekday_mapping[entry['weekday']]: entry['count']
-            for entry in task_count_for_weekdays
-        }
-
-        all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
-                        'Thursday', 'Friday', 'Saturday', 'Sunday']
-
-        task_count_for_weekdays = {
-            weekday: task_count_for_weekdays.get(weekday, 0)
-            for weekday in all_weekdays
-        }
-
-        # todo2: 오늘 날짜의 정보 (날짜와 요일) 구하기
         today_info = {
             'date': now.strftime("%Y년 %m월 %d일"),
             'dayOfWeek': now.strftime('%A')
         }
 
-        today_tasks = ProjectProgress.objects.filter(
-            Q(due_date__gte=morning_start) &
-            Q(due_date__lt=night_end)
-        )
-
-        # Step 1: Initialize a default dictionary to store task counts for each task manager
-        task_managers = defaultdict(
-            lambda: {'completed_count': 0, 'uncompleted_count': 0})
-
-        # step2 오늘의 업무에 대해 task_manager 와 count 정보를 dict 형식으로 초기화
-        for task in today_tasks:
-            print("task manager id: ", task.task_manager.id)
-            task_manager = task.task_manager
-            # id = task.task_manager.id
-            task_managers[task_manager.username]['id'] = task.task_manager.id
-            if task.current_status == 'completed':
-                task_managers[task_manager.username]['completed_count'] += 1
-            else:
-                task_managers[task_manager.username]['uncompleted_count'] += 1
-
-        print("task_managers ", task_managers)
-
-        # stpe3 task_managers 에 저장된 정보를 다시 list로 만들기
-        task_managers_data = []
-
-        for task_manager, counts in task_managers.items():
-
-            print("task_manager 11111111111111 : ", task_manager)
-
-            task_manager_data = {
-                # 'id': 여기에 해당 task manager id 얻어 오려면?
-                'id': counts['id'],
-                'task_manager': task_manager,
-                'uncompleted_count': counts['uncompleted_count'],
-                'completed_count': counts['completed_count']
-            }
-            task_managers_data.append(task_manager_data)
-
-        # Step 4: Sort the task_managers_data list based on the completed_count in descending order
-        task_managers_data = sorted(
-            task_managers_data, key=lambda x: x['completed_count'], reverse=True)
-
+        
         response_data = {
             "total_task_count_for_today":  total_task_count_for_today,
             "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
@@ -1657,6 +1586,9 @@ class TaskStatusViewForToday(APIView):
             Q(due_date__lt=end_time)
         ).order_by("task_completed", "order")
 
+    def filter_tasks_by_time(self, tasks, start_time, end_time):
+        return [task for task in tasks if start_time <= task.due_date < end_time]
+
     def get_uncompleted_task_count(self, now, morning_start):
         return ProjectProgress.objects.filter(
             (Q(due_date__lt=morning_start)) & ~Q(current_status='completed')
@@ -1679,6 +1611,73 @@ class TaskStatusViewForToday(APIView):
         return ProjectProgress.objects.filter(
             Q(due_date__date=now.date()) & Q(current_status=status)
         ).count()
+
+    def get_task_count_for_weekdays(self):
+        weekday_mapping = {
+            1: 'Sunday',
+            2: 'Monday',
+            3: 'Tuesday',
+            4: 'Wednesday',
+            5: 'Thursday',
+            6: 'Friday',
+            7: 'Saturday'
+        }
+
+        today = timezone.localtime(timezone.now()).date()
+        start_of_week = today - timedelta(days=today.weekday())
+
+        task_count_for_weekdays = ProjectProgress.objects.filter(
+            completed_at__range=(start_of_week, start_of_week +
+                                timedelta(days=7, hours=23, minutes=59, seconds=59)),
+            task_completed=True
+        ).annotate(
+            weekday=ExtractWeekDay(
+                'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+        ).values('weekday').annotate(count=Count('id'))
+
+        task_count_for_weekdays = {
+            weekday_mapping[entry['weekday']]: entry['count']
+            for entry in task_count_for_weekdays
+        }
+
+        all_weekdays = ['Monday', 'Tuesday', 'Wednesday',
+                        'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+        task_count_for_weekdays = {
+            weekday: task_count_for_weekdays.get(weekday, 0)
+            for weekday in all_weekdays
+        }
+
+        return task_count_for_weekdays
+
+    def get_task_managers_data(self, today_tasks):
+        task_managers = defaultdict(
+            lambda: {'completed_count': 0, 'uncompleted_count': 0})
+
+        for task in today_tasks:
+            task_manager = task.task_manager
+            task_managers[task_manager.username]['id'] = task.task_manager.id
+            if task.current_status == 'completed':
+                task_managers[task_manager.username]['completed_count'] += 1
+            else:
+                task_managers[task_manager.username]['uncompleted_count'] += 1
+
+        task_managers_data = []
+
+        for task_manager, counts in task_managers.items():
+            task_manager_data = {
+                'id': counts['id'],
+                'task_manager': task_manager,
+                'uncompleted_count': counts['uncompleted_count'],
+                'completed_count': counts['completed_count']
+            }
+            task_managers_data.append(task_manager_data)
+
+        task_managers_data = sorted(
+            task_managers_data, key=lambda x: x['completed_count'], reverse=True)
+
+        return task_managers_data
+
 
 def getStaticsForDailyCompletedTaskCountForMonthForPernalUser(userPk):
     # Get the date a month ago from now
