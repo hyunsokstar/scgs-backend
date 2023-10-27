@@ -1518,48 +1518,75 @@ class UpdateTaskTimeOptionAndOrder(APIView):
         return Response(status=HTTP_200_OK)
 
 # 1027
+
+
 class TaskStatusViewForToday(APIView):
     taskList = []
 
     def get(self, request):
         # checkedPksForUserList
         # checkedPksForUserList = request.data.get('checkedPksForUserList', [])
-        checkedPksForUserList = request.query_params.getlist('checkedPksForUserList', [])
+        checkedPksForUserList = request.query_params.getlist(
+            'checkedPksForUserList', [])
+        selectedDay = request.GET.get('selectedDay', "")
 
-        print("checkedPksForUserList : ", checkedPksForUserList)      
+        print("checkedPksForUserList : ", checkedPksForUserList)
 
         seoul_tz = pytz.timezone('Asia/Seoul')
         now = datetime.now().astimezone(seoul_tz)
+        current_day = self.get_current_day(selectedDay)
+        print("now : ", now)
+        print("current_day !#$%!@#%$!@#$%!$#!#@$!#$@#$!$#!@@$#!#$!@ ", current_day)
 
         # start_hour, end_hour, end_minute=0, end_seconds
-        morning_start, morning_end = self.get_time_range(now, 0, 13)
-        afternoon_start, afternoon_end = self.get_time_range(now, 13, 19)
-        night_start, night_end = self.get_time_range(now, 19, 23, 59)        
+        morning_start, morning_end = self.get_time_range(current_day, 0, 13)
+        afternoon_start, afternoon_end = self.get_time_range(current_day, 13, 19)
+        night_start, night_end = self.get_time_range(current_day, 19, 23, 59)
 
-        today_tasks = self.get_filtered_tasks(morning_start, night_end, checkedPksForUserList)
+        today_tasks = self.get_filtered_tasks(
+            morning_start, night_end, checkedPksForUserList, selectedDay)
         self.taskListForToday = list(today_tasks)
 
-        morning_tasks = self.filter_tasks_by_time(today_tasks, morning_start, morning_end)
-        afternoon_tasks = self.filter_tasks_by_time(today_tasks, afternoon_start, afternoon_end)
-        night_tasks = self.filter_tasks_by_time(today_tasks, night_start, night_end)
+        print("111111111111111111111111111111111111111111111111111")
+        print("today_tasks ::::::::::::::::::::::: ", today_tasks)
+        print("morning_start, morning_end", morning_start, morning_end)
+        print("afternoon_start, afternoon_end", afternoon_start, afternoon_end)
+        print("night_start, night_end", night_start, night_end)
 
-        task_count_for_uncompleted_task_until_yesterday = self.get_uncompleted_task_count(now, morning_start)
+        morning_tasks = self.filter_tasks_by_time(
+            today_tasks, morning_start, morning_end)
+        afternoon_tasks = self.filter_tasks_by_time(
+            today_tasks, afternoon_start, afternoon_end)
+        night_tasks = self.filter_tasks_by_time(
+            today_tasks, night_start, night_end)
+
+        print("morning_tasks ::::::::::::: ", morning_tasks)
+        print("afternoon_tasks ::::::::::::: ", afternoon_tasks)
+        print("night_tasks ::::::::::::: ", night_tasks)
+
+        task_count_for_uncompleted_task_until_yesterday = self.get_uncompleted_task_count(
+            now, morning_start)
         total_task_count_for_today = self.get_total_task_count_for_today(now)
         task_count_for_ready = self.get_task_count_by_status(now, 'ready')
-        task_count_for_in_progress = self.get_task_count_by_status(now, 'in_progress')
+        task_count_for_in_progress = self.get_task_count_by_status(
+            now, 'in_progress')
         task_count_for_testing = self.get_task_count_by_status(now, 'testing')
-        task_count_for_completed = self.get_task_count_by_status(now, 'completed')
-        progress_rate = self.get_progress_rate(total_task_count_for_today, task_count_for_completed)
+        task_count_for_completed = self.get_task_count_by_status(
+            now, 'completed')
+        progress_rate = self.get_progress_rate(
+            total_task_count_for_today, task_count_for_completed)
 
         task_count_for_weekdays = self.get_task_count_for_weekdays()
+
+        print("task_count_for_weekdays : ", task_count_for_weekdays)
+
         task_managers_data = self.get_task_managers_data(today_tasks)
 
         today_info = {
-            'date': now.strftime("%Y년 %m월 %d일"),
-            'dayOfWeek': now.strftime('%A')
+            'date': current_day.strftime("%Y년 %m월 %d일"),
+            'dayOfWeek': current_day.strftime('%A')
         }
 
-        
         response_data = {
             "total_task_count_for_today":  total_task_count_for_today,
             "task_count_for_uncompleted_task_until_yesterday": task_count_for_uncompleted_task_until_yesterday,
@@ -1578,24 +1605,123 @@ class TaskStatusViewForToday(APIView):
 
         return Response(response_data, status=HTTP_200_OK)
 
-    def get_time_range(self, now, start_hour, end_hour, end_minute=0):
-        start_time = now.replace(hour=start_hour, minute=0)
-        end_time = now.replace(hour=end_hour, minute=end_minute)
-        return start_time, end_time        
+    def get_current_day(self, selectedDay):
+
+        print("selectedDay :+++++++++++++++++++++++ ", selectedDay)
+
+        days_of_week = {
+            'Monday': 0,
+            'Tuesday': 1,
+            'Wednesday': 2,
+            'Thursday': 3,
+            'Friday': 4,
+            'Saturday': 5,
+            'Sunday': 6,
+        }
+
+        if selectedDay:
+            # 만약 selectedDay가 빈 문자열인 경우, 기본적으로 현재 요일을 사용
+            # current_weekday = datetime.now().strftime('%A')
+            seoul_tz = pytz.timezone('Asia/Seoul')
+            current_date = datetime.now().astimezone(seoul_tz)
+            start_of_week = current_date - timedelta(days=current_date.weekday())
+
+            # 선택한 요일의 날짜 계산
+            current_weekday_index = days_of_week.get(selectedDay, 0)
+            selected_day_date = start_of_week + timedelta(days=current_weekday_index)
+            print("selected_day_date =========================", selected_day_date)
+        else:
+            seoul_tz = pytz.timezone('Asia/Seoul')
+            selected_day_date = datetime.now().astimezone(seoul_tz)
+
+        return selected_day_date
+
+    def get_time_range(self, current_day, start_hour, end_hour, end_minute=0):
+        start_time = current_day.replace(hour=start_hour, minute=0)
+        end_time = current_day.replace(hour=end_hour, minute=end_minute)
+        return start_time, end_time
 
     # fix
-    def get_filtered_tasks(self, start_time, end_time, checkedPksForUserList):
-        if checkedPksForUserList and checkedPksForUserList != ['']:
-            return ProjectProgress.objects.filter(
-                Q(due_date__gte=start_time) &
-                Q(due_date__lt=end_time) &
-                Q(task_manager_id__in=checkedPksForUserList)
-            ).order_by("task_completed", "order")
+    def get_filtered_tasks(self, start_time, end_time, checkedPksForUserList, selectedDay):
+
+        days_of_week = {
+            'Monday': 0,
+            'Tuesday': 1,
+            'Wednesday': 2,
+            'Thursday': 3,
+            'Friday': 4,
+            'Saturday': 5,
+            'Sunday': 6,
+        }
+
+        # 요청에서 selectedDay 가져오기
+        # selectedDay = request.GET.get('selectedDay', "")
+
+        if not selectedDay:
+            # 만약 selectedDay가 빈 문자열인 경우, 기본적으로 현재 요일을 사용
+            current_weekday = datetime.now().strftime('%A')
         else:
-            return ProjectProgress.objects.filter(
-                Q(due_date__gte=start_time) &
-                Q(due_date__lt=end_time)
-            ).order_by("task_completed", "order")
+            current_weekday = selectedDay
+
+        # 이번 주의 시작 날짜와 끝 날짜 계산
+        current_date = datetime.now()
+        start_of_week = current_date - \
+            timedelta(days=current_date.weekday())
+
+        # 선택한 요일의 날짜 계산
+        current_weekday_index = days_of_week.get(current_weekday, 0)
+        selected_day_date = start_of_week + \
+            timedelta(days=current_weekday_index)
+
+        selected_day_start = selected_day_date.replace(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Seoul'))
+        selected_day_end = selected_day_date.replace(hour=23, minute=59, tzinfo=pytz.timezone('Asia/Seoul'))
+
+        print("selectedDay : ", selectedDay)
+        print("current_weekday : ", current_weekday)
+        # print("current_weekday_index :", current_weekday_index)
+        print("date_range 1111111 : ", selected_day_start)
+        print("date_range 2222222 : ", selected_day_end)
+
+
+        if selectedDay and datetime.now().strftime('%A') != current_weekday:
+            if checkedPksForUserList and checkedPksForUserList != ['']:
+                print("111111111111111111111111111111111111111111111111111111111")
+                return ProjectProgress.objects.filter(
+                    Q(task_manager_id__in=checkedPksForUserList) &
+                    Q(due_date__gte=selected_day_start) &
+                    Q(due_date__lt=selected_day_end)
+                ).order_by("task_completed", "order")
+            else:
+                print("222222222222222222222222222222222222222222222222222222")
+                print("date_range 1111111 : ", selected_day_start)
+                print("date_range 2222222 : ", selected_day_end)    
+
+                result = ProjectProgress.objects.filter(
+                    Q(due_date__gte=selected_day_start) &
+                    Q(due_date__lt=selected_day_end)
+                ).order_by("task_completed", "order")
+                print("result ;:::::::::::: ", result)
+
+                return ProjectProgress.objects.filter(
+                    Q(due_date__gte=selected_day_start) &
+                    Q(due_date__lt=selected_day_end)
+                ).order_by("task_completed", "order")
+        else:
+            if checkedPksForUserList and checkedPksForUserList != ['']:
+                print("33333333333333333333333333333333333333333333333333")
+                return ProjectProgress.objects.filter(
+                    Q(due_date__gte=start_time) &
+                    Q(due_date__lt=end_time) &
+                    Q(task_manager_id__in=checkedPksForUserList)).order_by("task_completed", "order")
+            else:
+                print("444444444444444444444444444444444444444444444")
+                print("date_range 1111111 : ", start_time)
+                print("date_range 2222222 : ", end_time)      
+
+                return ProjectProgress.objects.filter(
+                    Q(due_date__gte=start_time) &
+                    Q(due_date__lt=end_time)
+                ).order_by("task_completed", "order")
 
 
     def filter_tasks_by_time(self, tasks, start_time, end_time):
@@ -1608,9 +1734,11 @@ class TaskStatusViewForToday(APIView):
 
     def get_total_task_count_for_today(self, now):
         task_count_for_ready = self.get_task_count_by_status(now, 'ready')
-        task_count_for_in_progress = self.get_task_count_by_status(now, 'in_progress')
+        task_count_for_in_progress = self.get_task_count_by_status(
+            now, 'in_progress')
         task_count_for_testing = self.get_task_count_by_status(now, 'testing')
-        task_count_for_completed = self.get_task_count_by_status(now, 'completed')
+        task_count_for_completed = self.get_task_count_by_status(
+            now, 'completed')
         return task_count_for_ready + task_count_for_in_progress + task_count_for_testing + task_count_for_completed
 
     def get_progress_rate(self, total_task_count_for_today, task_count_for_completed):
@@ -1639,12 +1767,12 @@ class TaskStatusViewForToday(APIView):
         start_of_week = today - timedelta(days=today.weekday())
 
         task_count_for_weekdays = ProjectProgress.objects.filter(
-            completed_at__range=(start_of_week, start_of_week +
-                                timedelta(days=7, hours=23, minutes=59, seconds=59)),
-            task_completed=True
+            due_date__range=(start_of_week, start_of_week +
+                                 timedelta(days=7, hours=23, minutes=59, seconds=59)),
+            # task_completed=True
         ).annotate(
             weekday=ExtractWeekDay(
-                'completed_at', tzinfo=pytz.timezone('Asia/Seoul'))
+                'due_date', tzinfo=pytz.timezone('Asia/Seoul'))
         ).values('weekday').annotate(count=Count('id'))
 
         task_count_for_weekdays = {
