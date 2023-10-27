@@ -1517,13 +1517,16 @@ class UpdateTaskTimeOptionAndOrder(APIView):
 
         return Response(status=HTTP_200_OK)
 
-
+# 1027
 class TaskStatusViewForToday(APIView):
     taskList = []
 
     def get(self, request):
         # checkedPksForUserList
-        checkedPksForUserList = request.data.get('checkedPksForUserList', [])        
+        # checkedPksForUserList = request.data.get('checkedPksForUserList', [])
+        checkedPksForUserList = request.query_params.getlist('checkedPksForUserList', [])
+
+        print("checkedPksForUserList : ", checkedPksForUserList)      
 
         seoul_tz = pytz.timezone('Asia/Seoul')
         now = datetime.now().astimezone(seoul_tz)
@@ -1533,7 +1536,7 @@ class TaskStatusViewForToday(APIView):
         afternoon_start, afternoon_end = self.get_time_range(now, 13, 19)
         night_start, night_end = self.get_time_range(now, 19, 23, 59)        
 
-        today_tasks = self.get_filtered_tasks(morning_start, night_end)
+        today_tasks = self.get_filtered_tasks(morning_start, night_end, checkedPksForUserList)
         self.taskListForToday = list(today_tasks)
 
         morning_tasks = self.filter_tasks_by_time(today_tasks, morning_start, morning_end)
@@ -1580,11 +1583,20 @@ class TaskStatusViewForToday(APIView):
         end_time = now.replace(hour=end_hour, minute=end_minute)
         return start_time, end_time        
 
-    def get_filtered_tasks(self, start_time, end_time):
-        return ProjectProgress.objects.filter(
-            Q(due_date__gte=start_time) &
-            Q(due_date__lt=end_time)
-        ).order_by("task_completed", "order")
+    # fix
+    def get_filtered_tasks(self, start_time, end_time, checkedPksForUserList):
+        if checkedPksForUserList and checkedPksForUserList != ['']:
+            return ProjectProgress.objects.filter(
+                Q(due_date__gte=start_time) &
+                Q(due_date__lt=end_time) &
+                Q(task_manager_id__in=checkedPksForUserList)
+            ).order_by("task_completed", "order")
+        else:
+            return ProjectProgress.objects.filter(
+                Q(due_date__gte=start_time) &
+                Q(due_date__lt=end_time)
+            ).order_by("task_completed", "order")
+
 
     def filter_tasks_by_time(self, tasks, start_time, end_time):
         return [task for task in tasks if start_time <= task.due_date < end_time]
