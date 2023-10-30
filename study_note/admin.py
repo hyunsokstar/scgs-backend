@@ -12,8 +12,20 @@ from .models import (
     CommentForErrorReport,
     Suggestion,
     CommentForSuggestion,
-    CommentForFaqBoard
+    CommentForFaqBoard,
+    RoadMap
 )
+
+# 1122
+from django.contrib import admin
+from .models import RoadMap
+
+@admin.register(RoadMap)
+class RoadMapAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'sub_title', 'writer')  # admin 목록에 표시할 필드 설정
+    list_filter = ('writer',)  # 필터 설정
+    search_fields = ('title', 'sub_title', 'writer__username')  # 검색 설정
+    # raw_id_fields = ('writer',)  # 외래키 필드를 선택 상자 대신 검색 상자로 표시
 
 
 @admin.register(CommentForFaqBoard)

@@ -59,3 +59,13 @@ class TechNoteContent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+# class LoadMap(models.Model):
+#     writer = models.ForeignKey(
+#         "users.User",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#         related_name="loadmaps"
+#     )
+#     title = models.CharField(max_length=50)
+#     sub_title = models.CharField(max_length=50)

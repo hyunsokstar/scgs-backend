@@ -1,6 +1,16 @@
 from django.db import models
 from django.utils import timezone
 
+class RoadMap(models.Model):
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="loadmaps"
+    )
+    title = models.CharField(max_length=50)
+    sub_title = models.CharField(max_length=50)
 
 class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):

@@ -111,8 +111,8 @@ urlpatterns = [
          views.CreateViewForSuggestionForNote.as_view()),
 
     # list view
+    path('loadmap', views.ListViewForRoadMap.as_view()),
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
-
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
     path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
     #  study-note/${study_note_pk}/suggestion

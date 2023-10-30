@@ -13,11 +13,20 @@ from .models import (
     CommentForErrorReport,
     Suggestion,
     CommentForSuggestion,
-    CommentForFaqBoard
+    CommentForFaqBoard,
+    RoadMap
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
 # 1122
+class SerializerForRoadMap(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = RoadMap
+        fields = ['id', 'writer', 'title', 'sub_title']
+
+
 class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 

@@ -28,7 +28,8 @@ from .models import (
     CommentForFaqBoard,
     CoWriterForStudyNote,
     StudyNote,
-    StudyNoteContent
+    StudyNoteContent,
+    RoadMap
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -47,10 +48,18 @@ from .serializers import (
     SerializerForCreateCommentForSuggestion,
     CommentForSuggestionSerializer,
     CommentForFaqBoardSerializer,
-    SerializerForCreateCommentForFaqBoard
+    SerializerForCreateCommentForFaqBoard,
+    SerializerForRoadMap  
 )
 
 # 1122
+# ListViewForRoadMap
+class ListViewForRoadMap(APIView):
+    def get(self, request):
+        roadmaps = RoadMap.objects.all()  # RoadMap 모델의 모든 인스턴스 가져오기
+        serializer = SerializerForRoadMap(roadmaps, many=True)  # 시리얼라이즈된 데이터 생성
+        return Response(serializer.data)
+
 # UpdateViewForIsTaskingForCowriter
 class CopyOneOfNoteToMe(APIView):
     def post(self, request):
