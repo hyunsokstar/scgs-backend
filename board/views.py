@@ -28,7 +28,6 @@ from .serializers import (
 )
 
 # 1122
-# CreateViewForFaqForBoard
 class CreateViewForFaqForBoard(APIView):
     def post(self, request):
         try:
@@ -133,8 +132,6 @@ class CreateViewForCommentForFaqForBoard(APIView):
             )
 
 # ListViewForCommentForFaqForBoard
-
-
 class ListViewForCommentForFaqForBoard(APIView):
     def get(self, request, faqId):
         print("댓글 데이터 요청 확인 for faq for board")
@@ -170,8 +167,6 @@ class DeleteViewForFaqForBoard(APIView):
         faq.delete()
 
         return Response({"message": "FAQ deleted successfully"}, status=HTTP_204_NO_CONTENT)
-
-# UpdateViewForFaqForBoard
 
 
 class UpdateViewForFaqForBoard(APIView):

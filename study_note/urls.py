@@ -103,15 +103,16 @@ urlpatterns = [
          name='AddDummyDataForStudyNote'),
     path('content/search', views.SearchContentListView.as_view()),
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
-
     # create view
+    path('roadmap/create', views.CreateViewForRoadMap.as_view()),
+
     path('<int:study_note_pk>/FAQBoard/add',
          views.CreteViewForFAQBoard.as_view()),
     path('<int:study_note_pk>/suggestion/add',
          views.CreateViewForSuggestionForNote.as_view()),
 
     # list view
-    path('loadmap', views.ListViewForRoadMap.as_view()),
+    path('roadmap', views.ListViewForRoadMap.as_view()),
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
     path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),
@@ -160,7 +161,8 @@ urlpatterns = [
     path('<int:study_note_pk>/error-report/search',
          views.SearchViewForStudyNoteErrorReportList.as_view()),
     path('faq/<int:faq_pk>/update', views.UpdateViewForFaq.as_view()),
-    path('suggestion/<int:suggestionPk>/update', views.UpdateViewForSuggestion.as_view()),
+    path('suggestion/<int:suggestionPk>/update',
+         views.UpdateViewForSuggestion.as_view()),
 
 
 
@@ -181,17 +183,21 @@ urlpatterns = [
          views.DeleteViewForCommentForSuggestion.as_view()),
 
 
-         
-     # study-note/suggestion/comment/${commentPk}/update
+
+    # study-note/suggestion/comment/${commentPk}/update
     path('suggestion/comment/<int:commentPk>/update',
          views.UpdateViewForSuggestionComment.as_view()),
 
     # comment delete view
+    # roadmap/${roadMapId}/delete
+    path('roadmap/<int:roadMapId>/delete', views.DeleteViewForRoadMap.as_view()),
+
     # faq-baord/${commentPk}/delete
     path('faq-board/comment/<int:commentPk>/delete',
          views.DeleteViewForFaqComment.as_view()),
 
-     # update view
-     path('<int:coWriterId>/update-is-tasking-for-cowriter', views.UpdateViewForIsTaskingForCowriter.as_view())
+    # update view
+    path('<int:coWriterId>/update-is-tasking-for-cowriter',
+         views.UpdateViewForIsTaskingForCowriter.as_view())
 
 ]

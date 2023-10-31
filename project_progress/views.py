@@ -307,18 +307,12 @@ class DetailViewForTargetTaskForTaskIntegration(APIView):
         print(taskId, type(taskId))
 
         project_task = self.get_object(taskId)
-        print("project_task : ", project_task)
-        print("project_task.extra_tasks ::::: ", project_task.extra_tasks)
 
         serializer = TargetTaskSerializer(
             project_task, context={"request": request})
         return Response(serializer.data)
 
     def put(self, request, pk):
-        print("put 요청 확인 ")
-        print("request.data", request.data)
-        print("pk : ", pk)
-
         project_task = self.get_object(pk)
         print("project_task : ", project_task)
 

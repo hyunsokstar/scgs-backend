@@ -56,8 +56,30 @@ class StudyNote(models.Model):
     class Meta:
         ordering = ['-id']
 
-# todo ErrorReportForStudyNote의 댓글용 모델 필요 컬럼은?  error_report:ErrorReportForStudyNote, writer, content , created_at
+# class RoadMapContent(models.Model):
+#     study_note = models.ForeignKey(
+#         "study_note.StudyNote",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#         related_name="+"
+#     )
+#     road_map = models.ForeignKey(
+#         "study_note.RoadMap",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#         related_name="contents"
+#     )
 
+#     writer = models.ForeignKey(
+#         "users.User",
+#         blank=True,
+#         null=True,
+#         on_delete=models.CASCADE,
+#     )
+
+#     created_at = models.DateTimeField(default=timezone.now)
 
 class ErrorReportForStudyNote(models.Model):
     study_note = models.ForeignKey(
