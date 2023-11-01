@@ -29,7 +29,8 @@ from .models import (
     CoWriterForStudyNote,
     StudyNote,
     StudyNoteContent,
-    RoadMap
+    RoadMap,
+    RoadMapContent
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -49,13 +50,35 @@ from .serializers import (
     CommentForSuggestionSerializer,
     CommentForFaqBoardSerializer,
     SerializerForCreateCommentForFaqBoard,
-    SerializerForRoadMap
+    SerializerForRoadMap,
+    SerializerForRoamdMapContent
 )
 from rest_framework.permissions import IsAuthenticated  # IsAuthenticated import 필요
 
 
-# 1122
+class ListViewForRoadMapContent(APIView):
+    listForRoadMap = []
+
+    def getRoadMapContentListById(self, roadMapId):
+        return RoadMapContent.objects.filter(road_map=roadMapId)
+
+    def get(self, request, roadMapId):
+        print("roadMapId : ", roadMapId)
+
+        road_map_contents = self.getRoadMapContentListById(roadMapId)
+        serializer = SerializerForRoamdMapContent(road_map_contents, many=True)
+
+        response_data = {
+            "road_map_contents": serializer.data,
+            # "totalCount": self.totalCount,
+            # "perPage": self.perPage,
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
+
 # DeleteViewForRoadMap
+
+
 class DeleteViewForRoadMap(APIView):
     def delete(self, request, roadMapId):
         # print("삭제 요청 확인 ", roadMapId)
@@ -66,7 +89,7 @@ class DeleteViewForRoadMap(APIView):
             if request.user.username == roadmap.writer.username:
                 pass
             else:
-                return Response({'message': f"{roadmap.writer.username}님만 삭제할 수 있습니다"}, 
+                return Response({'message': f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
                                 status=status.HTTP_204_NO_CONTENT)
 
             # 댓글 삭제
@@ -93,21 +116,23 @@ class CreateViewForRoadMap(APIView):
                 writer = request.user
 
                 # title과 subTitle을 이용하여 RoadMap 생성
-                roadmap = RoadMap.objects.create(title=title, sub_title=subTitle)
+                roadmap = RoadMap.objects.create(
+                    title=title, sub_title=subTitle)
 
                 return Response({'status': 'success', 'message': f'입력한 게시글의 "{roadmap.title}"을(를) 생성하였습니다.'})
 
             else:  # 로그인하지 않은 경우
-                return Response({'status': 'error', 'message': '로그인 유저만 입력할 수 있습니다.'}, status=status.HTTP_401_UNAUTHORIZED)            
+                return Response({'status': 'error', 'message': '로그인 유저만 입력할 수 있습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception as e:
             return Response({'status': 'error', 'message':
                              '로드맵을 생성하는 중에 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class ListViewForRoadMap(APIView):
     listForRoadMap = []
     totalCount = 0
-    perPage = 8
+    perPage = 6
 
     def getAllRoadMapList(self):
         return RoadMap.objects.all()
@@ -700,7 +725,7 @@ class SearchViewForStudyNoteErrorReportList(APIView):
 
         search_words = request.query_params.get("searchWords", "")
 
-        study_note_list = study_note.error_reports.all()
+        study_note_list = study_note.error_report_list.all()
         self.errorReportList = study_note_list
 
         if search_words:
@@ -999,7 +1024,7 @@ class ErrorReportForStudyNoteView(APIView):
         try:
             # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
-            error_report_list = study_note.error_reports.all()
+            error_report_list = study_note.error_report_list.all()
 
             # 클래스 변수 초기화 하기
             self.errorReportList = error_report_list
@@ -1036,12 +1061,12 @@ class ErrorReportForPageForStudyNoteView(APIView):
     def get(self, request, study_note_pk, page):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
-            error_reports = study_note.error_reports.filter(page=page)
+            error_report_list = study_note.error_report_list.filter(page=page)
 
-            print("error_reports : ", error_reports)
+            print("error_report_list : ", error_report_list)
 
             serializer = ErrorReportForStudyNoteSerializer(
-                error_reports, many=True)
+                error_report_list, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except StudyNote.DoesNotExist:
             return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -2246,7 +2271,6 @@ class StudyNoteAPIView(APIView):
 
         return StudyNote.objects.filter(filter_conditions)  # 필터링된 데이터를 반환
 
-
     def get(self, request):
         selected_note_writer = request.query_params.get(
             "selectedNoteWriter", "")
@@ -2266,14 +2290,16 @@ class StudyNoteAPIView(APIView):
         start = (page - 1) * self.note_count_per_page
         end = start + self.note_count_per_page
 
-        filtered_note_list = self.get_all_note_list_filtered(selected_note_writer, first_category, second_category)
+        filtered_note_list = self.get_all_note_list_filtered(
+            selected_note_writer, first_category, second_category)
         self.total_page_count = filtered_note_list.count()
-        paginated_notes  = filtered_note_list[start:end]
+        paginated_notes = filtered_note_list[start:end]
 
-        serializer = StudyNoteSerializer(paginated_notes , many=True)
+        serializer = StudyNoteSerializer(paginated_notes, many=True)
 
         # all_study_note_list_for_users = paginated_notes
-        note_writers = list(set(note.writer.username for note in paginated_notes))
+        note_writers = list(
+            set(note.writer.username for note in paginated_notes))
 
         response_data = {
             "note_writers": note_writers,  # Include the note writers in the response

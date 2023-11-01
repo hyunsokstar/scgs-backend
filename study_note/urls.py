@@ -113,6 +113,8 @@ urlpatterns = [
 
     # list view
     path('roadmap', views.ListViewForRoadMap.as_view()),
+    path('roadmap/<int:roadMapId>/content/', views.ListViewForRoadMapContent.as_view()),
+
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),
     path('<int:study_note_pk>/FAQBoard', views.FAQBoardView.as_view()),

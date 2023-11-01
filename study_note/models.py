@@ -12,6 +12,12 @@ class RoadMap(models.Model):
     title = models.CharField(max_length=50)
     sub_title = models.CharField(max_length=50)
 
+    class Meta:
+        ordering = ['-id']
+
+    def __str__(self):
+        return f"{self.title}"        
+
 class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):
         FRONTEND = ("frontend", "Frontend")
@@ -56,30 +62,30 @@ class StudyNote(models.Model):
     class Meta:
         ordering = ['-id']
 
-# class RoadMapContent(models.Model):
-#     study_note = models.ForeignKey(
-#         "study_note.StudyNote",
-#         blank=True,
-#         null=True,
-#         on_delete=models.CASCADE,
-#         related_name="+"
-#     )
-#     road_map = models.ForeignKey(
-#         "study_note.RoadMap",
-#         blank=True,
-#         null=True,
-#         on_delete=models.CASCADE,
-#         related_name="contents"
-#     )
+class RoadMapContent(models.Model):
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="+"
+    )
+    road_map = models.ForeignKey(
+        "study_note.RoadMap",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="contents"
+    )
 
-#     writer = models.ForeignKey(
-#         "users.User",
-#         blank=True,
-#         null=True,
-#         on_delete=models.CASCADE,
-#     )
+    writer = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
 
-#     created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
 class ErrorReportForStudyNote(models.Model):
     study_note = models.ForeignKey(
@@ -87,7 +93,7 @@ class ErrorReportForStudyNote(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="error_reports"
+        related_name="error_report_list"
     )
     page = models.PositiveIntegerField(default=1)
 

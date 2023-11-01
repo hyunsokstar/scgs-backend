@@ -13,12 +13,16 @@ from .models import (
     Suggestion,
     CommentForSuggestion,
     CommentForFaqBoard,
-    RoadMap
+    RoadMap,
+    RoadMapContent
 )
 
 # 1122
-from django.contrib import admin
-from .models import RoadMap
+@admin.register(RoadMapContent)
+class RoadMapContentAdmin(admin.ModelAdmin):
+    list_display = ('study_note', 'road_map', 'writer', 'created_at')  # 모델 리스트에서 보여질 필드들
+    list_filter = ('writer', 'created_at')  # 필터링할 수 있는 필드들
+    search_fields = ('study_note__title',)
 
 @admin.register(RoadMap)
 class RoadMapAdmin(admin.ModelAdmin):

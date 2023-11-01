@@ -14,17 +14,105 @@ from .models import (
     Suggestion,
     CommentForSuggestion,
     CommentForFaqBoard,
-    RoadMap
+    RoadMap,
+    RoadMapContent
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
 # 1122
+
+
+class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = CoWriterForStudyNote
+        fields = ('id', 'writer', 'study_note', 'is_approved', 'created_at')
+
+
+class StudyNoteSerializer(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+    note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
+    count_for_note_contents = serializers.SerializerMethodField()
+    total_count_for_subtitle = serializers.SerializerMethodField()
+    total_count_for_comments = serializers.SerializerMethodField()
+    total_count_for_qna_board = serializers.SerializerMethodField()
+    total_count_for_faq_list = serializers.SerializerMethodField()
+    total_count_for_suggestion_list = serializers.SerializerMethodField()
+    total_count_for_class_list = serializers.SerializerMethodField()
+    total_count_for_error_report_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudyNote
+        fields = [
+            'pk',
+            'title',
+            'description',
+            'writer',
+            'note_cowriters',
+            'first_category',
+            'second_category',
+            'count_for_note_contents',
+            'total_count_for_subtitle',
+            'total_count_for_comments',
+            'total_count_for_qna_board',
+            'total_count_for_faq_list',
+            'total_count_for_suggestion_list',
+            'total_count_for_class_list',
+            'total_count_for_error_report_list'
+        ]
+
+    def get_count_for_note_contents(self, obj):
+        return obj.note_contents.count()
+
+    def get_total_count_for_subtitle(self, obj):
+        return obj.note_contents.filter(content_option="subtitle_for_page").count()
+
+    def get_total_count_for_comments(self, obj):
+        return obj.note_comments.count()
+
+    def get_total_count_for_qna_board(self, obj):
+        return obj.question_list.count()
+
+    def get_total_count_for_faq_list(self, obj):
+        return obj.faq_list.count()
+
+    def get_total_count_for_class_list(self, obj):
+        return obj.class_list.count()
+    
+    def get_total_count_for_suggestion_list(self, obj):
+        return obj.suggestion_list.count()
+    
+    def get_total_count_for_suggestion_list(self, obj):
+        return obj.suggestion_list.count()  
+      
+    def get_total_count_for_error_report_list(self, obj):
+        return obj.error_report_list.count()    
+
+
 class SerializerForRoadMap(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = RoadMap
         fields = ['id', 'writer', 'title', 'sub_title']
+
+
+class SerializerForStudyNoteForRoadMapContent(serializers.ModelSerializer):
+    class Meta:
+        model = StudyNote
+        fields = ('id', 'title', 'description', 'writer',
+                  'created_at', 'first_category', 'second_category')
+
+
+class SerializerForRoamdMapContent(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+    study_note = SerializerForStudyNoteForRoadMapContent()
+    # road_map = SerializerForRoadMap()
+
+    class Meta:
+        model = RoadMapContent
+        fields = ['id', 'writer', 'study_note']
 
 
 class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
@@ -190,55 +278,46 @@ class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
 
-class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)
+# class StudyNoteSerializer(serializers.ModelSerializer):
+#     writer = UserProfileImageSerializer(read_only=True)
+#     note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
+#     count_for_note_contents = serializers.SerializerMethodField()
+#     total_count_for_subtitle = serializers.SerializerMethodField()
+#     total_count_for_comments = serializers.SerializerMethodField()
+#     total_count_for_qna_board = serializers.SerializerMethodField()
+#     count_for_class_list = serializers.SerializerMethodField()
 
-    class Meta:
-        model = CoWriterForStudyNote
-        fields = ('id', 'writer', 'study_note', 'is_approved', 'created_at')
+#     class Meta:
+#         model = StudyNote
+#         fields = [
+#             'pk',
+#             'title',
+#             'description',
+#             'writer',
+#             'note_cowriters',
+#             'first_category',
+#             'second_category',
+#             'count_for_note_contents',
+#             'total_count_for_subtitle',
+#             'total_count_for_comments',
+#             'total_count_for_qna_board',
+#             'count_for_class_list'
+#         ]
 
+#     def get_count_for_note_contents(self, obj):
+#         return obj.note_contents.count()
 
-class StudyNoteSerializer(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)
-    note_cowriters = CoWriterForStudyNoteSerializer(many=True, required=False)
-    count_for_note_contents = serializers.SerializerMethodField()
-    count_for_note_contents_for_subtitle = serializers.SerializerMethodField()
-    count_for_note_comments = serializers.SerializerMethodField()
-    count_for_qna_boards = serializers.SerializerMethodField()
-    count_for_class_list = serializers.SerializerMethodField()
+#     def get_total_count_for_subtitle(self, obj):
+#         return obj.note_contents.filter(content_option="subtitle_for_page").count()
 
-    class Meta:
-        model = StudyNote
-        fields = [
-            'pk',
-            'title',
-            'description',
-            'writer',
-            'note_cowriters',
-            'first_category',
-            'second_category',
-            'count_for_note_contents',
-            'count_for_note_contents_for_subtitle',
-            'count_for_note_comments',
-            'count_for_qna_boards',
-            'count_for_class_list'
-        ]
+#     def get_total_count_for_comments(self, obj):
+#         return obj.note_comments.count()
 
-    def get_count_for_note_contents(self, obj):
-        return obj.note_contents.count()
+#     def get_total_count_for_qna_board(self, obj):
+#         return obj.question_list.count()
 
-    def get_count_for_note_contents_for_subtitle(self, obj):
-        return obj.note_contents.filter(content_option="subtitle_for_page").count()
-
-    def get_count_for_note_comments(self, obj):
-        return obj.note_comments.count()
-
-    def get_count_for_qna_boards(self, obj):
-        return obj.question_list.count()
-
-    def get_count_for_class_list(self, obj):
-        return obj.class_list.count()
-
+#     def get_count_for_class_list(self, obj):
+#         return obj.class_list.count()
 
 class CommentForErrorReportSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
