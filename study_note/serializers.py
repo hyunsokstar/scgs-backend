@@ -107,7 +107,7 @@ class SerializerForStudyNoteForRoadMapContent(serializers.ModelSerializer):
 
 class SerializerForRoamdMapContent(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
-    study_note = SerializerForStudyNoteForRoadMapContent()
+    study_note = StudyNoteSerializer()
     # road_map = SerializerForRoadMap()
 
     class Meta:
