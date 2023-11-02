@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.StudyNoteAPIView.as_view(), name='StudyNoteAPIView'),
+    path('for-register-roadmap', views.StudyNoteAPIViewForRegisterRoadMap.as_view(), name='StudyNoteAPIView'),
     path('<int:notePk>/<int:pageNum>', views.StudyNoteDetailView.as_view()),
     path('<int:notePk>', views.DeleteViewForStudyNote.as_view()),
     path('comment/<int:commentPk>/delete',
@@ -114,6 +115,7 @@ urlpatterns = [
     # list view
     path('roadmap', views.ListViewForRoadMap.as_view()),
     path('roadmap/<int:roadMapId>/content/', views.ListViewForRoadMapContent.as_view()),
+    path('roadmap/<int:roadMapId>/content/for-register', views.ListViewForRoadMapContentForRegister.as_view()),
 
     path('<int:study_note_pk>/class-room', views.ClasssRoomView.as_view()),
     path('<int:study_note_pk>/qa-list', views.QnABoardView.as_view()),

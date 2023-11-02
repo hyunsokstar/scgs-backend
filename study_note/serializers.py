@@ -98,17 +98,28 @@ class SerializerForRoadMap(serializers.ModelSerializer):
         fields = ['id', 'writer', 'title', 'sub_title']
 
 
-class SerializerForStudyNoteForRoadMapContent(serializers.ModelSerializer):
+class SerializerForStudyNoteForBasic(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
     class Meta:
         model = StudyNote
         fields = ('id', 'title', 'description', 'writer',
                   'created_at', 'first_category', 'second_category')
 
+class SerializerForRoamdMapContentBasicForRegister(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+    study_note = SerializerForStudyNoteForBasic()
+    # road_map = SerializerForStudyNoteForBasic()
+
+    class Meta:
+        model = RoadMapContent
+        fields = ['id', 'writer', 'study_note']
+
 
 class SerializerForRoamdMapContent(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     study_note = StudyNoteSerializer()
-    # road_map = SerializerForRoadMap()
+    # road_map = SerializerForStudyNoteForBasic()
 
     class Meta:
         model = RoadMapContent

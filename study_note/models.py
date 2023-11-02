@@ -70,6 +70,7 @@ class RoadMapContent(models.Model):
         on_delete=models.CASCADE,
         related_name="+"
     )
+    
     road_map = models.ForeignKey(
         "study_note.RoadMap",
         blank=True,

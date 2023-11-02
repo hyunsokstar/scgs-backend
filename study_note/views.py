@@ -51,10 +51,109 @@ from .serializers import (
     CommentForFaqBoardSerializer,
     SerializerForCreateCommentForFaqBoard,
     SerializerForRoadMap,
-    SerializerForRoamdMapContent
+    SerializerForRoamdMapContent,
+    SerializerForRoamdMapContentBasicForRegister,
+    SerializerForStudyNoteForBasic
 )
-from rest_framework.permissions import IsAuthenticated  # IsAuthenticated import 필요
 
+# 1122
+class StudyNoteAPIViewForRegisterRoadMap(APIView):
+    total_page_count = 0  # 노트의 총 개수
+    note_count_per_page = 4  # 1 페이지에 몇개씩
+    all_note_list = []
+
+    def getAllNoteList(self):
+        note_obj = StudyNote.objects.all()
+        return note_obj
+
+    # todo:
+    # ids_to_exclude 에 값이 있을 경우
+    # StudyNote 필터링할때 id가 todo ids_to_exclude 에 포함되는것들은 제외하도록 하기 
+    def get_all_note_list_filtered(self, selected_note_writer, first_category, second_category, ids_to_exclude):
+        filter_conditions = Q()
+        if selected_note_writer != "":
+            filter_conditions &= Q(writer__username=selected_note_writer)
+        if first_category != "":
+            filter_conditions &= Q(first_category=first_category)
+        if second_category != "":
+            filter_conditions &= Q(second_category=second_category)
+
+        if ids_to_exclude:
+            filter_conditions &= ~Q(id__in=ids_to_exclude)
+
+        return StudyNote.objects.filter(filter_conditions)  # 필터링된 데이터를 반환
+
+    def get(self, request):
+        selected_note_writer = request.query_params.get(
+            "selectedNoteWriter", "")
+        first_category = request.query_params.get(
+            "first_category", "")
+        second_category = request.query_params.get(
+            "second_category", "")
+
+        # step1 page 번호 가져 오기
+        try:
+            roadMapId = request.query_params.get("roadMapId", 1)
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        print("roadMapId check: ", roadMapId)
+        print("page check : ", page)
+
+        # step2 page 에 해당하는 데이터 가져 오기
+        start = (page - 1) * self.note_count_per_page
+        end = start + self.note_count_per_page
+
+        # roadMapId을 가리키는 RoadMapContent의 study_note들의 id들을 가져와서 ids_to_exclude에 저장
+        road_map_content_ids = RoadMapContent.objects.filter(road_map__id=roadMapId).values_list('study_note__id', flat=True)
+        ids_to_exclude = list(road_map_content_ids)
+
+        print("road_map_content_ids : ", road_map_content_ids)
+
+        filtered_note_list = self.get_all_note_list_filtered(
+            selected_note_writer, 
+            first_category, 
+            second_category, 
+            ids_to_exclude
+        )
+        self.total_page_count = filtered_note_list.count()
+        paginated_notes = filtered_note_list[start:end]
+
+        serializer = SerializerForStudyNoteForBasic(paginated_notes, many=True)
+
+        note_writers = list(
+            set(note.writer.username for note in paginated_notes))
+
+        response_data = {
+            "note_writers": note_writers,  # Include the note writers in the response
+            "noteList": serializer.data,
+            "totalPageCount": self.total_page_count,
+            "note_count_per_page": self.note_count_per_page
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
+
+class ListViewForRoadMapContentForRegister(APIView):
+    listForRoadMap = []
+
+    def getRoadMapContentListById(self, roadMapId):
+        return RoadMapContent.objects.filter(road_map=roadMapId)
+
+    def get(self, request, roadMapId):
+        print("roadMapId : ", roadMapId)
+
+        road_map_contents = self.getRoadMapContentListById(roadMapId)
+        serializer = SerializerForRoamdMapContentBasicForRegister(road_map_contents, many=True)
+
+        response_data = {
+            "road_map_contents": serializer.data,
+            # "totalCount": self.totalCount,
+            # "perPage": self.perPage,
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
 
 class ListViewForRoadMapContent(APIView):
     listForRoadMap = []
