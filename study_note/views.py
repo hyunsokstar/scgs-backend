@@ -55,8 +55,44 @@ from .serializers import (
     SerializerForRoamdMapContentBasicForRegister,
     SerializerForStudyNoteForBasic
 )
-
 # 1122
+class CreateViewForRegisterRoadMapFromCheckedNoteIds(APIView):
+
+    def post(self, request):
+        try:
+            if request.user.is_authenticated:  
+                roadMapId = request.data.get('roadMapId')
+                checkedIdsForNoteList = request.data.get('checkedIdsForNoteList')
+                
+                if roadMapId and checkedIdsForNoteList:
+                    # 해당하는 StudyNote를 조회하여 RoadMapContent를 생성합니다.
+                    road_map = RoadMap.objects.get(id=roadMapId)
+                    notes_to_link = StudyNote.objects.filter(id__in=checkedIdsForNoteList)
+
+                    for note in notes_to_link:
+                        RoadMapContent.objects.create(
+                            study_note=note,
+                            road_map=road_map,
+                            writer=request.user  # 현재 사용자로 설정
+                        )
+
+                    return Response({'status': 'success', 'message': f'로드맵 등록 완료'})
+                else:
+                    return Response({'status': 'error', 'message': '필수 정보가 누락되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                return Response({'status': 'error', 'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        except RoadMap.DoesNotExist:
+            return Response({'status': 'error', 'message': '해당하는 로드맵을 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except StudyNote.DoesNotExist:
+            return Response({'status': 'error', 'message': '하나 이상의 노트를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'status': 'error', 'message': '로드맵 등록 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class StudyNoteAPIViewForRegisterRoadMap(APIView):
     total_page_count = 0  # 노트의 총 개수
     note_count_per_page = 4  # 1 페이지에 몇개씩
@@ -93,7 +129,7 @@ class StudyNoteAPIViewForRegisterRoadMap(APIView):
 
         # step1 page 번호 가져 오기
         try:
-            roadMapId = request.query_params.get("roadMapId", 1)
+            roadMapId = request.query_params.get("roadMapId", 1) # null 일 경우는 없으므로 디폴트 1로 처리
             page = request.query_params.get("page", 1)
             page = int(page)
         except ValueError:
@@ -134,6 +170,7 @@ class StudyNoteAPIViewForRegisterRoadMap(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
 class ListViewForRoadMapContentForRegister(APIView):
     listForRoadMap = []

@@ -106,6 +106,7 @@ urlpatterns = [
     path('<int:study_note_pk>/contents', views.StudyNoteContentsView.as_view()),
     # create view
     path('roadmap/create', views.CreateViewForRoadMap.as_view()),
+    path('roadmap/register-from-checked-note-ids', views.CreateViewForRegisterRoadMapFromCheckedNoteIds.as_view()),
 
     path('<int:study_note_pk>/FAQBoard/add',
          views.CreteViewForFAQBoard.as_view()),
