@@ -253,7 +253,10 @@ class CreateViewForRoadMap(APIView):
 
                 # title과 subTitle을 이용하여 RoadMap 생성
                 roadmap = RoadMap.objects.create(
-                    title=title, sub_title=subTitle)
+                    writer=writer,
+                    title=title, 
+                    sub_title=subTitle
+                )
 
                 return Response({'status': 'success', 'message': f'입력한 게시글의 "{roadmap.title}"을(를) 생성하였습니다.'})
 
