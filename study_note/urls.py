@@ -107,6 +107,9 @@ urlpatterns = [
     # create view
     path('roadmap/create', views.CreateViewForRoadMap.as_view()),
     path('roadmap/register-from-checked-note-ids', views.CreateViewForRegisterRoadMapFromCheckedNoteIds.as_view()),
+    
+    #  deleteview
+    path('roadmap/content/delete-for-checked-ids', views.DeleteViewForRoadMapContentForCheckedIds.as_view()),
 
     path('<int:study_note_pk>/FAQBoard/add',
          views.CreteViewForFAQBoard.as_view()),

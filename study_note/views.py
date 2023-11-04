@@ -55,7 +55,48 @@ from .serializers import (
     SerializerForRoamdMapContentBasicForRegister,
     SerializerForStudyNoteForBasic
 )
+
 # 1122
+# DeleteViewForRoadMapContentForCheckedIds
+class DeleteViewForRoadMapContentForCheckedIds(APIView):
+    def delete(self, request):
+        try:
+
+            if request.user.is_authenticated:
+                print("로그인 확인 삭제 진행")
+            else:
+                return Response({'status': 'error', 'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # todo1: roadMapId, checkedIdsForRoadMapContent 얻어 오기
+            roadMapId = request.data.get('roadMapId')
+            checkedIdsForRoadMapContent = request.data.get('checkedIdsForRoadMapContent')
+
+            if roadMapId is None or checkedIdsForRoadMapContent is None:
+                return Response({'message': 'Missing data in the request'}, status=status.HTTP_400_BAD_REQUEST)
+
+            print("여기까지만 실행 되나 ??? ")
+            print("roadMapId : ", roadMapId)
+            roadmap = RoadMap.objects.get(id=roadMapId)
+
+            print("roadmap.writer.username :::;:: ", roadmap.writer.username)
+
+            if request.user.username == roadmap.writer.username:
+                # todo2: checkedIdsForRoadMapContent 에 해당하는(id로 비교) RoadMapContent 삭제
+                RoadMapContent.objects.filter(id__in=checkedIdsForRoadMapContent).delete()
+                # 성공적인 응답
+                return Response({'message': 'delete road map content success !!'}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({'message': f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
+                                status=status.HTTP_403_FORBIDDEN)
+
+        except RoadMap.DoesNotExist:
+            # 댓글을 찾을 수 없는 경우
+            return Response({'message': 'roadmap is not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # 다른 예외 처리
+            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class CreateViewForRegisterRoadMapFromCheckedNoteIds(APIView):
 
     def post(self, request):
