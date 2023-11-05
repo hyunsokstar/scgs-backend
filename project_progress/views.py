@@ -4189,7 +4189,7 @@ class UpdateTaskCompetedView(APIView):
                 hour=0, minute=0, second=0, microsecond=0)
 
             if project_task.due_date < today_midnight:
-                return Response({"message": "Due date has passed! if you want task complete update due date is necessary !"})
+                return Response({"warning": "Due date has passed! if you want task complete update due date is necessary !"})
             else:
                 print("그대로 진행 !!!!!!!!!")
                 print("project_task.due_date : ", project_task.due_date)
