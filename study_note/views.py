@@ -57,6 +57,29 @@ from .serializers import (
 )
 
 # 1122
+class UpdateViewForRoadMapContentOrder(APIView):
+    def put(self, request):
+        try:
+            roadMapId = request.data.get("roadMapId")
+            updatedRoadMapOrderList = request.data.get(
+                'updatedRoadMapOrderList', [])
+            print("roadMapId for reordering: ", roadMapId)
+            print("updatedRoadMapOrderList for reordering: ", updatedRoadMapOrderList)            
+
+            for item in updatedRoadMapOrderList:
+                content_id = item.get('id')
+                new_order = item.get('order')
+
+                # Fetch the RoadMapContent instance
+                content = RoadMapContent.objects.get(id=content_id, road_map_id=roadMapId)
+                content.order = new_order  # Update the order
+                content.save()  # Save the changes
+
+            return Response({'success': 'Study note content order updated successfully.'}, status=status.HTTP_200_OK)
+
+        except StudyNoteContent.DoesNotExist:
+            return Response({'error': 'Study note content does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
 # DeleteViewForRoadMapContentForCheckedIds
 class DeleteViewForRoadMapContentForCheckedIds(APIView):
     def delete(self, request):
@@ -106,16 +129,21 @@ class CreateViewForRegisterRoadMapFromCheckedNoteIds(APIView):
                 checkedIdsForNoteList = request.data.get('checkedIdsForNoteList')
                 
                 if roadMapId and checkedIdsForNoteList:
-                    # 해당하는 StudyNote를 조회하여 RoadMapContent를 생성합니다.
                     road_map = RoadMap.objects.get(id=roadMapId)
                     notes_to_link = StudyNote.objects.filter(id__in=checkedIdsForNoteList)
+
+                    max_order = RoadMapContent.objects.filter(road_map=road_map).aggregate(Max('order'))['order__max']
+                    next_order = max_order + 1 if max_order is not None else 1
 
                     for note in notes_to_link:
                         RoadMapContent.objects.create(
                             study_note=note,
                             road_map=road_map,
-                            writer=request.user  # 현재 사용자로 설정
+                            writer=request.user,
+                            order=next_order
                         )
+                        next_order += 1  # Increase order for each note
+                    
 
                     return Response({'status': 'success', 'message': f'로드맵 등록 완료'})
                 else:
@@ -217,7 +245,7 @@ class ListViewForRoadMapContentForRegister(APIView):
     listForRoadMap = []
 
     def getRoadMapContentListById(self, roadMapId):
-        return RoadMapContent.objects.filter(road_map=roadMapId)
+        return RoadMapContent.objects.filter(road_map=roadMapId).order_by("order")
 
     def get(self, request, roadMapId):
         print("roadMapId : ", roadMapId)
@@ -2204,8 +2232,8 @@ class StudyNoteContentReOrderAPIView(APIView):
                 study_note_content.order = order_for_update
                 study_note_content.save()
 
-            study_note_contents = StudyNoteContent.objects.filter(
-                study_note__pk=pk, page=1)
+            # study_note_contents = StudyNoteContent.objects.filter(
+            #     study_note__pk=pk, page=1)
 
             print("study_note_contents : ", study_note_contents)
 

@@ -86,6 +86,8 @@ class RoadMapContent(models.Model):
         on_delete=models.CASCADE,
     )
 
+    order = models.IntegerField(default=1)
+
     created_at = models.DateTimeField(default=timezone.now)
 
 class ErrorReportForStudyNote(models.Model):

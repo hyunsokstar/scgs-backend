@@ -79,15 +79,15 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 
     def get_total_count_for_class_list(self, obj):
         return obj.class_list.count()
-    
+
     def get_total_count_for_suggestion_list(self, obj):
         return obj.suggestion_list.count()
-    
+
     def get_total_count_for_suggestion_list(self, obj):
-        return obj.suggestion_list.count()  
-      
+        return obj.suggestion_list.count()
+
     def get_total_count_for_error_report_list(self, obj):
-        return obj.error_report_list.count()    
+        return obj.error_report_list.count()
 
 
 class SerializerForRoadMap(serializers.ModelSerializer):
@@ -106,14 +106,14 @@ class SerializerForStudyNoteForBasic(serializers.ModelSerializer):
         fields = ('id', 'title', 'description', 'writer',
                   'created_at', 'first_category', 'second_category')
 
+
 class SerializerForRoamdMapContentBasicForRegister(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     study_note = SerializerForStudyNoteForBasic()
-    # road_map = SerializerForStudyNoteForBasic()
 
     class Meta:
         model = RoadMapContent
-        fields = ['id', 'writer', 'study_note']
+        fields = ['id', 'writer', 'study_note', 'order']
 
 
 class SerializerForRoamdMapContent(serializers.ModelSerializer):

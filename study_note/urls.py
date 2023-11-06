@@ -110,6 +110,9 @@ urlpatterns = [
     
     #  deleteview
     path('roadmap/content/delete-for-checked-ids', views.DeleteViewForRoadMapContentForCheckedIds.as_view()),
+    # update view 1106
+    path('roadmap/content/order/update', views.UpdateViewForRoadMapContentOrder.as_view()),
+
 
     path('<int:study_note_pk>/FAQBoard/add',
          views.CreteViewForFAQBoard.as_view()),
