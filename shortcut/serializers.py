@@ -1,10 +1,10 @@
 from users.serializers import UserProfileImageSerializer
 from rest_framework import serializers
-from .models import ShortCut, Tags, RelatedShortcut, ShortCutHub
+from .models import ShortCut, Tags, RelatedShortcut, ShortCutHub, ShortCutHubContent
 
 class ShortcutHubSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer()
-    
+
     class Meta:
         model = ShortCutHub
         fields = ("id", "title", "description", "writer", "created_at")
@@ -52,6 +52,14 @@ class ShortCutSerializer(serializers.ModelSerializer):
     def get_related_shortcut_count(self, obj):
         return RelatedShortcut.objects.filter(shortcut=obj).count()
 
+
+class ShortCutHubContentSerializer(serializers.ModelSerializer):
+    
+    shortcut = ShortCutSerializer()
+    
+    class Meta:
+        model = ShortCutHubContent
+        fields = ['id', 'shortcut', 'shortcut_hub', 'writer', 'order', 'created_at']
 
 class RelatedShortcutSerializer(serializers.ModelSerializer):
     class Meta:

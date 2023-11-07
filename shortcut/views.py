@@ -10,34 +10,148 @@ from rest_framework.exceptions import (
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from django.http import Http404
 
-from .models import ShortCut, Tags, RelatedShortcut, ShortCutHub
+from .models import ShortCut, Tags, RelatedShortcut, ShortCutHub, ShortCutHubContent
+
 from .serializers import (
     SerializerForInsertToShortcut,
     ShortCutSerializer,
     RelatedShortcutSerializer,
     ShortcutHubSerializer,
+    ShortCutHubContentSerializer
 )
 from django.db import transaction
 
 
 # 1122
+class ListViewForShortForRegisterToHub(APIView):
+    toalCountForShortcut = 0
+    per_page = 50
+
+    # step4 목록 가져오는 함수 정의
+    def get_shortcut_list(self, shortcut_ids_from_hub_content):
+        try:
+            # return ShortCut.objects.all()
+            return ShortCut.objects.exclude(id__in=shortcut_ids_from_hub_content)            
+            # todo
+            # id 가 shortcut_ids_from_hub_content 속하는거 제외하도록 ShortCut.objects.all() 에 조건 추가
+        
+        except ShortCut.DoesNotExist:
+            raise NotFound
+
+    def get(self, request):
+        shortcut_hub_id = request.query_params.get("shortcut_hub_id")
+        print("shortcut_hub_id : ", shortcut_hub_id)
+        
+        # shortcut_hub_id와 관련된 ShortCutHubContent들을 가져오기
+        shortcut_hub_content = ShortCutHubContent.objects.filter(shortcut_hub_id=shortcut_hub_id)
+        print("shortcut_hub_content : ", shortcut_hub_content)
+
+        # ShortcutHubContent에서 shortcut_id들을 리스트로 추출
+        shortcut_ids_from_hub_content = list(shortcut_hub_content.values_list('shortcut_id', flat=True))
+        
+        print("shortcut_ids_from_hub_content : ", shortcut_ids_from_hub_content)     
+        
+        # step1 page 번호 받아 오기
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # step2 페이지 번호 확인
+        print("page : ", page)
+
+        # step5 total_count
+        self.toalCountForShortcut = self.get_shortcut_list(shortcut_ids_from_hub_content).count()
+        # step6 total_count 확인
+        print("총개수 check (self.toalCountForShortcut) : ", self.toalCountForShortcut)
+
+        # 페이지 범위에 대한 shortcut list
+        start = (page - 1) * self.per_page
+        end = start + self.per_page
+        list_for_shortcut_for_page = self.get_shortcut_list(shortcut_ids_from_hub_content)[start:end]
+
+        # step 8 시리얼라이저로 직렬화
+        serializer = ShortCutSerializer(list_for_shortcut_for_page, many=True)
+
+        data = {
+            "totalCount": self.toalCountForShortcut,
+            "shortcut_list": serializer.data,
+            "task_number_for_one_page": self.per_page,
+        }
+        return Response(data, status=HTTP_200_OK)
+
+
+class ListViewForShortCutHubContent(APIView):
+    totalCountForShortCutHubContent = 1
+    listForShortCutHubContentList = []
+    perPage = 10
+
+    def get_all_shortcut_hub_list(self):
+        try:
+            return ShortCutHubContent.objects.all()
+        except ShortCutHubContent.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, hub_id):
+        # pagenumber 초기화
+        try:
+            page = request.query_params.get("pageNum", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # 해당 범위의 shortcut hub list 가져 오기
+        start = (page - 1) * self.perPage
+        end = start + self.perPage
+
+        list_for_shortcut_hub_content_list = self.get_all_shortcut_hub_list()[start:end]
+
+        serializer = ShortCutHubContentSerializer(list_for_shortcut_hub_content_list, many=True)
+
+        self.listForShortCutHubContentList = serializer.data
+
+        self.totalCountForShortCutHub = self.get_all_shortcut_hub_list().count()
+
+        response_data = {
+            "listForShortCutHubContent": self.listForShortCutHubContentList,
+            "totalCountForShortCutHubContent": self.totalCountForShortCutHub,
+            "perPageForShortCutHubContent": self.perPage,
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
+
+
 class CreateViewForShortCutHub(APIView):
     def post(self, request):
         try:
-            title = request.data.get('title')
-            description= request.data.get('description')
+            title = request.data.get("title")
+            description = request.data.get("description")
 
             if not request.user.is_authenticated:  # 사용자가 로그인하지 않은 경우
-                return Response({'status': 'error', 'message': '로그인한 사용자만 입력할 수 있습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"status": "error", "message": "로그인한 사용자만 입력할 수 있습니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
-            shortcut_hub = ShortCutHub.objects.create(title=title, description=description)
+            shortcut_hub = ShortCutHub.objects.create(
+                title=title, description=description, writer=request.user
+            )
 
-            return Response({'status': 'success', 'message': f'"{shortcut_hub.title}" 을(를) 생성하였습니다.'})
+            return Response(
+                {
+                    "status": "success",
+                    "message": f'"{shortcut_hub.title}" 을(를) 생성하였습니다.',
+                }
+            )
 
         except Exception as e:
             print("e : ", e)
-            return Response({'status': 'error', 'message':
-                             '로드맵을 생성하는 중에 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"status": "error", "message": "로드맵을 생성하는 중에 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class ListViewForShortCutHub(APIView):
     totalCountForShortCutHub = 1
@@ -47,13 +161,12 @@ class ListViewForShortCutHub(APIView):
     def get_all_shortcut_hub_list(self):
         try:
             return ShortCutHub.objects.all()
-        except ShortCut.DoesNotExist:
+        except ShortCutHub.DoesNotExist:
             raise NotFound
 
     def get(self, request):
-        # pagenumber 초기화
         try:
-            page = request.query_params.get("page", 1)
+            page = request.query_params.get("pageNum", 1)
             page = int(page)
         except ValueError:
             page = 1
