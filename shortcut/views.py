@@ -21,6 +21,24 @@ from django.db import transaction
 
 
 # 1122
+class CreateViewForShortCutHub(APIView):
+    def post(self, request):
+        try:
+            title = request.data.get('title')
+            description= request.data.get('description')
+
+            if not request.user.is_authenticated:  # 사용자가 로그인하지 않은 경우
+                return Response({'status': 'error', 'message': '로그인한 사용자만 입력할 수 있습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            shortcut_hub = ShortCutHub.objects.create(title=title, description=description)
+
+            return Response({'status': 'success', 'message': f'"{shortcut_hub.title}" 을(를) 생성하였습니다.'})
+
+        except Exception as e:
+            print("e : ", e)
+            return Response({'status': 'error', 'message':
+                             '로드맵을 생성하는 중에 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class ListViewForShortCutHub(APIView):
     totalCountForShortCutHub = 1
     listForShortCutHubList = []
@@ -73,7 +91,7 @@ class DeleteRelatedShortcutForCheckedRow(APIView):
             return Response(str(e), status=500)
 
 
-class DeketeRekatedShortCutView(APIView):
+class RelatedShortCutView(APIView):
     def get_object(self, pk):
         try:
             return RelatedShortcut.objects.get(pk=pk)

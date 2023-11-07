@@ -721,3 +721,17 @@ class LogOut(APIView):
 #             return Response({"token": token})
 #         else:
 #             return Response({"error": "wrong password"})
+
+class TokenObtainView(APIView):
+    def post(self, request):
+        print("로그인 요청 확인 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

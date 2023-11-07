@@ -29,7 +29,7 @@ urlpatterns = [
     path("log-in", views.LogIn.as_view()),
     path("log-out", views.LogOut.as_view()),
     path("change-password", views.ChangePassword.as_view()),
-    path("token-login", obtain_auth_token),
+    path("token-login", views.TokenObtainView),
     path("@<str:username>", views.PublicUser.as_view()),
     path("manager-list-without-main-manager/<str:ownerUser>",
          views.ListViewForManagerListForRegisterExtraManager.as_view())
