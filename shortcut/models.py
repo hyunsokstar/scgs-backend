@@ -22,8 +22,6 @@ class ShortCut(models.Model):
         null=True,
     )
 
-    # shortcut = models.TextField(max_length=500, null=True, blank=True)
-
     description = models.CharField(
         max_length=50,
         blank=True,
@@ -66,3 +64,18 @@ class RelatedShortcut(models.Model):
 
     def __str__(self):
         return self.shortcut_content
+
+class ShortCutHub(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    writer = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="shortcut_hubs",
+        blank=True,
+        null=True,
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.name

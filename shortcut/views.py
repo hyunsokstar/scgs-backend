@@ -1,19 +1,69 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.exceptions import (
+    NotFound,
+    ParseError,
+    PermissionDenied,
+    NotAuthenticated,
+)
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_200_OK
 from django.http import Http404
 
-
-from .models import ShortCut, Tags, RelatedShortcut
-from .serializers import SerializerForInsertToShortcut, ShortCutSerializer, RelatedShortcutSerializer
+from .models import ShortCut, Tags, RelatedShortcut, ShortCutHub
+from .serializers import (
+    SerializerForInsertToShortcut,
+    ShortCutSerializer,
+    RelatedShortcutSerializer,
+    ShortcutHubSerializer,
+)
 from django.db import transaction
+
+
+# 1122
+class ListViewForShortCutHub(APIView):
+    totalCountForShortCutHub = 1
+    listForShortCutHubList = []
+    perPage = 4
+
+    def get_all_shortcut_hub_list(self):
+        try:
+            return ShortCutHub.objects.all()
+        except ShortCut.DoesNotExist:
+            raise NotFound
+
+    def get(self, request):
+        # pagenumber 초기화
+        try:
+            page = request.query_params.get("page", 1)
+            page = int(page)
+        except ValueError:
+            page = 1
+
+        # 해당 범위의 shortcut hub list 가져 오기
+        start = (page - 1) * self.perPage
+        end = start + self.perPage
+
+        list_for_shortcut_hub_list = self.get_all_shortcut_hub_list()[start:end]
+
+        serializer = ShortcutHubSerializer(list_for_shortcut_hub_list, many=True)
+
+        self.listForShortCutHubList = serializer.data
+
+        self.totalCountForShortCutHub = self.get_all_shortcut_hub_list().count()
+
+        response_data = {
+            "listForShortCutHub": self.listForShortCutHubList,
+            "totalCountForShortCutHub": self.totalCountForShortCutHub,
+            "perPageForShortCutHub": self.perPage,
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
 
 
 class DeleteRelatedShortcutForCheckedRow(APIView):
     def delete(self, request):
-        selected_rows = request.data.get('selectedRows', [])
+        selected_rows = request.data.get("selectedRows", [])
 
         try:
             # 선택된 RelatedShortcut 모델들을 삭제
@@ -37,7 +87,6 @@ class DeketeRekatedShortCutView(APIView):
 
 
 class ShortCutListView(APIView):
-    # step2 한 페이지당 목록 개수(per_page), 목록 총 개수(totalCount) 정의 하기
     toalCountForShortcut = 0
     per_page = 50
 
@@ -62,13 +111,11 @@ class ShortCutListView(APIView):
         # step5 total_count
         self.toalCountForShortcut = self.get_shortcut_list().count()
         # step6 total_count 확인
-        print("총개수 check (self.toalCountForShortcut) : ",
-              self.toalCountForShortcut)
+        print("총개수 check (self.toalCountForShortcut) : ", self.toalCountForShortcut)
 
-        # step7-1 범위 정하기 (start ~ end)
+        # 페이지 범위에 대한 shortcut list
         start = (page - 1) * self.per_page
         end = start + self.per_page
-        # step 7-2 해당 범위의 목록 가져 오기
         list_for_shortcut_for_page = self.get_shortcut_list()[start:end]
 
         # step 8 시리얼라이저로 직렬화
@@ -77,15 +124,11 @@ class ShortCutListView(APIView):
         data = {
             "totalCount": self.toalCountForShortcut,
             "shortcut_list": serializer.data,
-            "task_number_for_one_page": self.per_page
+            "task_number_for_one_page": self.per_page,
         }
         return Response(data, status=HTTP_200_OK)
 
     def post(self, request):
-        # print("request.data['shortcut] : ", request.data['shortcut'])
-        # print("request.data['description] : ", request.data['description'])
-        # print("request.data['classification] : ",
-        #       request.data['classification'])
         serializer = SerializerForInsertToShortcut(data=request.data)
 
         tags = request.data.get("tags")
@@ -123,8 +166,6 @@ class ShortCutListView(APIView):
 
         return Response({"success": True, "data": serializer.data})
 
-# ShortCutDetailView
-
 
 class ShortCutDetailView(APIView):
     def get_object(self, pk):
@@ -136,21 +177,21 @@ class ShortCutDetailView(APIView):
     def delete(self, request, pk):
         shortcut = self.get_object(pk)
         shortcut.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)        
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def put(self, request, pk):
         shortcut = self.get_object(pk)
         shortcut_data = request.data
 
-        shortcut.shortcut = shortcut_data.get('shortcut', shortcut.shortcut)
-        shortcut.description = shortcut_data.get(
-            'description', shortcut.description)
+        shortcut.shortcut = shortcut_data.get("shortcut", shortcut.shortcut)
+        shortcut.description = shortcut_data.get("description", shortcut.description)
         shortcut.classification = shortcut_data.get(
-            'classification', shortcut.classification)
+            "classification", shortcut.classification
+        )
 
         # Clear the existing tags and add new ones
         shortcut.tags.clear()
-        for tag_name in shortcut_data.get('tags', []):
+        for tag_name in shortcut_data.get("tags", []):
             tag, _ = Tags.objects.get_or_create(name=tag_name)
             shortcut.tags.add(tag)
 
@@ -161,14 +202,14 @@ class ShortCutDetailView(APIView):
 
     def post(self, request, pk):
         shortcut_id = pk
-        shortcut_content = request.data.get('shortcut_content')
-        description = request.data.get('description')
+        shortcut_content = request.data.get("shortcut_content")
+        description = request.data.get("description")
 
         # Create a new RelatedShortcut instance
         related_shortcut = RelatedShortcut.objects.create(
             shortcut_id=shortcut_id,
             shortcut_content=shortcut_content,
-            description=description
+            description=description,
         )
 
         # Serialize the created instance
@@ -183,7 +224,8 @@ class ShortCutDetailView(APIView):
 
         shortcut_serializer = ShortCutSerializer(shortcut)
         related_shortcuts_serializer = RelatedShortcutSerializer(
-            related_shortcuts, many=True)
+            related_shortcuts, many=True
+        )
 
         data = {
             "data_for_original_shortcut": shortcut_serializer.data,
@@ -193,7 +235,6 @@ class ShortCutDetailView(APIView):
 
 
 class RelatedShortcutView(APIView):
-
     def delete(self, request, pk):
         shortcut = self.get_object(pk)
         shortcut.delete()
@@ -208,9 +249,7 @@ class RelatedShortcutView(APIView):
         print("shortcut : ", shortcut)
 
         serializer = SerializerForInsertToShortcut(
-            shortcut,
-            data=request.data,
-            partial=True
+            shortcut, data=request.data, partial=True
         )
 
         if serializer.is_valid():
@@ -241,5 +280,4 @@ class RelatedShortcutView(APIView):
                 raise ParseError("project_task not found")
         else:
             print(serializer.errors)
-            raise ParseError(
-                "serializer is not valid: {}".format(serializer.errors))
+            raise ParseError("serializer is not valid: {}".format(serializer.errors))

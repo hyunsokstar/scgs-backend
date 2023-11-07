@@ -1,6 +1,6 @@
 # shortcut1
 from django.contrib import admin
-from .models import ShortCut, RelatedShortcut, Tags
+from .models import ShortCut, RelatedShortcut, Tags, ShortCutHub
 
 
 class TagsInline(admin.TabularInline):
@@ -24,3 +24,10 @@ class RelatedShortcutAdmin(admin.ModelAdmin):
                     'description', 'created_at']
     search_fields = ['shortcut_content', 'shortcut__name']
     list_filter = ['created_at']
+
+@admin.register(ShortCutHub)
+class ShortCutHubAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description', 'writer', 'created_at')
+    list_filter = ('writer', 'created_at')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'created_at'
