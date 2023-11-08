@@ -80,6 +80,7 @@ class UpdateViewForRoadMapContentOrder(APIView):
         except StudyNoteContent.DoesNotExist:
             return Response({'error': 'Study note content does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
+
 # DeleteViewForRoadMapContentForCheckedIds
 class DeleteViewForRoadMapContentForCheckedIds(APIView):
     def delete(self, request):

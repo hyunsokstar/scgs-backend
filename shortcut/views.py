@@ -20,9 +20,53 @@ from .serializers import (
     ShortCutHubContentSerializer
 )
 from django.db import transaction
+from django.db.models import Count, Max, Min
 
 
 # 1122
+class CreateViewForRegisterToShortCutHubContentFromCheckedShortCutIds(APIView):
+
+    def post(self, request):
+        try:
+            checkedIdsForShortCutToRegisterToHub = request.data.get('checkedIdsForShortCutToRegisterToHub')
+            shortcut_hub_id = request.data.get('shortcut_hub_id')
+            
+            if request.user.is_authenticated:  
+                shortcut_hub = ShortCutHub.objects.get(id=shortcut_hub_id)
+                
+                if shortcut_hub_id and checkedIdsForShortCutToRegisterToHub:
+                    shortcut_to_register = ShortCut.objects.filter(id__in=checkedIdsForShortCutToRegisterToHub)
+
+                    max_order = ShortCutHubContent.objects.filter(shortcut_hub=shortcut_hub).aggregate(Max('order'))['order__max']
+                    next_order = max_order + 1 if max_order is not None else 1
+
+                    for shortcut in shortcut_to_register:
+                        ShortCutHubContent.objects.create(
+                            shortcut_hub=shortcut_hub,
+                            shortcut = shortcut,
+                            writer=request.user,
+                            order=next_order
+                        )
+                        next_order += 1  # Increase order for each note
+
+                    return Response({'status': 'success', 'message': f'shortcut 등록 완료'})
+                else:
+                    return Response({'status': 'error', 'message': '필수 정보가 누락되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                return Response({'status': 'error', 'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        except ShortCutHub.DoesNotExist:
+            return Response({'status': 'error', 'message': '해당하는 로드맵을 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except ShortCut.DoesNotExist:
+            return Response({'status': 'error', 'message': '하나 이상의 노트를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print("e : ", e)
+            return Response({'status': 'error', 'message': 'ShortCut 등록 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class ListViewForShortForRegisterToHub(APIView):
     toalCountForShortcut = 0
     per_page = 50
