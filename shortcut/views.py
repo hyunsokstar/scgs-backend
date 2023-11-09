@@ -24,6 +24,26 @@ from django.db.models import Count, Max, Min
 
 
 # 1122
+from django.shortcuts import get_object_or_404
+
+class DeleteViewForShortCutHubContentById(APIView):
+    def delete(self, request, hub_content_id):
+        try:
+            # ShortCutHubContent 삭제 by hub_content_id
+            # 가져온 후 삭제
+            content = get_object_or_404(ShortCutHubContent, id=hub_content_id)
+            
+            if content.writer != request.user:
+                return Response("해당 컨텐츠를 삭제할 권한이 없습니다.", status=403)
+            
+            content.delete()
+            return Response("ShortCutHubContent 모델 삭제 성공")
+        except ShortCutHubContent.DoesNotExist:
+            return Response("해당 ID에 해당하는 ShortCutHubContent가 없습니다.", status=404)
+        except Exception as e:
+            return Response(str(e), status=500)
+
+
 class CreateViewForRegisterToShortCutHubContentFromCheckedShortCutIds(APIView):
 
     def post(self, request):
@@ -235,7 +255,7 @@ class ListViewForShortCutHub(APIView):
 
         return Response(response_data, status=HTTP_200_OK)
 
-
+# DeleteViewForShortCutHubContentById
 class DeleteRelatedShortcutForCheckedRow(APIView):
     def delete(self, request):
         selected_rows = request.data.get("selectedRows", [])
