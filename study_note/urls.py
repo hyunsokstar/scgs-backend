@@ -10,6 +10,7 @@ urlpatterns = [
     ),
     path("<int:notePk>/<int:pageNum>", views.StudyNoteDetailView.as_view()),
     path("<int:notePk>", views.DeleteViewForStudyNote.as_view()),
+    path("<int:notePk>/bookmark", views.BookMarkViewForNoteForPk.as_view()),
     path(
         "comment/<int:commentPk>/delete", views.DeleteViewForStudyNoteComment.as_view()
     ),

@@ -55,12 +55,59 @@ class StudyNote(models.Model):
         choices=SecondCategoryChoices.choices,
         default=SecondCategoryChoices.TUTORIAL,
     )
+    
+    # view_count = models.IntegerField(default=0)  
 
     def __str__(self):
         return f"{self.title} written by {self.writer.username}"
 
     class Meta:
         ordering = ['-id']
+
+class LikeForStudyNote(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="study_note_likes",
+    )
+    
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="likes",
+    )
+    
+    liked_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Like by {self.user.username} for {self.study_note.title}" 
+    
+class BookMarkForStudyNote(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="study_note_bookmarks",
+    )
+    
+    study_note = models.ForeignKey(
+        "study_note.StudyNote",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="bookmarks",
+    )
+    
+    bookmarked_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"bookmark by {self.user.username} for {self.study_note.title}"
+
 
 class RoadMapContent(models.Model):
     study_note = models.ForeignKey(

@@ -41,6 +41,7 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     total_count_for_suggestion_list = serializers.SerializerMethodField()
     total_count_for_class_list = serializers.SerializerMethodField()
     total_count_for_error_report_list = serializers.SerializerMethodField()
+    is_bookmark_for_note = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyNote
@@ -59,7 +60,8 @@ class StudyNoteSerializer(serializers.ModelSerializer):
             'total_count_for_faq_list',
             'total_count_for_suggestion_list',
             'total_count_for_class_list',
-            'total_count_for_error_report_list'
+            'total_count_for_error_report_list',
+            'is_bookmark_for_note'
         ]
 
     def get_count_for_note_contents(self, obj):
@@ -89,6 +91,12 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     def get_total_count_for_error_report_list(self, obj):
         return obj.error_report_list.count()
 
+    def get_is_bookmark_for_note(self, obj):
+        request = self.context.get('request')
+        print("request.user :::::: ", request.user)
+        if request and request.user.is_authenticated:
+            return obj.bookmarks.filter(user=request.user).exists()
+        return False
 
 class SerializerForRoadMap(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)

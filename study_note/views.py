@@ -30,7 +30,8 @@ from .models import (
     StudyNote,
     StudyNoteContent,
     RoadMap,
-    RoadMapContent
+    RoadMapContent,
+    BookMarkForStudyNote
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -55,6 +56,27 @@ from .serializers import (
     SerializerForRoamdMapContentBasicForRegister,
     SerializerForStudyNoteForBasic
 )
+
+class BookMarkViewForNoteForPk(APIView):
+    def post(self, request, notePk):
+        print("bookmark 요청 받음 !")
+        # 해당 notePk에 해당하는 StudyNote가 있는지 확인
+        study_note = get_object_or_404(StudyNote, pk=notePk)
+        
+        # 현재 유저의 북마크 확인
+        bookmark, created = BookMarkForStudyNote.objects.get_or_create(
+            user=request.user,
+            study_note=study_note,
+        )
+        
+        # 북마크가 이미 존재하는 경우 삭제하고, 아닌 경우 생성
+        if not created:
+            bookmark.delete()
+            message = f"Bookmark for '{study_note.title}' removed."
+        else:
+            message = f"Bookmark for '{study_note.title}' added."
+        
+        return Response({"message": message}, status=status.HTTP_200_OK)
 
 # 1122
 class UpdateViewForRoadMapContentOrder(APIView):
@@ -2481,6 +2503,9 @@ class StudyNoteAPIView(APIView):
         return StudyNote.objects.filter(filter_conditions)  # 필터링된 데이터를 반환
 
     def get(self, request):
+        
+        print("노트 요청 여기 맞지?? ")
+        
         selected_note_writer = request.query_params.get(
             "selectedNoteWriter", "")
         first_category = request.query_params.get(
@@ -2504,7 +2529,13 @@ class StudyNoteAPIView(APIView):
         self.total_page_count = filtered_note_list.count()
         paginated_notes = filtered_note_list[start:end]
 
-        serializer = StudyNoteSerializer(paginated_notes, many=True)
+        print("request.user.username : ", request.user)
+
+        serializer = StudyNoteSerializer(
+            paginated_notes, 
+            many=True, 
+            context={'request': request}
+        )
 
         # all_study_note_list_for_users = paginated_notes
         note_writers = list(
