@@ -31,7 +31,8 @@ from .models import (
     StudyNoteContent,
     RoadMap,
     RoadMapContent,
-    BookMarkForStudyNote
+    BookMarkForStudyNote,
+    LikeForStudyNote
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -54,9 +55,42 @@ from .serializers import (
     SerializerForRoadMap,
     SerializerForRoamdMapContent,
     SerializerForRoamdMapContentBasicForRegister,
-    SerializerForStudyNoteForBasic
+    SerializerForStudyNoteForBasic,
+    BookMarkForStudyNoteSerializer,
+    LikeForStudyNoteSerializer
 )
 
+# 1122
+# user_likes
+# ListViewForMyLikeNote(APIView):
+class ListViewForMyLikeNote(APIView):
+    def get(self, request):
+        user_likes = LikeForStudyNote.objects.filter(user=request.user)  # 현재 사용자의 북마크 필터링
+        serializer = LikeForStudyNoteSerializer(user_likes, many=True)  # 북마크 시리얼라이즈
+        # The above code is not doing anything. It is just a sequence of numbers and symbols.
+        return Response(serializer.data)
+
+class LikeViewForNoteForPk(APIView):
+    def post(self, request, notePk):
+        print("like 요청 받음 !")
+        study_note = get_object_or_404(StudyNote, pk=notePk)
+        
+        # 현재 유저의 북마크 확인
+        like, created = LikeForStudyNote.objects.get_or_create(
+            user=request.user,
+            study_note=study_note,
+        )
+        
+        # 북마크가 이미 존재하는 경우 삭제하고, 아닌 경우 생성
+        if not created:
+            like.delete()
+            message = f"like for '{study_note.title}' removed."
+        else:
+            message = f"like for '{study_note.title}' added."
+        
+        return Response({"message": message}, status=status.HTTP_200_OK)
+
+# LikeViewForNoteForPk
 class BookMarkViewForNoteForPk(APIView):
     def post(self, request, notePk):
         print("bookmark 요청 받음 !")
@@ -78,7 +112,12 @@ class BookMarkViewForNoteForPk(APIView):
         
         return Response({"message": message}, status=status.HTTP_200_OK)
 
-# 1122
+class ListViewForMyBookMark(APIView):
+    def get(self, request):
+        user_bookmarks = BookMarkForStudyNote.objects.filter(user=request.user)  # 현재 사용자의 북마크 필터링
+        serializer = BookMarkForStudyNoteSerializer(user_bookmarks, many=True)  # 북마크 시리얼라이즈
+        return Response(serializer.data)
+
 class UpdateViewForRoadMapContentOrder(APIView):
     def put(self, request):
         try:

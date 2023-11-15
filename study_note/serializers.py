@@ -15,11 +15,44 @@ from .models import (
     CommentForSuggestion,
     CommentForFaqBoard,
     RoadMap,
-    RoadMapContent
+    RoadMapContent,
+    BookMarkForStudyNote,
+    LikeForStudyNote
 )
 from django.utils import timezone  # timezone 모듈 임포트
 
-# 1122
+
+class SerializerForStudyNoteForBasic(serializers.ModelSerializer):
+    writer = UserProfileImageSerializer(read_only=True)
+
+    class Meta:
+        model = StudyNote
+        fields = (
+            "id",
+            "title",
+            "description",
+            "writer",
+            "created_at",
+            "first_category",
+            "second_category",
+        )
+
+class LikeForStudyNoteSerializer(serializers.ModelSerializer):
+    user = UserProfileImageSerializer(read_only=True)
+    study_note = SerializerForStudyNoteForBasic()
+
+    class Meta:
+        model = LikeForStudyNote
+        fields = ["user", "study_note", "liked_at"]
+
+# BookMarkForStudyNote
+class BookMarkForStudyNoteSerializer(serializers.ModelSerializer):
+    user = UserProfileImageSerializer(read_only=True)
+    study_note = SerializerForStudyNoteForBasic()
+
+    class Meta:
+        model = BookMarkForStudyNote
+        fields = ["user", "study_note", "bookmarked_at"]
 
 
 class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
@@ -27,7 +60,7 @@ class CoWriterForStudyNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CoWriterForStudyNote
-        fields = ('id', 'writer', 'study_note', 'is_approved', 'created_at')
+        fields = ("id", "writer", "study_note", "is_approved", "created_at")
 
 
 class StudyNoteSerializer(serializers.ModelSerializer):
@@ -46,22 +79,22 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyNote
         fields = [
-            'pk',
-            'title',
-            'description',
-            'writer',
-            'note_cowriters',
-            'first_category',
-            'second_category',
-            'count_for_note_contents',
-            'total_count_for_subtitle',
-            'total_count_for_comments',
-            'total_count_for_qna_board',
-            'total_count_for_faq_list',
-            'total_count_for_suggestion_list',
-            'total_count_for_class_list',
-            'total_count_for_error_report_list',
-            'is_bookmark_for_note'
+            "pk",
+            "title",
+            "description",
+            "writer",
+            "note_cowriters",
+            "first_category",
+            "second_category",
+            "count_for_note_contents",
+            "total_count_for_subtitle",
+            "total_count_for_comments",
+            "total_count_for_qna_board",
+            "total_count_for_faq_list",
+            "total_count_for_suggestion_list",
+            "total_count_for_class_list",
+            "total_count_for_error_report_list",
+            "is_bookmark_for_note",
         ]
 
     def get_count_for_note_contents(self, obj):
@@ -92,27 +125,19 @@ class StudyNoteSerializer(serializers.ModelSerializer):
         return obj.error_report_list.count()
 
     def get_is_bookmark_for_note(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         print("request.user :::::: ", request.user)
         if request and request.user.is_authenticated:
             return obj.bookmarks.filter(user=request.user).exists()
         return False
+
 
 class SerializerForRoadMap(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = RoadMap
-        fields = ['id', 'writer', 'title', 'sub_title']
-
-
-class SerializerForStudyNoteForBasic(serializers.ModelSerializer):
-    writer = UserProfileImageSerializer(read_only=True)
-
-    class Meta:
-        model = StudyNote
-        fields = ('id', 'title', 'description', 'writer',
-                  'created_at', 'first_category', 'second_category')
+        fields = ["id", "writer", "title", "sub_title"]
 
 
 class SerializerForRoamdMapContentBasicForRegister(serializers.ModelSerializer):
@@ -121,7 +146,7 @@ class SerializerForRoamdMapContentBasicForRegister(serializers.ModelSerializer):
 
     class Meta:
         model = RoadMapContent
-        fields = ['id', 'writer', 'study_note', 'order']
+        fields = ["id", "writer", "study_note", "order"]
 
 
 class SerializerForRoamdMapContent(serializers.ModelSerializer):
@@ -131,7 +156,7 @@ class SerializerForRoamdMapContent(serializers.ModelSerializer):
 
     class Meta:
         model = RoadMapContent
-        fields = ['id', 'writer', 'study_note']
+        fields = ["id", "writer", "study_note"]
 
 
 class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
@@ -139,11 +164,11 @@ class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
 
     class Meta:
         model = CommentForFaqBoard
-        fields = ['id', 'faq_board', 'writer', 'content', 'created_at']
+        fields = ["id", "faq_board", "writer", "content", "created_at"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['created_at_formatted'] = instance.created_at_formatted()
+        data["created_at_formatted"] = instance.created_at_formatted()
         return data
 
 
@@ -152,7 +177,7 @@ class CommentForFaqBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CommentForFaqBoard
-        fields = ['id', 'writer', 'content', 'created_at']
+        fields = ["id", "writer", "content", "created_at"]
 
 
 class SerializerForCreateCommentForSuggestion(serializers.ModelSerializer):
@@ -160,11 +185,11 @@ class SerializerForCreateCommentForSuggestion(serializers.ModelSerializer):
 
     class Meta:
         model = CommentForSuggestion
-        fields = ['id', 'suggestion', 'writer', 'content', 'created_at']
+        fields = ["id", "suggestion", "writer", "content", "created_at"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['created_at_formatted'] = instance.created_at_formatted()
+        data["created_at_formatted"] = instance.created_at_formatted()
         return data
 
 
@@ -173,13 +198,13 @@ class CommentForSuggestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CommentForSuggestion
-        fields = ['id', 'writer', 'content', 'created_at']
+        fields = ["id", "writer", "content", "created_at"]
 
 
 class SuggestionSerializerForCreate(serializers.ModelSerializer):
     class Meta:
         model = Suggestion
-        fields = ['study_note', 'title', 'content', 'writer']
+        fields = ["study_note", "title", "content", "writer"]
 
 
 class SuggestionSerializer(serializers.ModelSerializer):
@@ -190,19 +215,19 @@ class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQBoard
         fields = [
-            'pk',
-            'study_note',
-            'title',
-            'content',
-            'writer',
-            'created_at_formatted',
-            'updated_at',
-            'comments'
+            "pk",
+            "study_note",
+            "title",
+            "content",
+            "writer",
+            "created_at_formatted",
+            "updated_at",
+            "comments",
         ]
 
     def get_created_at_formatted(self, obj):
         local_created_at = timezone.localtime(obj.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
     def get_comments(self, suggestion):
         comments = CommentForSuggestion.objects.filter(suggestion=suggestion)
@@ -215,12 +240,19 @@ class FAQBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FAQBoard
-        fields = ['pk', 'study_note', 'title', 'content',
-                  'writer', 'created_at_formatted', 'updated_at']
+        fields = [
+            "pk",
+            "study_note",
+            "title",
+            "content",
+            "writer",
+            "created_at_formatted",
+            "updated_at",
+        ]
 
     def get_created_at_formatted(self, obj):
         local_created_at = timezone.localtime(obj.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class AnswerForQaBoardSerializer(serializers.ModelSerializer):
@@ -229,8 +261,7 @@ class AnswerForQaBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnswerForQaBoard
-        fields = ['pk', 'question', 'content',
-                  'writer', 'created_at_formatted']
+        fields = ["pk", "question", "content", "writer", "created_at_formatted"]
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
@@ -239,13 +270,21 @@ class AnswerForQaBoardSerializer(serializers.ModelSerializer):
 class QnABoardSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
     created_at_formatted = serializers.SerializerMethodField()
-    answers_for_qa_board = AnswerForQaBoardSerializer(
-        many=True, read_only=True)
+    answers_for_qa_board = AnswerForQaBoardSerializer(many=True, read_only=True)
 
     class Meta:
         model = QnABoard
-        fields = ['pk', 'study_note', 'title', 'content', 'page',
-                  'writer', 'created_at_formatted', 'updated_at', 'answers_for_qa_board']
+        fields = [
+            "pk",
+            "study_note",
+            "title",
+            "content",
+            "page",
+            "writer",
+            "created_at_formatted",
+            "updated_at",
+            "answers_for_qa_board",
+        ]
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
@@ -267,13 +306,15 @@ class ClassRoomForStudyNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClassRoomForStudyNote
-        fields = ['id',
-                  'current_note',
-                  'current_page',
-                  'writer',
-                  #   'is_logged_in',
-                  'is_approved',
-                  'created_at_formatted']
+        fields = [
+            "id",
+            "current_note",
+            "current_page",
+            "writer",
+            #   'is_logged_in',
+            "is_approved",
+            "created_at_formatted",
+        ]
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
@@ -292,9 +333,18 @@ class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudyNoteBriefingBoard
-        fields = ('id', 'note', 'writer', 'comment', 'like_count',
-                  'created_at', 'updated_at', 'is_edit_mode', 'created_at_formatted')
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        fields = (
+            "id",
+            "note",
+            "writer",
+            "comment",
+            "like_count",
+            "created_at",
+            "updated_at",
+            "is_edit_mode",
+            "created_at_formatted",
+        )
+        read_only_fields = ("id", "created_at", "updated_at")
 
 
 # class StudyNoteSerializer(serializers.ModelSerializer):
@@ -338,16 +388,17 @@ class StudyNoteBriefingBoardSerializer(serializers.ModelSerializer):
 #     def get_count_for_class_list(self, obj):
 #         return obj.class_list.count()
 
+
 class CommentForErrorReportSerializer(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
 
     class Meta:
         model = CommentForErrorReport
-        fields = ['pk', 'error_report', 'writer', 'content', 'created_at']
+        fields = ["pk", "error_report", "writer", "content", "created_at"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['created_at_formatted'] = instance.created_at_formatted()
+        data["created_at_formatted"] = instance.created_at_formatted()
         return data
 
 
@@ -358,8 +409,17 @@ class ErrorReportForStudyNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ErrorReportForStudyNote
-        fields = ['pk', 'study_note', 'writer', 'page', 'content',
-                  'is_resolved', 'created_at_formatted', 'updated_at', 'comments']
+        fields = [
+            "pk",
+            "study_note",
+            "writer",
+            "page",
+            "content",
+            "is_resolved",
+            "created_at_formatted",
+            "updated_at",
+            "comments",
+        ]
 
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
@@ -371,31 +431,26 @@ class StudyNoteContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyNoteContent
         fields = [
-            'pk',
-            'page',
-            'title',
-            'file_name',
-            'content',
-            'content_option',
-            'ref_url1',
-            'ref_url2',
-            'youtube_url',
-            'writer',
-            'created_at',
-            'order'
+            "pk",
+            "page",
+            "title",
+            "file_name",
+            "content",
+            "content_option",
+            "ref_url1",
+            "ref_url2",
+            "youtube_url",
+            "writer",
+            "created_at",
+            "order",
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ["id", "created_at"]
 
 
 class SerializerForCreateQuestionForNote(serializers.ModelSerializer):
     class Meta:
         model = QnABoard
-        fields = (
-            "study_note",
-            "title",
-            "content",
-            "page"
-        )
+        fields = ("study_note", "title", "content", "page")
 
 
 class SerializerForCreateErrorReportForNote(serializers.ModelSerializer):

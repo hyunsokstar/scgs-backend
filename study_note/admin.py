@@ -16,8 +16,8 @@ from .models import (
     RoadMap,
     RoadMapContent,
     BookMarkForStudyNote,
+    LikeForStudyNote
 )
-
 
 # 1122
 @admin.register(RoadMapContent)
@@ -210,3 +210,8 @@ class BookMarkForStudyNoteAdmin(admin.ModelAdmin):
     list_filter = ('user', 'study_note', 'bookmarked_at')
     search_fields = ('user__username', 'study_note__title')
 
+@admin.register(LikeForStudyNote)
+class LikeForStudyNoteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'study_note', 'liked_at')  # 관리자 페이지에서 보여줄 필드 설정
+    list_filter = ('liked_at',)  # 필터링할 수 있는 필드 설정
+    search_fields = ('user__username', 'study_note__title')  # 검색 기능을 위한 필드 설정

@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path("", views.StudyNoteAPIView.as_view(), name="StudyNoteAPIView"),
+    path("mybookmark", views.ListViewForMyBookMark.as_view()),
+    path("my-like-note-list", views.ListViewForMyLikeNote.as_view()),
     path(
         "for-register-roadmap",
         views.StudyNoteAPIViewForRegisterRoadMap.as_view(),
@@ -11,6 +13,7 @@ urlpatterns = [
     path("<int:notePk>/<int:pageNum>", views.StudyNoteDetailView.as_view()),
     path("<int:notePk>", views.DeleteViewForStudyNote.as_view()),
     path("<int:notePk>/bookmark", views.BookMarkViewForNoteForPk.as_view()),
+    path("<int:notePk>/like", views.LikeViewForNoteForPk.as_view()),
     path(
         "comment/<int:commentPk>/delete", views.DeleteViewForStudyNoteComment.as_view()
     ),
