@@ -333,7 +333,11 @@ class ListViewForRoadMapContent(APIView):
         print("roadMapId : ", roadMapId)
 
         road_map_contents = self.getRoadMapContentListById(roadMapId)
-        serializer = SerializerForRoamdMapContent(road_map_contents, many=True)
+        serializer = SerializerForRoamdMapContent(
+            road_map_contents, 
+            many=True, 
+            context={'request': request}
+            )
 
         response_data = {
             "road_map_contents": serializer.data,

@@ -75,6 +75,7 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     total_count_for_class_list = serializers.SerializerMethodField()
     total_count_for_error_report_list = serializers.SerializerMethodField()
     is_bookmark_for_note = serializers.SerializerMethodField()
+    is_like_for_note = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyNote
@@ -95,6 +96,7 @@ class StudyNoteSerializer(serializers.ModelSerializer):
             "total_count_for_class_list",
             "total_count_for_error_report_list",
             "is_bookmark_for_note",
+            "is_like_for_note"
         ]
 
     def get_count_for_note_contents(self, obj):
@@ -130,6 +132,13 @@ class StudyNoteSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.bookmarks.filter(user=request.user).exists()
         return False
+    
+    def get_is_like_for_note(self, obj):
+        request = self.context.get("request")
+        print("request.user :::::: ", request.user)
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
 
 
 class SerializerForRoadMap(serializers.ModelSerializer):
@@ -151,12 +160,20 @@ class SerializerForRoamdMapContentBasicForRegister(serializers.ModelSerializer):
 
 class SerializerForRoamdMapContent(serializers.ModelSerializer):
     writer = UserProfileImageSerializer(read_only=True)
-    study_note = StudyNoteSerializer()
-    # road_map = SerializerForStudyNoteForBasic()
+
 
     class Meta:
         model = RoadMapContent
         fields = ["id", "writer", "study_note"]
+
+    def __init__(self, *args, **kwargs):
+        # context에서 study_note를 가져옵니다.
+        context = kwargs.get('context', {})
+        request = context.get('request')
+        
+        # study_note에 context를 직접 전달합니다.
+        super(SerializerForRoamdMapContent, self).__init__(*args, **kwargs)
+        self.fields['study_note'] = StudyNoteSerializer(context={'request': request})
 
 
 class SerializerForCreateCommentForFaqBoard(serializers.ModelSerializer):
