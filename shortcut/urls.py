@@ -6,7 +6,7 @@ urlpatterns = [
     path('register-to-hub', views.ListViewForShortForRegisterToHub.as_view()),
     path('hub', views.ListViewForShortCutHub.as_view()),
     path('hub/content/<int:hub_content_id>', views.DeleteViewForShortCutHubContentById.as_view()),
-    
+    path('hub/<int:hub_id>/content/reordering', views.ReorderingViewForShortCutHubContent.as_view()),   
     
     path('hub/content/register-from-checked-ids', views.CreateViewForRegisterToShortCutHubContentFromCheckedShortCutIds.as_view()),
     path('hub/<int:hub_id>/content', views.ListViewForShortCutHubContent.as_view()),

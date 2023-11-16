@@ -21,10 +21,45 @@ from .serializers import (
 )
 from django.db import transaction
 from django.db.models import Count, Max, Min
+from django.shortcuts import get_object_or_404
 
 
 # 1122
-from django.shortcuts import get_object_or_404
+class ReorderingViewForShortCutHubContent(APIView):
+    def put(self, request, hub_id):
+        try:
+            shortcut_hub_contents = ShortCutHubContent.objects.filter(shortcut_hub_id=hub_id)
+
+            print("shortcut_hub_contents : ", shortcut_hub_contents)
+
+            reorderedShortCutHubList = request.data.get("reorderedShortCutHubList", [])
+            print("reorderedShortCutHubList : ", reorderedShortCutHubList)
+
+            for item in reorderedShortCutHubList:
+                id_for_update = item["hub_content_id"]
+                order_for_update = item["order"]
+
+                print(
+                    "id_for_update, order_for_update : ",
+                    id_for_update,
+                    order_for_update,
+                )
+
+                hub_content = shortcut_hub_contents.get(id=id_for_update)
+                hub_content.order = order_for_update
+                hub_content.save()
+
+
+            return Response(
+                {"success": "Study note content order updated successfully."},
+                status=status.HTTP_200_OK,
+            )
+
+        except ShortCutHubContent.DoesNotExist:
+            return Response(
+                {"error": "ShortCutHubContent does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 class DeleteViewForShortCutHubContentById(APIView):
     def delete(self, request, hub_content_id):
@@ -153,7 +188,7 @@ class ListViewForShortCutHubContent(APIView):
 
     def get_all_shortcut_hub_list(self):
         try:
-            return ShortCutHubContent.objects.all()
+            return ShortCutHubContent.objects.all().order_by("order")
         except ShortCutHubContent.DoesNotExist:
             raise NotFound
 

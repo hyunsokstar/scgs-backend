@@ -3,8 +3,18 @@ from django.db import transaction
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT, HTTP_200_OK
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, NotAuthenticated
+from rest_framework.status import (
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_204_NO_CONTENT,
+    HTTP_200_OK,
+)
+from rest_framework.exceptions import (
+    NotFound,
+    ParseError,
+    PermissionDenied,
+    NotAuthenticated,
+)
 from rest_framework import status
 import random
 from django.db.models import Count, Max, Min
@@ -32,7 +42,7 @@ from .models import (
     RoadMap,
     RoadMapContent,
     BookMarkForStudyNote,
-    LikeForStudyNote
+    LikeForStudyNote,
 )
 from .serializers import (
     SerializerForCreateQuestionForNote,
@@ -57,38 +67,43 @@ from .serializers import (
     SerializerForRoamdMapContentBasicForRegister,
     SerializerForStudyNoteForBasic,
     BookMarkForStudyNoteSerializer,
-    LikeForStudyNoteSerializer
+    LikeForStudyNoteSerializer,
 )
+
 
 # 1122
 # user_likes
 # ListViewForMyLikeNote(APIView):
 class ListViewForMyLikeNote(APIView):
     def get(self, request):
-        user_likes = LikeForStudyNote.objects.filter(user=request.user)  # 현재 사용자의 북마크 필터링
+        user_likes = LikeForStudyNote.objects.filter(
+            user=request.user
+        )  # 현재 사용자의 북마크 필터링
         serializer = LikeForStudyNoteSerializer(user_likes, many=True)  # 북마크 시리얼라이즈
         # The above code is not doing anything. It is just a sequence of numbers and symbols.
         return Response(serializer.data)
+
 
 class LikeViewForNoteForPk(APIView):
     def post(self, request, notePk):
         print("like 요청 받음 !")
         study_note = get_object_or_404(StudyNote, pk=notePk)
-        
+
         # 현재 유저의 북마크 확인
         like, created = LikeForStudyNote.objects.get_or_create(
             user=request.user,
             study_note=study_note,
         )
-        
+
         # 북마크가 이미 존재하는 경우 삭제하고, 아닌 경우 생성
         if not created:
             like.delete()
             message = f"like for '{study_note.title}' removed."
         else:
             message = f"like for '{study_note.title}' added."
-        
+
         return Response({"message": message}, status=status.HTTP_200_OK)
+
 
 # LikeViewForNoteForPk
 class BookMarkViewForNoteForPk(APIView):
@@ -96,68 +111,88 @@ class BookMarkViewForNoteForPk(APIView):
         print("bookmark 요청 받음 !")
         # 해당 notePk에 해당하는 StudyNote가 있는지 확인
         study_note = get_object_or_404(StudyNote, pk=notePk)
-        
+
         # 현재 유저의 북마크 확인
         bookmark, created = BookMarkForStudyNote.objects.get_or_create(
             user=request.user,
             study_note=study_note,
         )
-        
+
         # 북마크가 이미 존재하는 경우 삭제하고, 아닌 경우 생성
         if not created:
             bookmark.delete()
             message = f"Bookmark for '{study_note.title}' removed."
         else:
             message = f"Bookmark for '{study_note.title}' added."
-        
+
         return Response({"message": message}, status=status.HTTP_200_OK)
+
 
 class ListViewForMyBookMark(APIView):
     def get(self, request):
-        user_bookmarks = BookMarkForStudyNote.objects.filter(user=request.user)  # 현재 사용자의 북마크 필터링
-        serializer = BookMarkForStudyNoteSerializer(user_bookmarks, many=True)  # 북마크 시리얼라이즈
+        user_bookmarks = BookMarkForStudyNote.objects.filter(
+            user=request.user
+        )  # 현재 사용자의 북마크 필터링
+        serializer = BookMarkForStudyNoteSerializer(
+            user_bookmarks, many=True
+        )  # 북마크 시리얼라이즈
         return Response(serializer.data)
+
 
 class UpdateViewForRoadMapContentOrder(APIView):
     def put(self, request):
         try:
             roadMapId = request.data.get("roadMapId")
-            updatedRoadMapOrderList = request.data.get(
-                'updatedRoadMapOrderList', [])
+            updatedRoadMapOrderList = request.data.get("updatedRoadMapOrderList", [])
             print("roadMapId for reordering: ", roadMapId)
-            print("updatedRoadMapOrderList for reordering: ", updatedRoadMapOrderList)            
+            print("updatedRoadMapOrderList for reordering: ", updatedRoadMapOrderList)
 
             for item in updatedRoadMapOrderList:
-                content_id = item.get('id')
-                new_order = item.get('order')
+                content_id = item.get("id")
+                new_order = item.get("order")
 
                 # Fetch the RoadMapContent instance
-                content = RoadMapContent.objects.get(id=content_id, road_map_id=roadMapId)
+                content = RoadMapContent.objects.get(
+                    id=content_id, road_map_id=roadMapId
+                )
                 content.order = new_order  # Update the order
                 content.save()  # Save the changes
 
-            return Response({'success': 'Study note content order updated successfully.'}, status=status.HTTP_200_OK)
+            return Response(
+                {"success": "Study note content order updated successfully."},
+                status=status.HTTP_200_OK,
+            )
 
         except StudyNoteContent.DoesNotExist:
-            return Response({'error': 'Study note content does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Study note content does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 # DeleteViewForRoadMapContentForCheckedIds
 class DeleteViewForRoadMapContentForCheckedIds(APIView):
     def delete(self, request):
         try:
-
             if request.user.is_authenticated:
                 print("로그인 확인 삭제 진행")
             else:
-                return Response({'status': 'error', 'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"status": "error", "message": "로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
             # todo1: roadMapId, checkedIdsForRoadMapContent 얻어 오기
-            roadMapId = request.data.get('roadMapId')
-            checkedIdsForRoadMapContent = request.data.get('checkedIdsForRoadMapContent')
+            roadMapId = request.data.get("roadMapId")
+            checkedIdsForRoadMapContent = request.data.get(
+                "checkedIdsForRoadMapContent"
+            )
 
             if roadMapId is None or checkedIdsForRoadMapContent is None:
-                return Response({'message': 'Missing data in the request'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Missing data in the request"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             print("여기까지만 실행 되나 ??? ")
             print("roadMapId : ", roadMapId)
@@ -167,34 +202,48 @@ class DeleteViewForRoadMapContentForCheckedIds(APIView):
 
             if request.user.username == roadmap.writer.username:
                 # todo2: checkedIdsForRoadMapContent 에 해당하는(id로 비교) RoadMapContent 삭제
-                RoadMapContent.objects.filter(id__in=checkedIdsForRoadMapContent).delete()
+                RoadMapContent.objects.filter(
+                    id__in=checkedIdsForRoadMapContent
+                ).delete()
                 # 성공적인 응답
-                return Response({'message': 'delete road map content success !!'}, status=status.HTTP_204_NO_CONTENT)
+                return Response(
+                    {"message": "delete road map content success !!"},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
             else:
-                return Response({'message': f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
-                                status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"message": f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
         except RoadMap.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'roadmap is not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "roadmap is not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CreateViewForRegisterRoadMapFromCheckedNoteIds(APIView):
-
     def post(self, request):
         try:
-            if request.user.is_authenticated:  
-                roadMapId = request.data.get('roadMapId')
-                checkedIdsForNoteList = request.data.get('checkedIdsForNoteList')
-                
+            if request.user.is_authenticated:
+                roadMapId = request.data.get("roadMapId")
+                checkedIdsForNoteList = request.data.get("checkedIdsForNoteList")
+
                 if roadMapId and checkedIdsForNoteList:
                     road_map = RoadMap.objects.get(id=roadMapId)
-                    notes_to_link = StudyNote.objects.filter(id__in=checkedIdsForNoteList)
+                    notes_to_link = StudyNote.objects.filter(
+                        id__in=checkedIdsForNoteList
+                    )
 
-                    max_order = RoadMapContent.objects.filter(road_map=road_map).aggregate(Max('order'))['order__max']
+                    max_order = RoadMapContent.objects.filter(
+                        road_map=road_map
+                    ).aggregate(Max("order"))["order__max"]
                     next_order = max_order + 1 if max_order is not None else 1
 
                     for note in notes_to_link:
@@ -202,26 +251,40 @@ class CreateViewForRegisterRoadMapFromCheckedNoteIds(APIView):
                             study_note=note,
                             road_map=road_map,
                             writer=request.user,
-                            order=next_order
+                            order=next_order,
                         )
                         next_order += 1  # Increase order for each note
-                    
 
-                    return Response({'status': 'success', 'message': f'로드맵 등록 완료'})
+                    return Response({"status": "success", "message": f"로드맵 등록 완료"})
                 else:
-                    return Response({'status': 'error', 'message': '필수 정보가 누락되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"status": "error", "message": "필수 정보가 누락되었습니다."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
             else:
-                return Response({'status': 'error', 'message': '로그인이 필요합니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"status": "error", "message": "로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
         except RoadMap.DoesNotExist:
-            return Response({'status': 'error', 'message': '해당하는 로드맵을 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"status": "error", "message": "해당하는 로드맵을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         except StudyNote.DoesNotExist:
-            return Response({'status': 'error', 'message': '하나 이상의 노트를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"status": "error", "message": "하나 이상의 노트를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         except Exception as e:
-            return Response({'status': 'error', 'message': '로드맵 등록 중 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"status": "error", "message": "로드맵 등록 중 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class StudyNoteAPIViewForRegisterRoadMap(APIView):
@@ -235,8 +298,10 @@ class StudyNoteAPIViewForRegisterRoadMap(APIView):
 
     # todo:
     # ids_to_exclude 에 값이 있을 경우
-    # StudyNote 필터링할때 id가 todo ids_to_exclude 에 포함되는것들은 제외하도록 하기 
-    def get_all_note_list_filtered(self, selected_note_writer, first_category, second_category, ids_to_exclude):
+    # StudyNote 필터링할때 id가 todo ids_to_exclude 에 포함되는것들은 제외하도록 하기
+    def get_all_note_list_filtered(
+        self, selected_note_writer, first_category, second_category, ids_to_exclude
+    ):
         filter_conditions = Q()
         if selected_note_writer != "":
             filter_conditions &= Q(writer__username=selected_note_writer)
@@ -251,16 +316,15 @@ class StudyNoteAPIViewForRegisterRoadMap(APIView):
         return StudyNote.objects.filter(filter_conditions)  # 필터링된 데이터를 반환
 
     def get(self, request):
-        selected_note_writer = request.query_params.get(
-            "selectedNoteWriter", "")
-        first_category = request.query_params.get(
-            "first_category", "")
-        second_category = request.query_params.get(
-            "second_category", "")
+        selected_note_writer = request.query_params.get("selectedNoteWriter", "")
+        first_category = request.query_params.get("first_category", "")
+        second_category = request.query_params.get("second_category", "")
 
         # step1 page 번호 가져 오기
         try:
-            roadMapId = request.query_params.get("roadMapId", 1) # null 일 경우는 없으므로 디폴트 1로 처리
+            roadMapId = request.query_params.get(
+                "roadMapId", 1
+            )  # null 일 경우는 없으므로 디폴트 1로 처리
             page = request.query_params.get("page", 1)
             page = int(page)
         except ValueError:
@@ -274,30 +338,28 @@ class StudyNoteAPIViewForRegisterRoadMap(APIView):
         end = start + self.note_count_per_page
 
         # roadMapId을 가리키는 RoadMapContent의 study_note들의 id들을 가져와서 ids_to_exclude에 저장
-        road_map_content_ids = RoadMapContent.objects.filter(road_map__id=roadMapId).values_list('study_note__id', flat=True)
+        road_map_content_ids = RoadMapContent.objects.filter(
+            road_map__id=roadMapId
+        ).values_list("study_note__id", flat=True)
         ids_to_exclude = list(road_map_content_ids)
 
         print("road_map_content_ids : ", road_map_content_ids)
 
         filtered_note_list = self.get_all_note_list_filtered(
-            selected_note_writer, 
-            first_category, 
-            second_category, 
-            ids_to_exclude
+            selected_note_writer, first_category, second_category, ids_to_exclude
         )
         self.total_page_count = filtered_note_list.count()
         paginated_notes = filtered_note_list[start:end]
 
         serializer = SerializerForStudyNoteForBasic(paginated_notes, many=True)
 
-        note_writers = list(
-            set(note.writer.username for note in paginated_notes))
+        note_writers = list(set(note.writer.username for note in paginated_notes))
 
         response_data = {
             "note_writers": note_writers,  # Include the note writers in the response
             "noteList": serializer.data,
             "totalPageCount": self.total_page_count,
-            "note_count_per_page": self.note_count_per_page
+            "note_count_per_page": self.note_count_per_page,
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -313,7 +375,9 @@ class ListViewForRoadMapContentForRegister(APIView):
         print("roadMapId : ", roadMapId)
 
         road_map_contents = self.getRoadMapContentListById(roadMapId)
-        serializer = SerializerForRoamdMapContentBasicForRegister(road_map_contents, many=True)
+        serializer = SerializerForRoamdMapContentBasicForRegister(
+            road_map_contents, many=True
+        )
 
         response_data = {
             "road_map_contents": serializer.data,
@@ -322,6 +386,7 @@ class ListViewForRoadMapContentForRegister(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
 class ListViewForRoadMapContent(APIView):
     listForRoadMap = []
@@ -334,10 +399,8 @@ class ListViewForRoadMapContent(APIView):
 
         road_map_contents = self.getRoadMapContentListById(roadMapId)
         serializer = SerializerForRoamdMapContent(
-            road_map_contents, 
-            many=True, 
-            context={'request': request}
-            )
+            road_map_contents, many=True, context={"request": request}
+        )
 
         response_data = {
             "road_map_contents": serializer.data,
@@ -346,6 +409,7 @@ class ListViewForRoadMapContent(APIView):
         }
 
         return Response(response_data, status=HTTP_200_OK)
+
 
 # DeleteViewForRoadMap
 
@@ -360,47 +424,63 @@ class DeleteViewForRoadMap(APIView):
             if request.user.username == roadmap.writer.username:
                 pass
             else:
-                return Response({'message': f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
-                                status=status.HTTP_204_NO_CONTENT)
+                return Response(
+                    {"message": f"{roadmap.writer.username}님만 삭제할 수 있습니다"},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
 
             # 댓글 삭제
             roadmap.delete()
 
             # 성공적인 응답
-            return Response({'message': 'delete road map success !!'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "delete road map success !!"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
         except RoadMap.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'roadmap is not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "roadmap is not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CreateViewForRoadMap(APIView):
-
     def post(self, request):
         try:
             if request.user.is_authenticated:  # 사용자가 인증되었는지 확인
-                title = request.data.get('title')
-                subTitle = request.data.get('subTitle')
+                title = request.data.get("title")
+                subTitle = request.data.get("subTitle")
                 writer = request.user
 
                 # title과 subTitle을 이용하여 RoadMap 생성
                 roadmap = RoadMap.objects.create(
-                    writer=writer,
-                    title=title, 
-                    sub_title=subTitle
+                    writer=writer, title=title, sub_title=subTitle
                 )
 
-                return Response({'status': 'success', 'message': f'입력한 게시글의 "{roadmap.title}"을(를) 생성하였습니다.'})
+                return Response(
+                    {
+                        "status": "success",
+                        "message": f'입력한 게시글의 "{roadmap.title}"을(를) 생성하였습니다.',
+                    }
+                )
 
             else:  # 로그인하지 않은 경우
-                return Response({'status': 'error', 'message': '로그인 유저만 입력할 수 있습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"status": "error", "message": "로그인 유저만 입력할 수 있습니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
         except Exception as e:
-            return Response({'status': 'error', 'message':
-                             '로드맵을 생성하는 중에 오류가 발생했습니다.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"status": "error", "message": "로드맵을 생성하는 중에 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ListViewForRoadMap(APIView):
@@ -444,7 +524,7 @@ class ListViewForRoadMap(APIView):
 
 class CopyOneOfNoteToMe(APIView):
     def post(self, request):
-        studyNotePk = request.data.get('studyNotePk')
+        studyNotePk = request.data.get("studyNotePk")
         print("studyNotePk : ", studyNotePk)
 
         with transaction.atomic():
@@ -457,7 +537,7 @@ class CopyOneOfNoteToMe(APIView):
                 new_study_note = StudyNote.objects.create(
                     title=original_study_note.title,
                     description=original_study_note.description,
-                    writer=user
+                    writer=user,
                 )
 
                 # StudyNoteContent 생성
@@ -472,40 +552,38 @@ class CopyOneOfNoteToMe(APIView):
                         writer=user,
                         order=original_note_content.order,
                         created_at=original_note_content.created_at,
-                        page=original_note_content.page
+                        page=original_note_content.page,
                     )
 
                 response_data = {
-                    'message': 'Selected notes copied to my note successfully.'
+                    "message": "Selected notes copied to my note successfully."
                 }
 
                 return Response(response_data, status=HTTP_200_OK)
 
             except StudyNote.DoesNotExist:
-                response_data = {
-                    'message': 'One or more selected notes do not exist.'
-                }
+                response_data = {"message": "One or more selected notes do not exist."}
 
                 return Response(response_data, status=HTTP_400_BAD_REQUEST)
 
 
 class UpdateViewForIsTaskingForCowriter(APIView):
-
     authority_for_writing_note_contents = None
 
     def put(self, request, coWriterId):
-        study_note_pk = request.data.get('studyNotePk')
+        study_note_pk = request.data.get("studyNotePk")
         print("study_note_pk : ", study_note_pk)
         print("coWriterId : ", coWriterId)
 
         # 모델에서 해당하는 CoWriterForStudyNote 가져오기
         try:
             co_writer = CoWriterForStudyNote.objects.get(
-                id=coWriterId,
-                study_note_id=study_note_pk
+                id=coWriterId, study_note_id=study_note_pk
             )
         except CoWriterForStudyNote.DoesNotExist:
-            return Response({'message': '해당 CoWriter를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "해당 CoWriter를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # 업데이트되기 전의 값을 기반으로 반전
         is_tasking_before_update = co_writer.is_tasking
@@ -515,10 +593,10 @@ class UpdateViewForIsTaskingForCowriter(APIView):
 
         if is_tasking_before_update == False:
             CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk).exclude(
-                id=coWriterId).update(is_tasking=is_tasking_before_update)
+                id=coWriterId
+            ).update(is_tasking=is_tasking_before_update)
 
-        cowriters = CoWriterForStudyNote.objects.filter(
-            study_note_id=study_note_pk)
+        cowriters = CoWriterForStudyNote.objects.filter(study_note_id=study_note_pk)
 
         cowriters_data = []
 
@@ -536,9 +614,9 @@ class UpdateViewForIsTaskingForCowriter(APIView):
 
         # 성공 응답
         response_data = {
-            'message': '업데이트가 성공적으로 완료되었습니다.',
+            "message": "업데이트가 성공적으로 완료되었습니다.",
             "cowriters_data": cowriters_data,
-            "authority_for_writing_note_contents": self.authority_for_writing_note_contents
+            "authority_for_writing_note_contents": self.authority_for_writing_note_contents,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -547,15 +625,14 @@ class UpdateViewForIsTaskingForCowriter(APIView):
 # UpdateViewForSuggestion
 class UpdateViewForSuggestion(APIView):
     def put(self, request, suggestionPk):
-
         print("update 요청 받았습니다")
         try:
             # commentPk에 해당하는 댓글 찾기
             suggestion = Suggestion.objects.get(pk=suggestionPk)
 
             # 요청에서 수정된 내용 가져오기
-            editedtitle = request.data.get('title')
-            editedContent = request.data.get('content')
+            editedtitle = request.data.get("title")
+            editedContent = request.data.get("content")
 
             # 댓글 업데이트
             suggestion.title = editedtitle
@@ -563,14 +640,21 @@ class UpdateViewForSuggestion(APIView):
             suggestion.save()
 
             # 성공적인 응답
-            return Response({'message': 'faq suggestion update success !!'}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "faq suggestion update success !!"},
+                status=status.HTTP_200_OK,
+            )
 
         except Suggestion.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'suggestion not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "suggestion not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # DeleteViewForSuggestion
@@ -585,14 +669,21 @@ class DeleteViewForSuggestion(APIView):
             suggestion.delete()
 
             # 성공적인 응답
-            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "delete comment for faq success"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
         except Suggestion.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # DeleteViewForSuggestion
@@ -606,14 +697,21 @@ class DeleteViewForCommentForSuggestion(APIView):
             comment.delete()
 
             # 성공적인 응답
-            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "delete comment for faq success"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
         except CommentForSuggestion.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # UpdateViewForCommentForFaqForBoard
@@ -624,21 +722,27 @@ class UpdateViewForSuggestionComment(APIView):
             comment = CommentForSuggestion.objects.get(pk=commentPk)
 
             # 요청에서 수정된 내용 가져오기
-            editedContent = request.data.get('editedContent')
+            editedContent = request.data.get("editedContent")
 
             # 댓글 업데이트
             comment.content = editedContent
             comment.save()
 
             # 성공적인 응답
-            return Response({'message': 'faq comment update success !!'}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "faq comment update success !!"}, status=status.HTTP_200_OK
+            )
 
         except CommentForSuggestion.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class DeleteViewForFaqComment(APIView):
@@ -651,14 +755,22 @@ class DeleteViewForFaqComment(APIView):
             comment.delete()
 
             # 성공적인 응답
-            return Response({'message': 'delete comment for faq success'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "delete comment for faq success"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
         except CommentForFaqBoard.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 # UpdateViewForSuggestion
 
@@ -670,36 +782,40 @@ class UpdateViewForFaqComment(APIView):
             comment = CommentForFaqBoard.objects.get(pk=commentPk)
 
             # 요청에서 수정된 내용 가져오기
-            editedContent = request.data.get('editedContent')
+            editedContent = request.data.get("editedContent")
 
             # 댓글 업데이트
             comment.content = editedContent
             comment.save()
 
             # 성공적인 응답
-            return Response({'message': 'faq comment update success !!'}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "faq comment update success !!"}, status=status.HTTP_200_OK
+            )
 
         except CommentForFaqBoard.DoesNotExist:
             # 댓글을 찾을 수 없는 경우
-            return Response({'message': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             # 다른 예외 처리
-            return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CreateViewForCommentForFaqBoard(APIView):
     def post(self, request, faqPk):
         try:
             print("faqPk :::::::::::: ", faqPk)
-            faq_board = FAQBoard.objects.get(
-                id=faqPk)
+            faq_board = FAQBoard.objects.get(id=faqPk)
 
             print("faq_board ::::::::::::: ", faq_board)
 
         except CommentForFaqBoard.DoesNotExist:
             return Response(
-                {"message": "Error report not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"message": "Error report not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         print("request.data : ", request.data)
@@ -713,13 +829,13 @@ class CreateViewForCommentForFaqBoard(APIView):
 
             return Response(
                 {"message": "Comment created successfully"},
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
         else:
             # Return detailed error messages
             return Response(
                 {"message": "Invalid data", "errors": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -738,7 +854,7 @@ class ListViewForCommentForFaqBoard(APIView):
 
         # 응답 데이터 구성
         response_data = {
-            'comments': serializer.data,
+            "comments": serializer.data,
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -748,20 +864,21 @@ class ListViewForCommentForSuggestion(APIView):
         print("댓글 데이터 요청 확인 for 건의 사항")
         try:
             # suggestionPk 해당하는 CommentForSuggestion 정보 가져오기
-            comments = CommentForSuggestion.objects.filter(
-                suggestion_id=suggestionPk)
+            comments = CommentForSuggestion.objects.filter(suggestion_id=suggestionPk)
 
             # Serializer를 사용하여 데이터 직렬화
             serializer = CommentForSuggestionSerializer(comments, many=True)
 
             # 응답 데이터 구성
             response_data = {
-                'comments': serializer.data,
+                "comments": serializer.data,
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
         except CommentForSuggestion.DoesNotExist:
-            return Response({'detail': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Comments not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class CreateViewForCommentForSuggestionForNote(APIView):
@@ -770,15 +887,13 @@ class CreateViewForCommentForSuggestionForNote(APIView):
         try:
             print("suggestionPk :::::::::::: ", suggestionPk)
             # Check if the error_report with the provided error_report_pk exists
-            suggestion = Suggestion.objects.get(
-                id=suggestionPk)
+            suggestion = Suggestion.objects.get(id=suggestionPk)
 
             print("suggestion ::::::::::::: ", suggestion)
 
         except Suggestion.DoesNotExist:
             return Response(
-                {"message": "Error report not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"message": "Error report not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         print("request.data : ", request.data)
@@ -793,13 +908,13 @@ class CreateViewForCommentForSuggestionForNote(APIView):
 
             return Response(
                 {"message": "Comment created successfully"},
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
         else:
             # Return detailed error messages
             return Response(
                 {"message": "Invalid data", "errors": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -811,7 +926,9 @@ class SearchViewForStudyNoteSuggestionList(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         search_words = request.query_params.get("searchWords", "")
 
@@ -820,8 +937,7 @@ class SearchViewForStudyNoteSuggestionList(APIView):
 
         if search_words:
             print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(
-                title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
             print("study_note_list : ", study_note_list)
 
         self.suggestionList = study_note_list
@@ -832,10 +948,11 @@ class SearchViewForStudyNoteSuggestionList(APIView):
 
         response_data = {
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data
+            "data": serializer.data,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
 
 # CreateViewForSuggestionForBoard
 
@@ -851,23 +968,31 @@ class CreateViewForSuggestionForNote(APIView):
             content = request.data.get("content")
 
             # SuggestionSerializerForCreate 사용
-            serializer = SuggestionSerializerForCreate(data={
-                "study_note": study_note_pk,
-                "title": title,
-                "content": content,
-                "writer": request.user.id  # 또는 원하는 작성자 정보
-            })
+            serializer = SuggestionSerializerForCreate(
+                data={
+                    "study_note": study_note_pk,
+                    "title": title,
+                    "content": content,
+                    "writer": request.user.id,  # 또는 원하는 작성자 정보
+                }
+            )
 
             if serializer.is_valid():
                 suggestion = serializer.save()  # create 메서드를 사용하여 저장
 
-                return Response({"message": "건의 사항이 추가되었습니다.", "suggestion_id": suggestion.id}, status=status.HTTP_201_CREATED)
+                return Response(
+                    {"message": "건의 사항이 추가되었습니다.", "suggestion_id": suggestion.id},
+                    status=status.HTTP_201_CREATED,
+                )
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             print("에러 발생:", str(e))
-            return Response({"message": "건의 사항 추가 중에 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": "건의 사항 추가 중에 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class CreateViewForErrorReportComment(APIView):
@@ -875,15 +1000,13 @@ class CreateViewForErrorReportComment(APIView):
         try:
             print("error_report_pk :::::::::::: ", error_report_pk)
             # Check if the error_report with the provided error_report_pk exists
-            error_report = ErrorReportForStudyNote.objects.get(
-                id=error_report_pk)
+            error_report = ErrorReportForStudyNote.objects.get(id=error_report_pk)
 
             print("error_report ::::::::::::: ", error_report)
 
         except ErrorReportForStudyNote.DoesNotExist:
             return Response(
-                {"message": "Error report not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"message": "Error report not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         print("request.data : ", request.data)
@@ -898,13 +1021,13 @@ class CreateViewForErrorReportComment(APIView):
 
             return Response(
                 {"message": "Comment created successfully"},
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
         else:
             # Return detailed error messages
             return Response(
                 {"message": "Invalid data", "errors": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -918,11 +1041,12 @@ class CreteViewForFAQBoard(APIView):
             study_note_id=study_note_pk,
             title=title,
             content=content,
-            writer=request.user
+            writer=request.user,
         )
         print("note_content : ", note_content)
 
         return Response(status=status.HTTP_201_CREATED)
+
 
 # class CreteViewForSuggestionForNote(APIView):
 #     def post(self, request, study_note_pk):
@@ -944,16 +1068,23 @@ class DeleteViewForWithDrawClassRoom(APIView):
     def delete(self, request, study_note_pk):
         try:
             classroom = ClassRoomForStudyNote.objects.get(
-                current_note_id=study_note_pk, writer=request.user)
+                current_note_id=study_note_pk, writer=request.user
+            )
         except ClassRoomForStudyNote.DoesNotExist:
-            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user != classroom.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         classroom.delete()
 
-        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class SearchViewForStudyNoteCardList(APIView):
@@ -964,13 +1095,14 @@ class SearchViewForStudyNoteCardList(APIView):
             study_note_list = StudyNote.objects.all()
             print("study_note_list : ", study_note_list)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         search_words = request.query_params.get("searchWords", "")
 
         if search_words:
-            study_note_list = study_note_list.filter(
-                title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
 
         self.studyNoteList = study_note_list
 
@@ -980,7 +1112,7 @@ class SearchViewForStudyNoteCardList(APIView):
 
         response_data = {
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data
+            "data": serializer.data,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -995,7 +1127,9 @@ class SearchViewForStudyNoteErrorReportList(APIView):
             study_note = StudyNote.objects.get(pk=study_note_pk)
             print("study_note check : ", study_note)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         search_words = request.query_params.get("searchWords", "")
 
@@ -1003,22 +1137,20 @@ class SearchViewForStudyNoteErrorReportList(APIView):
         self.errorReportList = study_note_list
 
         if search_words:
-            study_note_list = study_note_list.filter(
-                content__icontains=search_words)
+            study_note_list = study_note_list.filter(content__icontains=search_words)
 
         self.errorReportList = study_note_list
 
         # Count the number of search results
         result_count = self.errorReportList.count()
 
-        serializer = ErrorReportForStudyNoteSerializer(
-            self.errorReportList, many=True)
+        serializer = ErrorReportForStudyNoteSerializer(self.errorReportList, many=True)
 
         # Create a custom response data dictionary
         response_data = {
             # Include the result count in the message
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data  # Include the serialized data
+            "data": serializer.data,  # Include the serialized data
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -1033,7 +1165,9 @@ class SearchViewForStudyNoteQnaList(APIView):
             study_note = StudyNote.objects.get(pk=study_note_pk)
             print("study_note check : ", study_note)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         search_words = request.query_params.get("searchWords", "")
 
@@ -1042,8 +1176,7 @@ class SearchViewForStudyNoteQnaList(APIView):
 
         if search_words:
             print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(
-                title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
             print("study_note_list : ", study_note_list)
 
         self.errorReportList = study_note_list
@@ -1057,7 +1190,7 @@ class SearchViewForStudyNoteQnaList(APIView):
         response_data = {
             # Include the result count in the message
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data  # Include the serialized data
+            "data": serializer.data,  # Include the serialized data
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -1068,14 +1201,21 @@ class DeleteViewForNoteFaq(APIView):
         try:
             faq = FAQBoard.objects.get(pk=faq_pk)
         except FAQBoard.DoesNotExist:
-            return Response({"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user != faq.writer:
-            return Response({"message": f"{faq.writer.username}만 삭제할 수 있습니다"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": f"{faq.writer.username}만 삭제할 수 있습니다"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         faq.delete()
 
-        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class DeleteViewForCommentForErrorReport(APIView):
@@ -1083,14 +1223,20 @@ class DeleteViewForCommentForErrorReport(APIView):
         try:
             comment = CommentForErrorReport.objects.get(pk=commentPk)
         except CommentForErrorReport.DoesNotExist:
-            return Response({"message": "comment not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "comment not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user != comment.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         comment.delete()
 
-        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class DeleteViewForClassRoomForNote(APIView):
@@ -1098,14 +1244,20 @@ class DeleteViewForClassRoomForNote(APIView):
         try:
             classroom = ClassRoomForStudyNote.objects.get(pk=classRoomId)
         except ClassRoomForStudyNote.DoesNotExist:
-            return Response({"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "classroom not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user != classroom.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         classroom.delete()
 
-        return Response({"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "FAQ deleted successfully"}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 # UpdateViewForFaq
@@ -1116,22 +1268,30 @@ class UpdateViewForFaq(APIView):
         try:
             faq = FAQBoard.objects.get(pk=faq_pk)
         except FAQBoard.DoesNotExist:
-            return Response({"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "FAQ not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         if request.user != faq.writer:
-            return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
 
         title = request.data.get("title")
         content = request.data.get("content")
 
         if title is None or content is None:
-            return Response({"message": "Title and content are required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Title and content are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         faq.title = title
         faq.content = content
         faq.save()
 
         return Response({"message": "FAQ update success"}, status=status.HTTP_200_OK)
+
 
 # SearchViewForStudyNoteSuggestionList
 
@@ -1144,7 +1304,9 @@ class SearchViewForStudyNoteFaqList(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         search_words = request.query_params.get("searchWords", "")
 
@@ -1153,8 +1315,7 @@ class SearchViewForStudyNoteFaqList(APIView):
 
         if search_words:
             print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(
-                title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
             print("study_note_list : ", study_note_list)
 
         self.faqList = study_note_list
@@ -1167,27 +1328,29 @@ class SearchViewForStudyNoteFaqList(APIView):
         response_data = {
             # Include the result count in the message
             "message": f"{result_count}개의 데이터가 검색되었습니다.",
-            "data": serializer.data  # Include the serialized data
+            "data": serializer.data,  # Include the serialized data
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
 
 
 class UpdateViewForNoteSubtitle(APIView):
-
     def put(self, request, content_pk, format=None):
         study_note_content = StudyNoteContent.objects.get(pk=content_pk)
 
-        study_note_content.title = request.data.get(
-            'title', study_note_content.title)
+        study_note_content.title = request.data.get("title", study_note_content.title)
         study_note_content.content = request.data.get(
-            'content', study_note_content.content)
+            "content", study_note_content.content
+        )
         study_note_content.ref_url1 = request.data.get(
-            'ref_url1', study_note_content.ref_url1)
+            "ref_url1", study_note_content.ref_url1
+        )
         study_note_content.ref_url2 = request.data.get(
-            'ref_url2', study_note_content.ref_url2)
+            "ref_url2", study_note_content.ref_url2
+        )
         study_note_content.youtube_url = request.data.get(
-            'youtube_url', study_note_content.youtube_url)
+            "youtube_url", study_note_content.youtube_url
+        )
 
         study_note_content.save()
 
@@ -1211,14 +1374,18 @@ class DeleteViewForStudyNote(APIView):
 class DeleteViewForErrorReport(APIView):
     def delete(self, request, error_report_pk):
         try:
-            error_report = ErrorReportForStudyNote.objects.get(
-                pk=error_report_pk)
+            error_report = ErrorReportForStudyNote.objects.get(pk=error_report_pk)
 
             if request.user.is_authenticated:
                 error_report.delete()
-                return Response({"message": "delete ErrorReport success"}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "delete ErrorReport success"}, status=status.HTTP_200_OK
+                )
             else:
-                return Response({"detail": "에러 노트를 삭제 할수 없습니다 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"detail": "에러 노트를 삭제 할수 없습니다 로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
         except ErrorReportForStudyNote.DoesNotExist:
             print("ErrorReport is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1237,10 +1404,16 @@ class UpdateViewForErrorReport(APIView):
                 answer.save()
 
                 # todo 적당한 http 응답 message 는 comment update success
-                return Response({"message": "ErrorReport content update success"}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "ErrorReport content update success"},
+                    status=status.HTTP_200_OK,
+                )
 
             else:
-                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
         except ErrorReportForStudyNote.DoesNotExist:
             print("ErrorReport is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1265,17 +1438,23 @@ class CreateViewForErrorRecordForNote(APIView):
         if serializer.is_valid():
             try:
                 question = serializer.save(
-                    writer=request.user, study_note=study_note)  # study_note 정보 추가
+                    writer=request.user, study_note=study_note
+                )  # study_note 정보 추가
                 serializer = SerializerForCreateErrorReportForNote(question)
-                return Response({'success': True, "result": serializer.data}, status=HTTP_200_OK)
+                return Response(
+                    {"success": True, "result": serializer.data}, status=HTTP_200_OK
+                )
             except Exception as e:
                 print("e: ", e)
                 raise ParseError(
-                    "An error occurred while serializing the create question data")
+                    "An error occurred while serializing the create question data"
+                )
         else:
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
-            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class ErrorReportForStudyNoteView(APIView):
@@ -1313,7 +1492,8 @@ class ErrorReportForStudyNoteView(APIView):
 
             # 시리얼라이징 하기
             serializer = ErrorReportForStudyNoteSerializer(
-                self.errorReportList, many=True)
+                self.errorReportList, many=True
+            )
 
             # 응답할 딕셔너리 만들기
             response_data = {
@@ -1328,7 +1508,9 @@ class ErrorReportForStudyNoteView(APIView):
             return Response(response_data, status=HTTP_200_OK)
 
         except StudyNote.DoesNotExist:
-            return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class ErrorReportForPageForStudyNoteView(APIView):
@@ -1339,11 +1521,12 @@ class ErrorReportForPageForStudyNoteView(APIView):
 
             print("error_report_list : ", error_report_list)
 
-            serializer = ErrorReportForStudyNoteSerializer(
-                error_report_list, many=True)
+            serializer = ErrorReportForStudyNoteSerializer(error_report_list, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except StudyNote.DoesNotExist:
-            return Response({"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "StudyNote not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class DeleteViewForCommentForQuestionForNote(APIView):
@@ -1351,11 +1534,18 @@ class DeleteViewForCommentForQuestionForNote(APIView):
         try:
             comment = AnswerForQaBoard.objects.get(pk=commentPk)
             comment.delete()
-            return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"message": "Comment deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
         except AnswerForQaBoard.DoesNotExist:
-            return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class UpdateViewForCommentForQuestionForNote(APIView):
@@ -1371,10 +1561,15 @@ class UpdateViewForCommentForQuestionForNote(APIView):
                 answer.save()
 
                 # todo 적당한 http 응답 message 는 comment update success
-                return Response({"message": "Comment update success"}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "Comment update success"}, status=status.HTTP_200_OK
+                )
 
             else:
-                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
         except AnswerForQaBoard.DoesNotExist:
             print("AnswerForQaBoard is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1391,14 +1586,18 @@ class CreateViewForCommentForQuestionForNote(APIView):
 
                 if content:
                     answer = AnswerForQaBoard(
-                        question=question, content=content, writer=writer)
+                        question=question, content=content, writer=writer
+                    )
                     answer.save()
                     return Response(status=status.HTTP_201_CREATED)
                 else:
                     print("content 가 없습니다")
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"detail": "댓글을 입력할 수 없습니다. 로그인이 필요합니다."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
         except QnABoard.DoesNotExist:
             print("qa board is note exist")
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1466,16 +1665,21 @@ class CreateViewForQnABoard(APIView):
         if serializer.is_valid():
             try:
                 question = serializer.save(
-                    writer=request.user, study_note=study_note)  # study_note 정보 추가
+                    writer=request.user, study_note=study_note
+                )  # study_note 정보 추가
                 serializer = SerializerForCreateQuestionForNote(question)
-                return Response({'success': True, "result": serializer.data}, status=HTTP_200_OK)
+                return Response(
+                    {"success": True, "result": serializer.data}, status=HTTP_200_OK
+                )
             except Exception as e:
                 print("e: ", e)
                 raise ParseError(
-                    "An error occurred while serializing the create question data")
+                    "An error occurred while serializing the create question data"
+                )
         else:
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
+
 
 # list view:
 # SuggestionView
@@ -1498,7 +1702,9 @@ class ListViewForSuggestion(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         # 검색어 가져오기
         search_words = request.query_params.get("searchWords", "")
@@ -1508,8 +1714,7 @@ class ListViewForSuggestion(APIView):
 
         if search_words:
             # print("search_words : ", search_words)
-            suggestion_list = suggestion_list.filter(
-                title__icontains=search_words)
+            suggestion_list = suggestion_list.filter(title__icontains=search_words)
 
         self.suggestionList = suggestion_list
 
@@ -1544,7 +1749,6 @@ class FAQBoardView(APIView):
     faqList = []
 
     def get(self, request, study_note_pk):
-
         # page 번호 받기
         try:
             pageNum = request.query_params.get("pageNum", 1)
@@ -1557,7 +1761,9 @@ class FAQBoardView(APIView):
             # 해당 노트 찾기
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         # 검색어 가져오기
         search_words = request.query_params.get("searchWords", "")
@@ -1567,8 +1773,7 @@ class FAQBoardView(APIView):
 
         if search_words:
             # print("search_words : ", search_words)
-            study_note_list = study_note_list.filter(
-                title__icontains=search_words)
+            study_note_list = study_note_list.filter(title__icontains=search_words)
 
         self.faqList = study_note_list
 
@@ -1618,7 +1823,9 @@ class QnABoardView(APIView):
             study_note = StudyNote.objects.get(pk=study_note_pk)
 
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         # 해당 노트에 대한 qa list 가져 오기
         study_note_list = QnABoard.objects.filter(study_note=study_note)
@@ -1649,35 +1856,37 @@ class QnABoardView(APIView):
 class GetSavedPageForCurrentNote(APIView):
     def get(self, request, study_note_pk):
         try:
-            study_note = StudyNote.objects.get(
-                pk=study_note_pk)
+            study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         # todo
         # login 안했으면 로그인 사용자가 아닐 경우 저장된 페이지를 불러 올수 없습니다라고 메세지 응답
         if not request.user.is_authenticated:
             print("비로그인 유저에 대한 체크 실행 !")
-            return Response("Please log in to retrieve the saved page", status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                "Please log in to retrieve the saved page",
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         existing_class_room = ClassRoomForStudyNote.objects.filter(
-            current_note=study_note,
-            writer=request.user
+            current_note=study_note, writer=request.user
         ).exists()
 
         if existing_class_room:
             class_room = ClassRoomForStudyNote.objects.filter(
-                current_note=study_note, writer=request.user).first()
+                current_note=study_note, writer=request.user
+            ).first()
             current_page = class_room.current_page  # class_room.current_page를 변수로 추출
             print("current_page : ", current_page)
             return Response({"current_page": current_page}, status=status.HTTP_200_OK)
         else:
-            return Response("saved_data is not exist",
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response("saved_data is not exist", status=status.HTTP_404_NOT_FOUND)
 
 
 class ClasssRoomView(APIView):
-
     def get_object(self, taskPk):
         try:
             return StudyNote.objects.get(pk=taskPk)
@@ -1689,7 +1898,9 @@ class ClasssRoomView(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         class_list = study_note.class_list.all()
 
@@ -1703,11 +1914,12 @@ class ClasssRoomView(APIView):
                 break
 
         serializer = ClassRoomForStudyNoteSerializer(
-            class_list, many=True, context={'request': request})
+            class_list, many=True, context={"request": request}
+        )
 
         response_data = {
             "is_registered": is_registered,
-            "class_room_list": serializer.data
+            "class_room_list": serializer.data,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -1717,7 +1929,9 @@ class ClasssRoomView(APIView):
             study_note = self.get_object(study_note_pk)
         except StudyNote.DoesNotExist:
             print("여기 실행 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         if not request.user.is_authenticated:
             return Response("Please log in", status=status.HTTP_401_UNAUTHORIZED)
@@ -1727,13 +1941,13 @@ class ClasssRoomView(APIView):
 
         # Check if a ClassRoomForStudyNote already exists with current_note=study_note
         existing_class_room = ClassRoomForStudyNote.objects.filter(
-            current_note=study_note,
-            writer=request.user
+            current_note=study_note, writer=request.user
         ).exists()
 
         if existing_class_room:
             existing_class_room = ClassRoomForStudyNote.objects.filter(
-                current_note=study_note, writer=request.user).first()
+                current_note=study_note, writer=request.user
+            ).first()
             if existing_class_room.current_page != current_page:
                 print("original : ", existing_class_room.current_page)
                 print("current_page : ", current_page)
@@ -1742,28 +1956,28 @@ class ClasssRoomView(APIView):
                 existing_class_room.current_page = current_page
                 existing_class_room.save()
 
-                response_data = {
-                    'save_page_num': current_page
-                }
+                response_data = {"save_page_num": current_page}
 
                 return Response(response_data, status=status.HTTP_200_OK)
             else:
                 print("페이지 번호가 다르지 않습니다")
         # update
         if existing_class_room:
-            return Response({"message_type": "warnning", "message": "The record for the current page already exists, so it will not be updated"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "message_type": "warnning",
+                    "message": "The record for the current page already exists, so it will not be updated",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         print("excute check !!")
 
         class_room = ClassRoomForStudyNote.objects.create(
-            current_note=study_note,
-            current_page=current_page,
-            writer=writer
+            current_note=study_note, current_page=current_page, writer=writer
         )
 
-        response_data = {
-            'save_page_num': current_page
-        }
+        response_data = {"save_page_num": current_page}
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -1811,11 +2025,14 @@ class CreateViewForCommentForNote(APIView):
                 test_for_task = serializer.save(writer=request.user)
                 serializer = CreateCommentSerializerForNote(test_for_task)
 
-                return Response({'success': 'true', "result": serializer.data}, status=HTTP_200_OK)
+                return Response(
+                    {"success": "true", "result": serializer.data}, status=HTTP_200_OK
+                )
             except Exception as e:
                 print("e : ", e)
                 raise ParseError(
-                    "error is occured for serailizer for create extra task")
+                    "error is occured for serailizer for create extra task"
+                )
         else:
             print("serializer is not valid !!!!!!!!!!!!")
             print("Errors:", serializer.errors)
@@ -1870,11 +2087,12 @@ class ListViewForStudyNoteBriefingBoard(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response("StudyNote does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                "StudyNote does not exist", status=status.HTTP_404_NOT_FOUND
+            )
 
         briefing_boards = study_note.note_comments.all()
-        serializer = StudyNoteBriefingBoardSerializer(
-            briefing_boards, many=True)
+        serializer = StudyNoteBriefingBoardSerializer(briefing_boards, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1883,7 +2101,8 @@ class ApiViewForGetSubtitleListForNote(APIView):
     def get(self, request, study_note_pk):
         # study_note_pk(StudyNote의 id임)를 참조하는 StudyNoteContent 리스트를 가져옴
         note_contents = StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk, content_option='subtitle_for_page').order_by('page')
+            study_note_id=study_note_pk, content_option="subtitle_for_page"
+        ).order_by("page")
 
         # 시리얼라이저로 응답 데이터 직렬화
         serializer = StudyNoteContentSerializer(note_contents, many=True)
@@ -1899,8 +2118,12 @@ class CreateViewForYoutubeContentForNote(APIView):
         title = request.data["title"]
         youtube_url = request.data["youtube_url"]
 
-        max_order = StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk, page=current_page_number).aggregate(Max('order'))['order__max'] or 0
+        max_order = (
+            StudyNoteContent.objects.filter(
+                study_note_id=study_note_pk, page=current_page_number
+            ).aggregate(Max("order"))["order__max"]
+            or 0
+        )
 
         # StudyNoteContent 모델 생성
         note_content = StudyNoteContent.objects.create(
@@ -1916,10 +2139,8 @@ class CreateViewForYoutubeContentForNote(APIView):
         print("note_content : ", note_content)
 
         return Response(
-            {
-                "message": "youtube content is created successfuly"
-            },
-            status=status.HTTP_201_CREATED
+            {"message": "youtube content is created successfuly"},
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -1939,25 +2160,30 @@ class CreateViewForSubTitleForNote(APIView):
         existing_subtitle = StudyNoteContent.objects.filter(
             study_note_id=study_note_pk,
             page=current_page_number,
-            content_option="subtitle_for_page"
+            content_option="subtitle_for_page",
         ).exists()
 
         if existing_subtitle:
             return Response(
-                {"message": "If a sub title for the page already exists, The note will not be updated"},
-                status=status.HTTP_201_CREATED
+                {
+                    "message": "If a sub title for the page already exists, The note will not be updated"
+                },
+                status=status.HTTP_201_CREATED,
             )
 
         # 이전 order 값 중 최소값 구하기
-        min_order = StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk, page=current_page_number
-        ).aggregate(Min('order'))['order__min'] or 0
+        min_order = (
+            StudyNoteContent.objects.filter(
+                study_note_id=study_note_pk, page=current_page_number
+            ).aggregate(Min("order"))["order__min"]
+            or 0
+        )
 
         # 기존의 min_order가 1인 경우, 기존의 order를 모두 +1 증가
         if min_order == 1:
             StudyNoteContent.objects.filter(
                 study_note_id=study_note_pk, page=current_page_number
-            ).update(order=models.F('order') + 1)
+            ).update(order=models.F("order") + 1)
 
         if min_order > 1:
             order_for_update = min_order - 1
@@ -1974,7 +2200,7 @@ class CreateViewForSubTitleForNote(APIView):
             title=title,
             ref_url1=ref_url1,
             ref_url2=ref_url2,
-            content=content
+            content=content,
         )
 
         # Save youtube_url only if it is not empty
@@ -1994,14 +2220,14 @@ class ApiViewForCoWriter(APIView):
         except CoWriterForStudyNote.DoesNotExist:
             return Response(
                 {"message": "CoWriterForStudyNote does not exist."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         co_writer.delete()
 
         return Response(
             {"message": "CoWriterForStudyNote has been deleted successfully."},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -2012,18 +2238,19 @@ class CreateViewForCoWriterForOhterUserNote(APIView):
         except StudyNote.DoesNotExist:
             return Response(
                 {"message": "StudyNote does not exist."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if study_note.writer == request.user:
             return Response(
-                {"message": "You cannot request to be a co-writer for your own StudyNote."},
-                status=status.HTTP_400_BAD_REQUEST
+                {
+                    "message": "You cannot request to be a co-writer for your own StudyNote."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         co_writer, created = CoWriterForStudyNote.objects.get_or_create(
-            writer=request.user,
-            study_note=study_note
+            writer=request.user, study_note=study_note
         )
 
         if created:
@@ -2031,10 +2258,7 @@ class CreateViewForCoWriterForOhterUserNote(APIView):
         else:
             message = f"{request.user.username}님은 이미 이 StudyNote의 CoWriter입니다."
 
-        return Response(
-            {"message": message},
-            status=status.HTTP_201_CREATED
-        )
+        return Response({"message": message}, status=status.HTTP_201_CREATED)
 
 
 class UpdateViewForIsApprovedForCoWorker(APIView):
@@ -2067,10 +2291,7 @@ class UpdateViewForIsApprovedForCoWorker(APIView):
 
         cowirter.save()
 
-        result_data = {
-            "success": True,
-            "message":  message
-        }
+        result_data = {"success": True, "message": message}
 
         return Response(result_data, status=HTTP_200_OK)
 
@@ -2078,9 +2299,11 @@ class UpdateViewForIsApprovedForCoWorker(APIView):
 class CopyCopySelectedNotesToMyNoteView(APIView):
     def post(self, request):
         selectedRowPksFromOriginalTable = request.data.get(
-            'selectedRowPksFromOriginalTable')
-        print("selectedRowPksFromOriginalTable : ",
-              selectedRowPksFromOriginalTable)  # [17,18] <=> StudyNote의 pk
+            "selectedRowPksFromOriginalTable"
+        )
+        print(
+            "selectedRowPksFromOriginalTable : ", selectedRowPksFromOriginalTable
+        )  # [17,18] <=> StudyNote의 pk
 
         with transaction.atomic():
             try:
@@ -2094,7 +2317,7 @@ class CopyCopySelectedNotesToMyNoteView(APIView):
                     new_study_note = StudyNote.objects.create(
                         title=original_study_note.title,
                         description=original_study_note.description,
-                        writer=user
+                        writer=user,
                     )
 
                     # StudyNoteContent 생성
@@ -2109,19 +2332,17 @@ class CopyCopySelectedNotesToMyNoteView(APIView):
                             writer=user,
                             order=original_note_content.order,
                             created_at=original_note_content.created_at,
-                            page=original_note_content.page
+                            page=original_note_content.page,
                         )
 
                 response_data = {
-                    'message': 'Selected notes copied to my note successfully.'
+                    "message": "Selected notes copied to my note successfully."
                 }
 
                 return Response(response_data, status=HTTP_200_OK)
 
             except StudyNote.DoesNotExist:
-                response_data = {
-                    'message': 'One or more selected notes do not exist.'
-                }
+                response_data = {"message": "One or more selected notes do not exist."}
 
                 return Response(response_data, status=HTTP_400_BAD_REQUEST)
 
@@ -2130,8 +2351,9 @@ class StudyNoteAPIViewForCheckedRows(APIView):
     total_page_count = 0  # 노트의 총 개수
 
     def get(self, request):
-        selected_row_pks = request.GET.get(
-            "selectedRowPksFromOriginalTable", "").split(",")
+        selected_row_pks = request.GET.get("selectedRowPksFromOriginalTable", "").split(
+            ","
+        )
         print("selected_row_pks :::::::::::::::::::", selected_row_pks)
 
         all_study_note_list = StudyNote.objects.filter(
@@ -2158,38 +2380,40 @@ class UpdateNoteContentsPageForSelectedView(APIView):
             raise NotFound
 
     def put(self, request, study_note_pk):
-        direction = request.data.get('direction')
-        pageNumbersToEdit = request.data.get('pageNumbersToEdit')  # 초록색
-        pageNumbersToMove = request.data.get('pageNumbersToMove')  # 주황색
+        direction = request.data.get("direction")
+        pageNumbersToEdit = request.data.get("pageNumbersToEdit")  # 초록색
+        pageNumbersToMove = request.data.get("pageNumbersToMove")  # 주황색
 
         try:
             with transaction.atomic():
                 study_note = self.get_object(study_note_pk)  # 특정 노트
                 study_note_contents = study_note.note_contents.all()  # 모든 노트
 
-                if direction == 'forward':
+                if direction == "forward":
                     for content in study_note_contents:
                         if content.page in pageNumbersToEdit:
-                            new_page = pageNumbersToMove[pageNumbersToEdit.index(
-                                content.page)]
+                            new_page = pageNumbersToMove[
+                                pageNumbersToEdit.index(content.page)
+                            ]
                             content.page = new_page
                             content.created_at = timezone.now()
                             content.save()
 
-                elif direction == 'backward':
+                elif direction == "backward":
                     for content in study_note_contents:
                         if content.page in pageNumbersToMove:
-                            new_page = pageNumbersToEdit[pageNumbersToMove.index(
-                                content.page)]
+                            new_page = pageNumbersToEdit[
+                                pageNumbersToMove.index(content.page)
+                            ]
                             content.page = new_page
                             content.save()
 
-                elif direction == 'switch':
-                    for edit_page, move_page in zip(pageNumbersToEdit, pageNumbersToMove):
-                        edit_contents = study_note_contents.filter(
-                            page=edit_page)
-                        move_contents = study_note_contents.filter(
-                            page=move_page)
+                elif direction == "switch":
+                    for edit_page, move_page in zip(
+                        pageNumbersToEdit, pageNumbersToMove
+                    ):
+                        edit_contents = study_note_contents.filter(page=edit_page)
+                        move_contents = study_note_contents.filter(page=move_page)
 
                         if edit_contents.count() == move_contents.count() == 1:
                             edit_content = edit_contents.first()
@@ -2199,7 +2423,7 @@ class UpdateNoteContentsPageForSelectedView(APIView):
                             edit_content.save()
                             move_content.save()
 
-                elif direction == 'add_whitespace':
+                elif direction == "add_whitespace":
                     max_page = 0  # 초기값 설정
 
                     if pageNumbersToEdit:
@@ -2214,13 +2438,12 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
                     # pageNumbersToEdit의 페이지도 a만큼 증가시킴
                     for page_num in pageNumbersToEdit:
-                        contents_to_update = study_note_contents.filter(
-                            page=page_num)
+                        contents_to_update = study_note_contents.filter(page=page_num)
                         for content in contents_to_update:
                             content.page += a
                             content.save()
 
-                elif direction == 'insert':
+                elif direction == "insert":
                     max_page = 0  # 초기값 설정
 
                     if pageNumbersToEdit:
@@ -2235,8 +2458,7 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
                     # pageNumbersToEdit의 페이지도 a만큼 증가시킴
                     for page_num in pageNumbersToEdit:
-                        contents_to_update = study_note_contents.filter(
-                            page=page_num)
+                        contents_to_update = study_note_contents.filter(page=page_num)
                         for content in contents_to_update:
                             content.page += a
                             content.save()
@@ -2246,8 +2468,9 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
                     for content in study_note_contents:
                         if content.page in pageNumbersToMove:
-                            new_page = pageNumbersToEdit[pageNumbersToMove.index(
-                                content.page)]
+                            new_page = pageNumbersToEdit[
+                                pageNumbersToMove.index(content.page)
+                            ]
                             content.page = new_page
                             content.save()
 
@@ -2271,30 +2494,33 @@ class UpdateNoteContentsPageForSelectedView(APIView):
 
         except Exception as e:
             print(f"An error occurred: {e}")
-            return Response(data={"message": "An error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"message": "An error occurred"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class StudyNoteContentReOrderAPIView(APIView):
     def put(self, request, pk):
         try:
-            study_note_contents = StudyNoteContent.objects.filter(
-                study_note__pk=pk)
+            study_note_contents = StudyNoteContent.objects.filter(study_note__pk=pk)
 
             print("study_note_contents : ", study_note_contents)
 
-            reordered_contents_list = request.data.get(
-                'reordered_contents_list', [])
+            reordered_contents_list = request.data.get("reordered_contents_list", [])
             print("reordered_contents_list : ", reordered_contents_list)
 
             for item in reordered_contents_list:
-                pk_for_update = item['content_pk']
-                order_for_update = item['order']
+                pk_for_update = item["content_pk"]
+                order_for_update = item["order"]
 
-                print("pk_for_update, order_for_update : ",
-                      pk_for_update, order_for_update)
+                print(
+                    "pk_for_update, order_for_update : ",
+                    pk_for_update,
+                    order_for_update,
+                )
 
-                study_note_content = study_note_contents.get(
-                    pk=pk_for_update)
+                study_note_content = study_note_contents.get(pk=pk_for_update)
                 study_note_content.order = order_for_update
                 study_note_content.save()
 
@@ -2306,16 +2532,22 @@ class StudyNoteContentReOrderAPIView(APIView):
             # serializer = StudyNoteContentSerializer(study_note_content, many=True)
             # return Response(serializer.data, status=status.HTTP_200_OK)
 
-            return Response({'success': 'Study note content order updated successfully.'}, status=status.HTTP_200_OK)
+            return Response(
+                {"success": "Study note content order updated successfully."},
+                status=status.HTTP_200_OK,
+            )
 
         except StudyNoteContent.DoesNotExist:
-            return Response({'error': 'Study note content does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Study note content does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class SearchContentListView(APIView):
     def get(self, request):
-        study_note_pk = request.query_params.get('study_note_pk')
-        search_term = request.query_params.get('searchTerm')
+        study_note_pk = request.query_params.get("study_note_pk")
+        search_term = request.query_params.get("searchTerm")
 
         print("search_term : ", search_term)
 
@@ -2326,8 +2558,7 @@ class SearchContentListView(APIView):
 
         if search_term:
             queryset = queryset.filter(
-                Q(title__icontains=search_term) |
-                Q(content__icontains=search_term)
+                Q(title__icontains=search_term) | Q(content__icontains=search_term)
             )
         print("queryset2 : ", queryset)
 
@@ -2340,7 +2571,7 @@ class SearchContentListView(APIView):
 
 class DeleteNoteContentsForChecked(APIView):
     def delete(self, request):
-        username = request.data.get('username')  # 'username' 값 받기
+        username = request.data.get("username")  # 'username' 값 받기
         pageNumbersToEdit = request.data  # [1, 2, 3, 5]
         print("pageNumbersToEdit : ", pageNumbersToEdit)
 
@@ -2348,12 +2579,12 @@ class DeleteNoteContentsForChecked(APIView):
         writer = User.objects.get(username=username)
 
         deleted_count = StudyNoteContent.objects.filter(
-            writer=writer,
-            pk__in=pageNumbersToEdit).delete()[0]
+            writer=writer, pk__in=pageNumbersToEdit
+        ).delete()[0]
 
-        return Response({
-            'message': f'{deleted_count} StudyNoteContent instances deleted.'
-        })
+        return Response(
+            {"message": f"{deleted_count} StudyNoteContent instances deleted."}
+        )
 
 
 class order_plus_one_for_note_content(APIView):
@@ -2370,13 +2601,13 @@ class order_plus_one_for_note_content(APIView):
         # 먼저 +1 인거 -1 처리
         # order 값이 증가된 객체보다 큰 값을 가지는 다른 객체들의 order 값을 1씩 감소시키기
         other_content = StudyNoteContent.objects.get(
-            study_note=content.study_note,
-            order=content.order + 1
+            study_note=content.study_note, order=content.order + 1
         )
 
         study_note = self.get_object(content.study_note.pk)
         note_contents_after_order_update = study_note.note_contents.filter(
-            page=content.page).order_by('order')
+            page=content.page
+        ).order_by("order")
 
         # order 값을 1 증가시키고 저장
         content.order += 1
@@ -2386,7 +2617,8 @@ class order_plus_one_for_note_content(APIView):
         other_content.save()
 
         serializer = StudyNoteContentSerializer(
-            note_contents_after_order_update, many=True)
+            note_contents_after_order_update, many=True
+        )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -2405,22 +2637,23 @@ class order_minus_one_for_note_content(APIView):
         # 먼저 +1 인거 -1 처리
         # order 값이 증가된 객체보다 큰 값을 가지는 다른 객체들의 order 값을 1씩 감소시키기
         other_content = StudyNoteContent.objects.get(
-            study_note=content.study_note,
-            order=content.order - 1
+            study_note=content.study_note, order=content.order - 1
         )
         other_content.order += 1
         other_content.save()
 
         study_note = self.get_object(content.study_note.pk)
         note_contents_after_order_update = study_note.note_contents.filter(
-            page=content.page).order_by('order')
+            page=content.page
+        ).order_by("order")
 
         # order 값을 1 증가시키고 저장
         content.order -= 1
         content.save()
 
         serializer = StudyNoteContentSerializer(
-            note_contents_after_order_update, many=True)
+            note_contents_after_order_update, many=True
+        )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -2437,12 +2670,13 @@ class StudyNoteContentView(APIView):
     def put(self, request, content_pk, format=None):
         study_note_content = StudyNoteContent.objects.get(pk=content_pk)
 
-        study_note_content.title = request.data.get(
-            'title', study_note_content.title)
+        study_note_content.title = request.data.get("title", study_note_content.title)
         study_note_content.file_name = request.data.get(
-            'file_name', study_note_content.file_name)
+            "file_name", study_note_content.file_name
+        )
         study_note_content.content = request.data.get(
-            'content', study_note_content.content)
+            "content", study_note_content.content
+        )
 
         study_note_content.save()
 
@@ -2460,8 +2694,12 @@ class StudyNoteContentsView(APIView):
         print("content_option : ", content_option)
 
         # 이전 order 값 중 최대값 구하기
-        max_order = StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk, page=current_page_number).aggregate(Max('order'))['order__max'] or 0
+        max_order = (
+            StudyNoteContent.objects.filter(
+                study_note_id=study_note_pk, page=current_page_number
+            ).aggregate(Max("order"))["order__max"]
+            or 0
+        )
 
         # StudyNoteContent 모델 생성
         note_content = StudyNoteContent.objects.create(
@@ -2481,13 +2719,14 @@ class StudyNoteContentsView(APIView):
 
 class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        pageNumbersToEdit = request.data.get('pageNumbersToEdit', [])
+        pageNumbersToEdit = request.data.get("pageNumbersToEdit", [])
         print("pageNumbersToEdit : ", pageNumbersToEdit)
         # pageNumbersToEdit 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=pageNumbersToEdit)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEdit
+        )
         for study_note_content in study_note_contents:
             study_note_content.page += 1
             study_note_content.save()
@@ -2497,13 +2736,14 @@ class PlusOnePageForSelectedPageForStudyNoteContents(APIView):
 
 class MinusOnePageForSelectedPageForStudyNoteContents(APIView):
     def put(self, request, study_note_pk):
-        pageNumbersToEdit = request.data.get('pageNumbersToEdit', [])
+        pageNumbersToEdit = request.data.get("pageNumbersToEdit", [])
         print("pageNumbersToEdit : ", pageNumbersToEdit)
         # selected_buttons_data 는 [1,2,3,5] 와 같이 리스트 형태로 넘어옵니다.
 
         # 선택된 StudyNote의 StudyNoteContent들의 page를 +1 해줍니다.
         study_note_contents = StudyNoteContent.objects.filter(
-            study_note__pk=study_note_pk, page__in=pageNumbersToEdit)
+            study_note__pk=study_note_pk, page__in=pageNumbersToEdit
+        )
         for study_note_content in study_note_contents:
             study_note_content.page -= 1
             study_note_content.save()
@@ -2516,13 +2756,12 @@ class DeleteNoteContentsForSelectedPage(APIView):
         selected_buttons_data = request.data
 
         StudyNoteContent.objects.filter(
-            study_note_id=study_note_pk,
-            page__in=selected_buttons_data
+            study_note_id=study_note_pk, page__in=selected_buttons_data
         ).delete()
 
         message = "노트에 대해  {} 페이지 삭제 완료".format(selected_buttons_data)
 
-        return Response({'message': message})
+        return Response({"message": message})
 
 
 class StudyNoteAPIView(APIView):
@@ -2534,7 +2773,9 @@ class StudyNoteAPIView(APIView):
         note_obj = StudyNote.objects.all()
         return note_obj
 
-    def get_all_note_list_filtered(self, selected_note_writer, first_category, second_category):
+    def get_all_note_list_filtered(
+        self, selected_note_writer, first_category, second_category
+    ):
         filter_conditions = Q()
         if selected_note_writer != "":
             filter_conditions &= Q(writer__username=selected_note_writer)
@@ -2546,15 +2787,11 @@ class StudyNoteAPIView(APIView):
         return StudyNote.objects.filter(filter_conditions)  # 필터링된 데이터를 반환
 
     def get(self, request):
-        
         print("노트 요청 여기 맞지?? ")
-        
-        selected_note_writer = request.query_params.get(
-            "selectedNoteWriter", "")
-        first_category = request.query_params.get(
-            "first_category", "")
-        second_category = request.query_params.get(
-            "second_category", "")
+
+        selected_note_writer = request.query_params.get("selectedNoteWriter", "")
+        first_category = request.query_params.get("first_category", "")
+        second_category = request.query_params.get("second_category", "")
 
         # step1 page 번호 가져 오기
         try:
@@ -2568,27 +2805,25 @@ class StudyNoteAPIView(APIView):
         end = start + self.note_count_per_page
 
         filtered_note_list = self.get_all_note_list_filtered(
-            selected_note_writer, first_category, second_category)
+            selected_note_writer, first_category, second_category
+        )
         self.total_page_count = filtered_note_list.count()
         paginated_notes = filtered_note_list[start:end]
 
         print("request.user.username : ", request.user)
 
         serializer = StudyNoteSerializer(
-            paginated_notes, 
-            many=True, 
-            context={'request': request}
+            paginated_notes, many=True, context={"request": request}
         )
 
         # all_study_note_list_for_users = paginated_notes
-        note_writers = list(
-            set(note.writer.username for note in paginated_notes))
+        note_writers = list(set(note.writer.username for note in paginated_notes))
 
         response_data = {
             "note_writers": note_writers,  # Include the note writers in the response
             "noteList": serializer.data,
             "totalPageCount": self.total_page_count,
-            "note_count_per_page": self.note_count_per_page
+            "note_count_per_page": self.note_count_per_page,
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -2613,7 +2848,10 @@ class StudyNoteAPIView(APIView):
         try:
             study_note = StudyNote.objects.get(pk=study_note_pk)
         except StudyNote.DoesNotExist:
-            return Response({"error": "Study note does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Study note does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         serializer = StudyNoteSerializer(study_note, data=request.data)
         if serializer.is_valid():
@@ -2646,10 +2884,12 @@ class StudyNoteAPIViewForCopyMode(APIView):
 
         if selected_note_writer == "":
             all_study_note_list = StudyNote.objects.filter(
-                ~Q(writer__username=request.user.username))
+                ~Q(writer__username=request.user.username)
+            )
         else:
             all_study_note_list = StudyNote.objects.filter(
-                writer__username=selected_note_writer)
+                writer__username=selected_note_writer
+            )
         self.total_page_count = len(all_study_note_list)
         study_notes = all_study_note_list[start:end]
 
@@ -2658,7 +2898,7 @@ class StudyNoteAPIViewForCopyMode(APIView):
         response_data = {
             "noteList": serializer.data,
             "totalPageCount": self.total_page_count,
-            "note_count_per_page": self.note_count_per_page
+            "note_count_per_page": self.note_count_per_page,
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -2693,7 +2933,8 @@ class StudyNoteAPIViewForMe(APIView):
 
         # study_notes 데이터중 start, end 에 해당하는 데이터 가져 오기
         all_study_note_list = StudyNote.objects.filter(
-            Q(writer__username=request.user.username))
+            Q(writer__username=request.user.username)
+        )
 
         # print("all_study_note_list For Me :::::::::::::::::", all_study_note_list)
 
@@ -2705,7 +2946,7 @@ class StudyNoteAPIViewForMe(APIView):
         response_data = {
             "noteList": serializer.data,
             "totalPageCount": self.total_page_count,
-            "note_count_per_page": self.note_count_per_page
+            "note_count_per_page": self.note_count_per_page,
         }
 
         return Response(response_data, status=HTTP_200_OK)
@@ -2731,15 +2972,13 @@ class StudyNoteDetailView(APIView):
         study_note = self.get_object(notePk)
 
         question_count_for_current_page = study_note.question_list.filter(
-            page=pageNum).count()
-        print("question_count_for_current_page:",
-              question_count_for_current_page)
+            page=pageNum
+        ).count()
+        print("question_count_for_current_page:", question_count_for_current_page)
         print("current_page:", pageNum)
-        note_contents = study_note.note_contents.filter(
-            page=pageNum).order_by('order')
+        note_contents = study_note.note_contents.filter(page=pageNum).order_by("order")
 
-        filtered_contents = note_contents.filter(
-            content_option="subtitle_for_page")
+        filtered_contents = note_contents.filter(content_option="subtitle_for_page")
 
         if filtered_contents.exists():
             subtitle_for_page = filtered_contents[0].title
@@ -2749,12 +2988,15 @@ class StudyNoteDetailView(APIView):
         serializer = StudyNoteContentSerializer(note_contents, many=True)
         data = serializer.data
 
-        total_note_contents = study_note.note_contents.all().order_by('order')
+        total_note_contents = study_note.note_contents.all().order_by("order")
 
-        page_numbers = total_note_contents.values(
-            'page').annotate(count=Count('id')).order_by('page')
+        page_numbers = (
+            total_note_contents.values("page")
+            .annotate(count=Count("id"))
+            .order_by("page")
+        )
 
-        exist_page_numbers = [page['page'] for page in page_numbers]
+        exist_page_numbers = [page["page"] for page in page_numbers]
 
         cowriters = study_note.note_cowriters.all()
         cowriters_data = []
@@ -2767,7 +3009,7 @@ class StudyNoteDetailView(APIView):
                     "profile_image": cowriter.writer.profile_image,
                     "is_tasking": cowriter.is_tasking,
                     "current_page": cowriter.current_page,
-                    "task_description": cowriter.task_description
+                    "task_description": cowriter.task_description,
                 }
                 cowriters_data.append(cowriter_data)
 
@@ -2778,7 +3020,10 @@ class StudyNoteDetailView(APIView):
         authority_for_writing_note_contents = False
 
         for cowriter in cowriters_data:
-            if cowriter['username'] == request.user.username and cowriter['is_tasking'] == True:
+            if (
+                cowriter["username"] == request.user.username
+                and cowriter["is_tasking"] == True
+            ):
                 authority_for_writing_note_contents = True
                 break
 
