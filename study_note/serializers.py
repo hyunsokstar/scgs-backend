@@ -74,6 +74,10 @@ class StudyNoteSerializer(serializers.ModelSerializer):
     total_count_for_suggestion_list = serializers.SerializerMethodField()
     total_count_for_class_list = serializers.SerializerMethodField()
     total_count_for_error_report_list = serializers.SerializerMethodField()
+    
+    total_count_for_bookmark = serializers.SerializerMethodField()
+    total_count_for_like = serializers.SerializerMethodField()
+    
     is_bookmark_for_note = serializers.SerializerMethodField()
     is_like_for_note = serializers.SerializerMethodField()
 
@@ -95,6 +99,8 @@ class StudyNoteSerializer(serializers.ModelSerializer):
             "total_count_for_suggestion_list",
             "total_count_for_class_list",
             "total_count_for_error_report_list",
+            "total_count_for_bookmark",
+            "total_count_for_like",
             "is_bookmark_for_note",
             "is_like_for_note"
         ]
@@ -125,6 +131,12 @@ class StudyNoteSerializer(serializers.ModelSerializer):
 
     def get_total_count_for_error_report_list(self, obj):
         return obj.error_report_list.count()
+
+    def get_total_count_for_bookmark(self, obj):
+        return obj.bookmarks.count()
+    
+    def get_total_count_for_like (self, obj):
+        return obj.likes.count()  
 
     def get_is_bookmark_for_note(self, obj):
         request = self.context.get("request")

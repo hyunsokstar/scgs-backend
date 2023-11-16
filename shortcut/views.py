@@ -145,7 +145,7 @@ class ListViewForShortForRegisterToHub(APIView):
         }
         return Response(data, status=HTTP_200_OK)
 
-
+# 1116
 class ListViewForShortCutHubContent(APIView):
     totalCountForShortCutHubContent = 1
     listForShortCutHubContentList = []
