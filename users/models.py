@@ -41,7 +41,7 @@ class User(AbstractUser):
 
     profile_image = models.URLField(null=True, blank=True)
     cash = models.IntegerField(default=0)
-    # note_url1, note_url2
+    
     study_note_url1 = models.URLField(null=True, blank=True)
     study_note_url2 = models.URLField(null=True, blank=True)
 

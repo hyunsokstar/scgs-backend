@@ -2830,7 +2830,9 @@ class StudyNoteAPIView(APIView):
 
     def post(self, request):
         print("study note post 요청")
-        serializer = StudyNoteSerializer(data=request.data)
+        serializer = StudyNoteSerializer(
+            data=request.data, context={"request": request}
+        )
 
         print("request.user : ", request.user)
 
@@ -2853,7 +2855,9 @@ class StudyNoteAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = StudyNoteSerializer(study_note, data=request.data)
+        serializer = StudyNoteSerializer(
+            study_note, data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -2893,7 +2897,9 @@ class StudyNoteAPIViewForCopyMode(APIView):
         self.total_page_count = len(all_study_note_list)
         study_notes = all_study_note_list[start:end]
 
-        serializer = StudyNoteSerializer(study_notes, many=True)
+        serializer = StudyNoteSerializer(
+            study_notes, many=True, context={"request": request}
+        )
 
         response_data = {
             "noteList": serializer.data,

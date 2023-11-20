@@ -1,22 +1,24 @@
 from django.db import models
 from django.utils import timezone
 
+
 class RoadMap(models.Model):
     writer = models.ForeignKey(
         "users.User",
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="loadmaps"
+        related_name="loadmaps",
     )
     title = models.CharField(max_length=50)
     sub_title = models.CharField(max_length=50)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
 
     def __str__(self):
-        return f"{self.title}"        
+        return f"{self.title}"
+
 
 class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):
@@ -33,8 +35,8 @@ class StudyNote(models.Model):
         PROGRAMMING_LANGUAGE = ("programming-language", "Programming Language")
         CHALLENGE = ("challenge", "Challenge")
 
-    title = models.CharField(max_length=30, default='black')
-    description = models.TextField(default='black')
+    title = models.CharField(max_length=30, default="black")
+    description = models.TextField(default="black", blank=True, null=True)
 
     writer = models.ForeignKey(
         "users.User",
@@ -55,14 +57,15 @@ class StudyNote(models.Model):
         choices=SecondCategoryChoices.choices,
         default=SecondCategoryChoices.TUTORIAL,
     )
-    
-    # view_count = models.IntegerField(default=0)  
+
+    # view_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.title} written by {self.writer.username}"
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
+
 
 class LikeForStudyNote(models.Model):
     user = models.ForeignKey(
@@ -72,7 +75,7 @@ class LikeForStudyNote(models.Model):
         on_delete=models.CASCADE,
         related_name="study_note_likes",
     )
-    
+
     study_note = models.ForeignKey(
         "study_note.StudyNote",
         blank=True,
@@ -80,12 +83,13 @@ class LikeForStudyNote(models.Model):
         on_delete=models.CASCADE,
         related_name="likes",
     )
-    
+
     liked_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Like by {self.user.username} for {self.study_note.title}" 
-    
+        return f"Like by {self.user.username} for {self.study_note.title}"
+
+
 class BookMarkForStudyNote(models.Model):
     user = models.ForeignKey(
         "users.User",
@@ -94,7 +98,7 @@ class BookMarkForStudyNote(models.Model):
         on_delete=models.CASCADE,
         related_name="study_note_bookmarks",
     )
-    
+
     study_note = models.ForeignKey(
         "study_note.StudyNote",
         blank=True,
@@ -102,7 +106,7 @@ class BookMarkForStudyNote(models.Model):
         on_delete=models.CASCADE,
         related_name="bookmarks",
     )
-    
+
     bookmarked_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -115,15 +119,15 @@ class RoadMapContent(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="+"
+        related_name="+",
     )
-    
+
     road_map = models.ForeignKey(
         "study_note.RoadMap",
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="contents"
+        related_name="contents",
     )
 
     writer = models.ForeignKey(
@@ -137,13 +141,14 @@ class RoadMapContent(models.Model):
 
     created_at = models.DateTimeField(default=timezone.now)
 
+
 class ErrorReportForStudyNote(models.Model):
     study_note = models.ForeignKey(
         "study_note.StudyNote",
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="error_report_list"
+        related_name="error_report_list",
     )
     page = models.PositiveIntegerField(default=1)
 
@@ -165,14 +170,12 @@ class ErrorReportForStudyNote(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class CommentForErrorReport(models.Model):
     error_report = models.ForeignKey(
-        "ErrorReportForStudyNote",
-        on_delete=models.CASCADE,
-        related_name="comments"
+        "ErrorReportForStudyNote", on_delete=models.CASCADE, related_name="comments"
     )
 
     writer = models.ForeignKey(
@@ -191,7 +194,7 @@ class CommentForErrorReport(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class QnABoard(models.Model):
@@ -200,7 +203,7 @@ class QnABoard(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="question_list"
+        related_name="question_list",
     )
     title = models.CharField(max_length=200)
     content = models.TextField()
@@ -219,27 +222,24 @@ class QnABoard(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class AnswerForQaBoard(models.Model):
     question = models.ForeignKey(
         "study_note.QnABoard",
         on_delete=models.CASCADE,
-        related_name="answers_for_qa_board"
+        related_name="answers_for_qa_board",
     )
     content = models.TextField()
     writer = models.ForeignKey(
-        "users.User",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True
+        "users.User", on_delete=models.CASCADE, blank=True, null=True
     )
     created_at = models.DateTimeField(default=timezone.now)
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class ClassRoomForStudyNote(models.Model):
@@ -248,7 +248,7 @@ class ClassRoomForStudyNote(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="class_list"
+        related_name="class_list",
     )
     current_page = models.PositiveIntegerField(default=1)
     writer = models.ForeignKey(
@@ -262,7 +262,7 @@ class ClassRoomForStudyNote(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class CoWriterForStudyNote(models.Model):
@@ -278,14 +278,15 @@ class CoWriterForStudyNote(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="note_cowriters"
+        related_name="note_cowriters",
     )
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     is_tasking = models.BooleanField(default=False)
     current_page = models.IntegerField(null=True, blank=True)
     task_description = models.CharField(
-        max_length=30, default='', null=True, blank=True)
+        max_length=30, default="", null=True, blank=True
+    )
 
     def __str__(self):
         return f"{self.writer.username} <=> {self.study_note.title}의 공동 저자"
@@ -302,13 +303,13 @@ class StudyNoteContent(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="note_contents"
+        related_name="note_contents",
     )
 
-    title = models.CharField(max_length=30, default='black')
+    title = models.CharField(max_length=30, default="black")
     file_name = models.CharField(max_length=50, null=True, blank=True)
 
-    content = models.TextField(default='black')
+    content = models.TextField(default="black")
 
     writer = models.ForeignKey(
         "users.User",
@@ -360,9 +361,9 @@ class StudyNoteBriefingBoard(models.Model):
     is_edit_mode = models.BooleanField(default=False)
 
     def created_at_formatted(self):
-        if (self.created_at != None):
+        if self.created_at != None:
             local_created_at = timezone.localtime(self.created_at)
-            return local_created_at.strftime('%y년 %m월 %d일 %H 시 %M분')
+            return local_created_at.strftime("%y년 %m월 %d일 %H 시 %M분")
         else:
             return "준비"
 
@@ -373,7 +374,7 @@ class FAQBoard(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="faq_list"
+        related_name="faq_list",
     )
     title = models.CharField(max_length=200)
     content = models.TextField()
@@ -391,7 +392,7 @@ class FAQBoard(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class CommentForFaqBoard(models.Model):
@@ -400,7 +401,7 @@ class CommentForFaqBoard(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="comments_list"
+        related_name="comments_list",
     )
 
     writer = models.ForeignKey(
@@ -419,7 +420,7 @@ class CommentForFaqBoard(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
 
 
 class Suggestion(models.Model):
@@ -428,7 +429,7 @@ class Suggestion(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="suggestion_list"
+        related_name="suggestion_list",
     )
     title = models.CharField(max_length=200)
     content = models.TextField()
@@ -446,7 +447,7 @@ class Suggestion(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m%d%H%M')
+        return local_created_at.strftime("%m%d%H%M")
 
 
 class CommentForSuggestion(models.Model):
@@ -455,7 +456,7 @@ class CommentForSuggestion(models.Model):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_name="comments_list"
+        related_name="comments_list",
     )
 
     writer = models.ForeignKey(
@@ -474,4 +475,4 @@ class CommentForSuggestion(models.Model):
 
     def created_at_formatted(self):
         local_created_at = timezone.localtime(self.created_at)
-        return local_created_at.strftime('%m월 %d일 %H시 %M분')
+        return local_created_at.strftime("%m월 %d일 %H시 %M분")
