@@ -74,6 +74,37 @@ from .serializers import (
 # 1122
 # user_likes
 # ListViewForMyLikeNote(APIView):
+
+
+class UpdateViewForMoveNoteContentsToOtherPage(APIView):
+    def put(self, request):
+        checked_ids = request.data.get("checkedIds", [])  # 기본값으로 빈 리스트 설정
+        selected_page = request.data.get("selectedPage", 1)
+
+        print("checked_ids : ", checked_ids)
+        print("selected_page : ", selected_page)
+
+        # StudyNoteContent 데이터 중 id가 checked_ids에 포함되는 노트 내용들을 가져와서 페이지를 업데이트합니다.
+        try:
+            note_contents_to_update = StudyNoteContent.objects.filter(
+                id__in=checked_ids
+            )
+            note_contents_to_update.update(page=selected_page)
+
+            # 업데이트된 노트 내용의 수를 세어서 응답 메시지에 포함할 수도 있습니다.
+            count_updated = note_contents_to_update.count()
+
+            # Response message에 선택한 페이지 대신에 selected_page를 사용하여 응답합니다.
+            return Response(
+                {
+                    "message": f"{count_updated}개의 노트 내용을 선택한 페이지({selected_page})로 이동했습니다.",
+                    "pageToMove":selected_page
+                }
+            )
+        except StudyNoteContent.DoesNotExist:
+            return Response({"message": "노트 내용을 찾을 수 없습니다."})
+
+
 class ListViewForMyLikeNote(APIView):
     def get(self, request):
         user_likes = LikeForStudyNote.objects.filter(

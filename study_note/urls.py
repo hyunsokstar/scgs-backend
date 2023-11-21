@@ -3,6 +3,11 @@ from . import views
 
 urlpatterns = [
     path("", views.StudyNoteAPIView.as_view(), name="StudyNoteAPIView"),
+    path(
+        "content/move-contents-to-selected-page",
+        views.UpdateViewForMoveNoteContentsToOtherPage.as_view(),
+        name="StudyNoteAPIView",
+    ),
     path("mybookmark", views.ListViewForMyBookMark.as_view()),
     path("my-like-note-list", views.ListViewForMyLikeNote.as_view()),
     path(
