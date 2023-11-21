@@ -2411,6 +2411,24 @@ def get_writers_info_for_cash_prize(complete_status):
 
     return task_managers_info
 
+def get_writers_info_for_ready():
+    task_manager_counts = ProjectProgress.objects.filter(current_status="ready").values(
+        'task_manager__username', 'task_manager__profile_image', 'task_manager__cash').annotate(count=Count('id'))
+    print("task_manager_counts : ", task_manager_counts)
+
+    task_managers_info = []
+    for task_manager_count in task_manager_counts:
+        writer_info = {
+            "username": task_manager_count['task_manager__username'],
+            "profile_image": task_manager_count['task_manager__profile_image'],
+            "cash": task_manager_count['task_manager__cash'],
+            "task_count": task_manager_count['count']
+        }
+        task_managers_info.append(writer_info)
+
+    sorted_task_managers_info = sorted(
+        task_managers_info, key=lambda x: x['task_count'], reverse=True)
+    return sorted_task_managers_info
 
 def get_writers_info(complete_status):
     print("complete_status2 : ", complete_status)
@@ -3795,7 +3813,8 @@ class UncompletedTaskListView(APIView):
                 uncompleted_project_task_list_for_current_page, many=True)
 
             response_data = {
-                "writers_info": get_writers_info(complete_status=False),
+                # 1121 current
+                "writers_info": get_writers_info_for_ready(),
                 "ProjectProgressList": serializer.data,
                 "count_for_ready": self.all_uncompleted_project_task_list.filter(in_progress=False).count(),
                 # "count_for_in_progress": self.all_uncompleted_project_task_list.filter(in_progress=True, is_testing=False, task_completed=False).count(),
