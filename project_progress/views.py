@@ -2412,6 +2412,7 @@ def get_writers_info_for_cash_prize(complete_status):
     return task_managers_info
 
 def get_writers_info_for_ready():
+    print("user for ready")
     task_manager_counts = ProjectProgress.objects.filter(current_status="ready").values(
         'task_manager__username', 'task_manager__profile_image', 'task_manager__cash').annotate(count=Count('id'))
     print("task_manager_counts : ", task_manager_counts)
