@@ -35,7 +35,7 @@ class StudyNote(models.Model):
         PROGRAMMING_LANGUAGE = ("programming-language", "Programming Language")
         CHALLENGE = ("challenge", "Challenge")
 
-    title = models.CharField(max_length=30, default="black")
+    title = models.CharField(max_length=80, default="black")
     description = models.TextField(default="black", blank=True, null=True)
 
     writer = models.ForeignKey(
