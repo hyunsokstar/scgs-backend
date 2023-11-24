@@ -72,8 +72,41 @@ from .serializers import (
 
 
 # 1122
-# user_likes
-# ListViewForMyLikeNote(APIView):
+
+
+class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
+    def get(self, request, study_note_pk):
+        # 로그인 확인
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # study_note_pk = request.data.get("studyNotePk")
+        study_note = get_object_or_404(StudyNote, pk=study_note_pk)
+
+        # 1. 로그인 유저의 StudyNote 반환
+        my_notes = StudyNote.objects.filter(writer=request.user)
+        serializer = SerializerForStudyNoteForBasic(my_notes, many=True)
+        my_notes_data = serializer.data
+
+        # 2. 페이지 번호들을 그룹화하여 리스트로 반환
+        note_content = StudyNoteContent.objects.filter(study_note=study_note)
+        target_note_page_numbers = note_content.values_list(
+            "page", flat=True
+        ).distinct()
+
+        # 3. 해당 StudyNote의 제목 반환
+        target_note_title = study_note.title
+
+        # response_data에 정보 담아 Response로 응답
+        response_data = {
+            "my_notes": my_notes_data,
+            "target_note_title": target_note_title,
+            "target_note_page_numbers": list(target_note_page_numbers),
+            "message": "partial copy from selected note is success!",
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class UpdateViewForMoveNoteContentsToOtherPage(APIView):
@@ -98,7 +131,7 @@ class UpdateViewForMoveNoteContentsToOtherPage(APIView):
             return Response(
                 {
                     "message": f"{count_updated}개의 노트 내용을 선택한 페이지({selected_page})로 이동했습니다.",
-                    "pageToMove":selected_page
+                    "pageToMove": selected_page,
                 }
             )
         except StudyNoteContent.DoesNotExist:

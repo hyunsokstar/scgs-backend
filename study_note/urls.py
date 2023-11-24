@@ -207,8 +207,10 @@ urlpatterns = [
         views.CopyCopySelectedNotesToMyNoteView.as_view(),
     ),
     path("copy-one-of-note-to-me", views.CopyOneOfNoteToMe.as_view()),
-    # comment create view
-    # error-report/${error_report_pk}/comment/add
+    path(
+        "<int:study_note_pk>/GetMyNoteInfoAndTargetNoteInforToPartialCopy",
+        views.GetMyNoteInfoAndTargetNoteInForToPartialCopy.as_view(),
+    ),
     path(
         "error-report/<int:error_report_pk>/comment/add",
         views.CreateViewForErrorReportComment.as_view(),
