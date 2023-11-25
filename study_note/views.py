@@ -94,33 +94,39 @@ class PageToPageContentReplacementView(APIView):
         ).delete()
 
         # Step 2: 페이지 복사 작업 수행
-        for idx, page_number in enumerate(checked_page_numbers_to_copy):
-            # copy_target_note_id와 page_number에 해당하는 StudyNoteContent 객체 찾기
-            
-            source_contents = StudyNoteContent.objects.filter(study_note_id=copy_target_note_id, page=page_number)
-
-            destination_page_number = checked_page_numbers_for_destination[idx]
-
-            if source_contents.exists():
-                for target_note in source_contents:
+        try:
+            with transaction.atomic():
+                for idx, page_number in enumerate(checked_page_numbers_to_copy):
+                    # copy_target_note_id와 page_number에 해당하는 StudyNoteContent 객체 찾기
                     
-                    destination_content = StudyNoteContent(
-                        study_note_id=selected_my_note_id,
-                        title=target_note.title,
-                        file_name=target_note.file_name,
-                        content=target_note.content,
-                        writer=target_note.writer,
-                        order=target_note.order,
-                        page=destination_page_number,
-                        content_option=target_note.content_option,
-                        ref_url1=target_note.ref_url1,
-                        ref_url2=target_note.ref_url2,
-                        youtube_url=target_note.youtube_url,
-                        created_at=target_note.created_at,
-                    )
-                    destination_content.save()
-            else:
-                pass
+                    source_contents = StudyNoteContent.objects.filter(study_note_id=copy_target_note_id, page=page_number)
+
+                    destination_page_number = checked_page_numbers_for_destination[idx]
+
+                    if source_contents.exists():
+                        for target_note in source_contents:
+                            
+                            destination_content = StudyNoteContent(
+                                study_note_id=selected_my_note_id,
+                                title=target_note.title,
+                                file_name=target_note.file_name,
+                                content=target_note.content,
+                                writer=target_note.writer,
+                                order=target_note.order,
+                                page=destination_page_number,
+                                content_option=target_note.content_option,
+                                ref_url1=target_note.ref_url1,
+                                ref_url2=target_note.ref_url2,
+                                youtube_url=target_note.youtube_url,
+                                created_at=target_note.created_at,
+                            )
+                            destination_content.save()
+                    else:
+                        pass
+
+        except Exception as e:
+            # 에러 처리
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # 응답 메시지 작성
         copied_note_title = StudyNote.objects.get(id=copy_target_note_id).title
