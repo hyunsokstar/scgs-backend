@@ -115,21 +115,42 @@ class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-
+# 1125
 class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
+    my_note_list = []
+    totalCount = 0
+    perPage = 10
+    
     def get(self, request, study_note_id):
         # 로그인 확인
         if not request.user.is_authenticated:
             return Response(
                 {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
             )
+            
+        try:
+            pageNum = request.query_params.get("pageNum", 1)
+            pageNum = int(pageNum)
+        except ValueError:
+            pageNum = 1            
+            
 
-        study_note = get_object_or_404(StudyNote, pk=study_note_id)
-
-        # 1. 로그인 유저의 StudyNote 반환
+        # 내 노트 리스트
         my_notes = StudyNote.objects.filter(writer=request.user).exclude(pk=study_note_id)
+        
+        # total Count 정하기
+        totalCount = my_notes.count()
+        
+        start = (pageNum - 1) * self.perPage
+        end = start + self.perPage
+        my_notes = my_notes[start:end]      
+        
+        # 내 노트 리스트 가져오되 페이지 번호에 맞게 가져 오기        
         serializer = SerializerForStudyNoteForBasic(my_notes, many=True)
+        
         my_notes_data = serializer.data
+        
+        study_note = get_object_or_404(StudyNote, pk=study_note_id)
 
         # 2. 페이지 번호들을 그룹화하여 리스트로 반환
         note_content = StudyNoteContent.objects.filter(study_note=study_note)
@@ -142,7 +163,12 @@ class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
 
         # response_data에 정보 담아 Response로 응답
         response_data = {
+            # 내 노트 정보
             "my_note_list": my_notes_data,
+            "totalCount": self.totalCount,
+            "perPage": self.perPage,
+            
+            # target 정보            
             "target_note_title": target_note_title,
             "target_note_page_numbers": list(target_note_page_numbers),
             "message": "partial copy from selected note is success!",
