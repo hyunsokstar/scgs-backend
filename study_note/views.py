@@ -139,7 +139,7 @@ class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
         my_notes = StudyNote.objects.filter(writer=request.user).exclude(pk=study_note_id)
         
         # total Count 정하기
-        totalCount = my_notes.count()
+        self.totalCount = my_notes.count()
         
         start = (pageNum - 1) * self.perPage
         end = start + self.perPage
