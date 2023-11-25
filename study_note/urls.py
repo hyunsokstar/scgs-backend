@@ -8,6 +8,9 @@ urlpatterns = [
         views.UpdateViewForMoveNoteContentsToOtherPage.as_view(),
         name="StudyNoteAPIView",
     ),
+    
+    path("content/PageToPageContentReplacement", views.PageToPageContentReplacementView.as_view()),
+    
     path("mybookmark", views.ListViewForMyBookMark.as_view()),
     path("my-like-note-list", views.ListViewForMyLikeNote.as_view()),
     path(

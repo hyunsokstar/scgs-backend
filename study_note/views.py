@@ -72,13 +72,68 @@ from .serializers import (
 
 
 # 1122
-# class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
-#     def get(self, request, my_note_id):
-#         # todo
-#         # my_note_id 에 해당하는 StudyNote 모델 데이터 가져와서 selected_my_note_obj 에 담기
-#         # selected_my_note_obj.title 을 title_for_my_selected_note 에 담기
-#         # selected_my_note_obj 를 가르키는 StudyNoteContent 의 페이지 번호 리스트 가져와서 page_numbers_for_selected_my_note 에 담기
-#         # response_data 딕셔너리에 담은뒤 응답 with 적절한 http 응답 코드
+class PageToPageContentReplacementView(APIView):
+    def post(self, request, format=None):
+        # 전송된 데이터 받기
+        selected_my_note_id = request.data.get("selectedMyNoteId")
+        checked_page_numbers_for_destination = request.data.get(
+            "checkedPageNumbersForDestination"
+        )
+        copy_target_note_id = request.data.get("copyTargetNoteId")
+        checked_page_numbers_to_copy = request.data.get("checkedPageNumbersToCopy")
+
+        print("Received Data:")
+        print("selectedMyNoteId:", selected_my_note_id)
+        print("checkedPageNumbersForDestination:", checked_page_numbers_for_destination)
+        print("copyTargetNoteId:", copy_target_note_id)
+        print("checkedPageNumbersToCopy:", checked_page_numbers_to_copy)
+
+        # Step 1: selected_my_note_id와 checked_page_numbers_to_copy에 해당하는 StudyNoteContent 데이터 모두 삭제
+        StudyNoteContent.objects.filter(
+            study_note_id=selected_my_note_id, page__in=checked_page_numbers_to_copy
+        ).delete()
+
+        # Step 2: 페이지 복사 작업 수행
+        for idx, page_number in enumerate(checked_page_numbers_to_copy):
+            # copy_target_note_id와 page_number에 해당하는 StudyNoteContent 객체 찾기
+            
+            source_contents = StudyNoteContent.objects.filter(study_note_id=copy_target_note_id, page=page_number)
+
+            destination_page_number = checked_page_numbers_for_destination[idx]
+
+            if source_contents.exists():
+                for target_note in source_contents:
+                    
+                    destination_content = StudyNoteContent(
+                        study_note_id=selected_my_note_id,
+                        title=target_note.title,
+                        file_name=target_note.file_name,
+                        content=target_note.content,
+                        writer=target_note.writer,
+                        order=target_note.order,
+                        page=destination_page_number,
+                        content_option=target_note.content_option,
+                        ref_url1=target_note.ref_url1,
+                        ref_url2=target_note.ref_url2,
+                        youtube_url=target_note.youtube_url,
+                        created_at=target_note.created_at,
+                    )
+                    destination_content.save()
+            else:
+                pass
+
+        # 응답 메시지 작성
+        copied_note_title = StudyNote.objects.get(id=copy_target_note_id).title
+        
+        message = (
+            f"{copied_note_title}에서 {len(checked_page_numbers_to_copy)}개의 데이터를 복사했습니다."
+        )
+
+        # 적절한 응답 및 HTTP 상태 코드 반환
+        response_data = {
+            "message": message,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
@@ -115,42 +170,45 @@ class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+
 # 1125
 class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
     my_note_list = []
     totalCount = 0
-    perPage = 10
-    
+    perPage = 3
+
     def get(self, request, study_note_id):
         # 로그인 확인
         if not request.user.is_authenticated:
             return Response(
                 {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
             )
-            
+
         try:
             pageNum = request.query_params.get("pageNum", 1)
             pageNum = int(pageNum)
         except ValueError:
-            pageNum = 1            
-            
+            pageNum = 1
+
         print("pageNum : ", pageNum)
 
         # 내 노트 리스트
-        my_notes = StudyNote.objects.filter(writer=request.user).exclude(pk=study_note_id)
-        
+        my_notes = StudyNote.objects.filter(writer=request.user).exclude(
+            pk=study_note_id
+        )
+
         # total Count 정하기
         self.totalCount = my_notes.count()
-        
+
         start = (pageNum - 1) * self.perPage
         end = start + self.perPage
-        my_notes = my_notes[start:end]      
-        
-        # 내 노트 리스트 가져오되 페이지 번호에 맞게 가져 오기        
+        my_notes = my_notes[start:end]
+
+        # 내 노트 리스트 가져오되 페이지 번호에 맞게 가져 오기
         serializer = SerializerForStudyNoteForBasic(my_notes, many=True)
-        
+
         my_notes_data = serializer.data
-        
+
         study_note = get_object_or_404(StudyNote, pk=study_note_id)
 
         # 2. 페이지 번호들을 그룹화하여 리스트로 반환
@@ -168,8 +226,7 @@ class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
             "my_note_list": my_notes_data,
             "totalCount": self.totalCount,
             "perPage": self.perPage,
-            
-            # target 정보            
+            # target 정보
             "target_note_title": target_note_title,
             "target_note_page_numbers": list(target_note_page_numbers),
             "message": "partial copy from selected note is success!",
