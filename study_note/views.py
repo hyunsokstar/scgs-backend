@@ -181,7 +181,7 @@ class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
 class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
     my_note_list = []
     totalCount = 0
-    perPage = 3
+    perPage = 10
 
     def get(self, request, study_note_id):
         # 로그인 확인
