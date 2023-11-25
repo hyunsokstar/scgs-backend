@@ -72,21 +72,62 @@ from .serializers import (
 
 
 # 1122
+# class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
+#     def get(self, request, my_note_id):
+#         # todo
+#         # my_note_id 에 해당하는 StudyNote 모델 데이터 가져와서 selected_my_note_obj 에 담기
+#         # selected_my_note_obj.title 을 title_for_my_selected_note 에 담기
+#         # selected_my_note_obj 를 가르키는 StudyNoteContent 의 페이지 번호 리스트 가져와서 page_numbers_for_selected_my_note 에 담기
+#         # response_data 딕셔너리에 담은뒤 응답 with 적절한 http 응답 코드
+
+
+class InfoViewForSelectedNoteInfoAndPageNumberList(APIView):
+    def get(self, request, my_note_id):
+        try:
+            # 주어진 my_note_id에 해당하는 StudyNote 객체 가져오기
+            selected_my_note_obj = StudyNote.objects.get(pk=my_note_id)
+
+            # selected_my_note_obj의 title 가져오기
+            title_for_my_selected_note = selected_my_note_obj.title
+
+            # selected_my_note_obj를 가리키는 StudyNoteContent의 페이지 번호 리스트 가져오기
+            # StudyNoteContent의 페이지 번호 가져오기
+            page_numbers_for_selected_my_note = (
+                selected_my_note_obj.note_contents.values_list("page", flat=True)
+            )
+
+            # 중복 제거하여 유일한 값만 반환
+            unique_page_numbers = list(set(page_numbers_for_selected_my_note))
+
+            # 응답 데이터 구성
+            response_data = {
+                "title_for_my_selected_note": title_for_my_selected_note,
+                "page_numbers_for_selected_my_note": unique_page_numbers,
+            }
+
+            # 적절한 HTTP 응답 코드와 함께 데이터 응답
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except StudyNote.DoesNotExist:
+            # 주어진 my_note_id에 해당하는 StudyNote가 없을 경우 에러 응답
+            return Response(
+                {"error": "StudyNote with the given ID does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
-    def get(self, request, study_note_pk):
+    def get(self, request, study_note_id):
         # 로그인 확인
         if not request.user.is_authenticated:
             return Response(
                 {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # study_note_pk = request.data.get("studyNotePk")
-        study_note = get_object_or_404(StudyNote, pk=study_note_pk)
+        study_note = get_object_or_404(StudyNote, pk=study_note_id)
 
         # 1. 로그인 유저의 StudyNote 반환
-        my_notes = StudyNote.objects.filter(writer=request.user)
+        my_notes = StudyNote.objects.filter(writer=request.user).exclude(pk=study_note_id)
         serializer = SerializerForStudyNoteForBasic(my_notes, many=True)
         my_notes_data = serializer.data
 
@@ -101,7 +142,7 @@ class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
 
         # response_data에 정보 담아 Response로 응답
         response_data = {
-            "my_notes": my_notes_data,
+            "my_note_list": my_notes_data,
             "target_note_title": target_note_title,
             "target_note_page_numbers": list(target_note_page_numbers),
             "message": "partial copy from selected note is success!",

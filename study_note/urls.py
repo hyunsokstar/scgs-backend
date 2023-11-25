@@ -18,6 +18,10 @@ urlpatterns = [
     path("<int:notePk>/<int:pageNum>", views.StudyNoteDetailView.as_view()),
     path("<int:notePk>", views.DeleteViewForStudyNote.as_view()),
     path("<int:notePk>/bookmark", views.BookMarkViewForNoteForPk.as_view()),
+    path(
+        "<int:my_note_id>/getSelectedNoteInfoAndPageNumberList",
+        views.InfoViewForSelectedNoteInfoAndPageNumberList.as_view(),
+    ),
     path("<int:notePk>/like", views.LikeViewForNoteForPk.as_view()),
     path(
         "comment/<int:commentPk>/delete", views.DeleteViewForStudyNoteComment.as_view()
@@ -208,7 +212,7 @@ urlpatterns = [
     ),
     path("copy-one-of-note-to-me", views.CopyOneOfNoteToMe.as_view()),
     path(
-        "<int:study_note_pk>/GetMyNoteInfoAndTargetNoteInforToPartialCopy",
+        "<int:study_note_id>/GetMyNoteInfoAndTargetNoteInforToPartialCopy",
         views.GetMyNoteInfoAndTargetNoteInForToPartialCopy.as_view(),
     ),
     path(
