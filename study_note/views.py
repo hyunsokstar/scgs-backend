@@ -134,6 +134,7 @@ class GetMyNoteInfoAndTargetNoteInForToPartialCopy(APIView):
         except ValueError:
             pageNum = 1            
             
+        print("pageNum : ", pageNum)
 
         # 내 노트 리스트
         my_notes = StudyNote.objects.filter(writer=request.user).exclude(pk=study_note_id)
