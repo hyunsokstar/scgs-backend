@@ -24,6 +24,7 @@ class StudyNote(models.Model):
     class FirstCategoryChoices(models.TextChoices):
         FRONTEND = ("frontend", "Frontend")
         BACKEND = ("backend", "Backend")
+        FULLSTACK = ("full-stack", "FullStack")
 
     class SecondCategoryChoices(models.TextChoices):
         TUTORIAL = ("tutorial", "Tutorial")
