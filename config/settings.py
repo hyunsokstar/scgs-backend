@@ -36,7 +36,7 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = []
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
@@ -64,16 +64,16 @@ CUSTOM_APPS = [
     "plan_maker.apps.PlanMakerConfig",
     "board.apps.BoardConfig",
     "challenges.apps.ChallengesConfig",
-    "survey.apps.SurveyConfig"
+    "survey.apps.SurveyConfig",
 ]
 
 SYSTEM_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles'
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
 ]
 
 THIRD_PARTY_APPS = [
@@ -87,7 +87,7 @@ INSTALLED_APPS = CUSTOM_APPS + THIRD_PARTY_APPS + SYSTEM_APPS
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    'django_brotli.middleware.BrotliMiddleware',
+    "django_brotli.middleware.BrotliMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -145,13 +145,13 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
-            "NAME": env('DATABASE_NAME'),
-            "USER": env('DATABASE_USER'),
-            "PASSWORD": env('DATABASE_PASSWORD'),
-            "HOST": env('DATABASE_HOST'),
+            "NAME": env("DATABASE_NAME"),
+            "USER": env("DATABASE_USER"),
+            "PASSWORD": env("DATABASE_PASSWORD"),
+            "HOST": env("DATABASE_HOST"),
             "PORT": 3306,
             "OPTIONS": {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
             },
         }
     }
@@ -196,7 +196,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-us"
 
 # TIME_ZONE = "UTC"
-TIME_ZONE = 'Asia/Seoul'
+TIME_ZONE = "Asia/Seoul"
 
 
 USE_I18N = True
@@ -208,7 +208,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / 'www_dir'
+STATIC_ROOT = BASE_DIR / "www_dir"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -231,26 +231,30 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://13.125.214.210"]
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://13.125.214.210",
+]
 CORS_ALLOW_CREDENTIALS = True
 
 CF_ID = env("CF_ID")
 CF_TOKEN = env("CF_TOKEN")
 
 # 네이버 메일 보내기
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.naver.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.naver.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1',
-    'http://127.0.0.1:3000',
-    'http://localhost',
-    'http://localhost:3000',
-    'http://13.125.214.210',
-    'http://12.125.214.210:3000',
-    'http://12.125.214.210:8000'
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://13.125.214.210",
+    "http://12.125.214.210:3000",
+    "http://12.125.214.210:8000",
 ]
